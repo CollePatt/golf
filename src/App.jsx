@@ -110,17 +110,20 @@ export default function App() {
     });
   }
 
-  function handleAllocate(upgradeId) {
-    const { upgradeState, yardsToAllocate } = allocateToUpgrade(
-      upgradeId,
-      state.upgrades,
-      state.yardsToAllocate
-    );
-    setState(s => ({
-      ...s,
-      upgrades: upgradeState,
-      yardsToAllocate,
-    }));
+  function handleAllocate(upgradeId, amount) {
+    setState(s => {
+      const { upgradeState, yardsToAllocate } = allocateToUpgrade(
+        upgradeId,
+        s.upgrades,
+        s.yardsToAllocate,
+        amount
+      );
+      return {
+        ...s,
+        upgrades: upgradeState,
+        yardsToAllocate,
+      };
+    });
   }
 
   function handleStartNextRound() {

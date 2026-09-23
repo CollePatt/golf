@@ -217,6 +217,12 @@ h3 {
 .upgrade-desc {
   font-size: 0.85rem;
   color: #81c784;
+  margin-bottom: 0.35rem;
+}
+
+.upgrade-preview {
+  font-size: 0.82rem;
+  color: #f1d58a;
   margin-bottom: 0.6rem;
 }
 
@@ -240,7 +246,7 @@ h3 {
 }
 
 .allocate-btn {
-  padding: 0.35rem 0.8rem;
+  padding: 0.45rem 0.8rem;
   font-size: 0.85rem;
   background: #2e7d32;
   color: white;
@@ -249,8 +255,22 @@ h3 {
   cursor: pointer;
 }
 
+.allocate-actions {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.45rem;
+}
+
 .allocate-btn:hover:not(:disabled) {
   background: #388e3c;
+}
+
+.allocate-btn.primary {
+  background: #1565c0;
+}
+
+.allocate-btn.primary:hover:not(:disabled) {
+  background: #1976d2;
 }
 
 .allocate-btn:disabled {
