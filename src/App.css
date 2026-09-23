@@ -339,6 +339,40 @@ h3 {
   font-size: 0.82rem;
 }
 
+.quick-stats {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.55rem;
+  margin-bottom: 0.75rem;
+}
+
+.quick-stat {
+  min-height: 72px;
+  padding: 0.75rem;
+  border: 1px solid #385045;
+  border-radius: 8px;
+  background: #16231f;
+}
+
+.quick-stat span,
+.quick-stat strong {
+  display: block;
+}
+
+.quick-stat span {
+  color: #81c784;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.quick-stat strong {
+  margin-top: 0.25rem;
+  color: #ffffff;
+  font-size: 1.15rem;
+}
+
 .stats {
   display: grid;
   gap: 0.45rem;
@@ -356,6 +390,27 @@ h3 {
 
 .stat strong {
   color: #ffffff;
+}
+
+.all-stats {
+  margin-top: 0.65rem;
+  border: 1px solid #385045;
+  border-radius: 8px;
+  background: #16231f;
+}
+
+.all-stats summary {
+  padding: 0.75rem 0.85rem;
+  color: #f1d58a;
+  font-size: 0.78rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+}
+
+.all-stats .stats {
+  padding: 0 0.85rem 0.85rem;
 }
 
 .hint {
