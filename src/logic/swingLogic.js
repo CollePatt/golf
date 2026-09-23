@@ -30,14 +30,16 @@ export function getExpectedYardsPerSwing(upgrades, wind, holeDefinition = null) 
   ));
 }
 
-export function rollSwingYards(upgrades, wind, holeDefinition = null) {
+export function rollSwingYards(upgrades, wind, holeDefinition = null, options = {}) {
   const expectedYards = getExpectedYardsPerSwing(upgrades, wind, holeDefinition);
-  const perfect = Math.random() < 0.06;
+  const focused = Boolean(options.focused);
+  const perfect = !focused && Math.random() < 0.06;
   const variance = perfect ? 1.35 : 0.92 + Math.random() * 0.16;
-  const yards = Math.max(1, Math.round(expectedYards * variance));
+  const yards = Math.max(1, Math.round(expectedYards * (focused ? 1.5 : variance)));
 
   let quality = 'Steady';
-  if (perfect) quality = 'Perfect';
+  if (focused) quality = 'Focused';
+  else if (perfect) quality = 'Perfect';
   else if (variance >= 1.04) quality = 'Clean';
   else if (variance <= 0.96) quality = 'Soft';
 
@@ -45,6 +47,7 @@ export function rollSwingYards(upgrades, wind, holeDefinition = null) {
     yards,
     expectedYards,
     quality,
+    source: options.source || 'manual',
   };
 }
 

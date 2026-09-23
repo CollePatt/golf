@@ -2,7 +2,7 @@ import { UPGRADES } from '../data/upgrades.js';
 import { COURSES, getCourseById } from '../data/courses.js';
 import { normalizeWind, rollWind } from './runModifiers.js';
 
-export const SAVE_VERSION = 6;
+export const SAVE_VERSION = 7;
 
 export const BASE_YARDS_PER_SWING = 25;
 export const BASE_STARTING_BALLS = 10;
@@ -59,6 +59,7 @@ export function createInitialState() {
     wind: rollWind(),
     lastSwing: null,
     autoSwingEnabled: true,
+    focusMeter: 0,
     scorecard: createScorecard(),
     roundsCompleted: 0,
     bestCompletedRound: null,
@@ -113,6 +114,7 @@ export function normalizeState(state) {
     wind: normalizeWind(state?.wind),
     lastSwing: state?.lastSwing || null,
     autoSwingEnabled: typeof state?.autoSwingEnabled === 'boolean' ? state.autoSwingEnabled : true,
+    focusMeter: Number.isFinite(state?.focusMeter) ? state.focusMeter : 0,
     scorecard: normalizeScorecard(state?.scorecard),
     roundsCompleted: Number.isFinite(state?.roundsCompleted) ? state.roundsCompleted : 0,
     bestCompletedRound: state?.bestCompletedRound || null,

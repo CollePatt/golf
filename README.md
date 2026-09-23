@@ -29,6 +29,7 @@ After adding a screenshot, uncomment this line:
 - On-screen rules and a clear goal for new players.
 - Named holes with light gameplay traits and changing course palettes.
 - Round wind modifiers and per-swing distance variance.
+- Manual Focus meter that rewards active play with stronger shots.
 - Permanent upgrades for yards per swing, starting balls, and yard multipliers.
 - Partial upgrade investments with next-level stat previews.
 - Unlockable Auto Caddie for idle swings with upgradeable speed.

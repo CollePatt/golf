@@ -24,17 +24,26 @@ import ScorecardPanel from './components/ScorecardPanel.jsx';
 import GuidePanel from './components/GuidePanel.jsx';
 import './App.css';
 
-function advanceSwingState(s) {
+const FOCUS_GAIN_PER_MANUAL_SWING = 18;
+const FOCUS_READY = 100;
+
+function advanceSwingState(s, source = 'manual') {
   if (s.phase !== 'run' || s.ballsLeft <= 0) return s;
 
   const holeDefinition = getHoleDefinition(s.courseId, s.hole);
-  const swing = rollSwingYards(s.upgrades, s.wind, holeDefinition);
+  const focused = source === 'manual' && s.focusMeter >= FOCUS_READY;
+  const swing = rollSwingYards(s.upgrades, s.wind, holeDefinition, { focused, source });
   const yards = swing.yards;
   const newYardsThisHole = s.yardsThisHole + yards;
   const newBalls = s.ballsLeft - 1;
   const newHoleShots = s.currentHoleShots + 1;
   const newTotalShots = s.totalShots + 1;
   const newTotalYards = s.totalYardsThisRound + yards;
+  const newFocusMeter = source === 'manual'
+    ? focused
+      ? 0
+      : Math.min(FOCUS_READY, s.focusMeter + FOCUS_GAIN_PER_MANUAL_SWING)
+    : s.focusMeter;
 
   const holeCleared = newYardsThisHole >= s.targetDistance;
   const lastHole = s.hole >= HOLES_PER_ROUND;
@@ -53,6 +62,7 @@ function advanceSwingState(s) {
       totalShots: newTotalShots,
       totalYardsThisRound: newTotalYards,
       lastSwing: swing,
+      focusMeter: newFocusMeter,
       scorecard: nextScorecard,
       roundsCompleted: s.roundsCompleted + 1,
       bestCompletedRound: isBetterCompletedRound(completedRound, s.bestCompletedRound)
@@ -76,6 +86,7 @@ function advanceSwingState(s) {
       totalShots: newTotalShots,
       totalYardsThisRound: newTotalYards,
       lastSwing: swing,
+      focusMeter: newFocusMeter,
       scorecard: nextScorecard,
       phase: 'upgrade',
       roundResult: 'outOfBalls',
@@ -96,6 +107,7 @@ function advanceSwingState(s) {
       totalShots: newTotalShots,
       totalYardsThisRound: newTotalYards,
       lastSwing: swing,
+      focusMeter: newFocusMeter,
       scorecard: nextScorecard,
     };
   }
@@ -109,6 +121,7 @@ function advanceSwingState(s) {
     totalShots: newTotalShots,
     totalYardsThisRound: newTotalYards,
     lastSwing: swing,
+    focusMeter: newFocusMeter,
   };
 }
 
@@ -129,13 +142,13 @@ export default function App() {
   useEffect(() => {
     if (state.phase !== 'run' || !state.autoSwingEnabled || !autoSwingIntervalMs) return undefined;
     const intervalId = window.setInterval(() => {
-      setState(s => advanceSwingState(s));
+      setState(s => advanceSwingState(s, 'auto'));
     }, autoSwingIntervalMs);
     return () => window.clearInterval(intervalId);
   }, [state.phase, state.autoSwingEnabled, autoSwingIntervalMs]);
 
   function handleSwing() {
-    setState(s => advanceSwingState(s));
+    setState(s => advanceSwingState(s, 'manual'));
   }
 
   function handleToggleAutoSwing() {
@@ -179,6 +192,7 @@ export default function App() {
       yardsToAllocate: 0,
       wind: rollWind(),
       lastSwing: null,
+      focusMeter: 0,
       scorecard: createScorecard(),
       roundResult: null,
     }));
@@ -235,6 +249,7 @@ export default function App() {
             getHoleDefinition(state.courseId, state.hole)
           )}
           autoSwingIntervalMs={autoSwingIntervalMs}
+          focusReady={FOCUS_READY}
         />
       )}
 
