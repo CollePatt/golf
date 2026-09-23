@@ -25,6 +25,8 @@ After adding a screenshot, uncomment this line:
 
 - 18-hole run structure with increasing target distances.
 - Animated fairway view with ball movement and camera follow.
+- Wider tabbed layout for play, upgrades, scorecard, and guide screens.
+- On-screen rules and a clear goal for new players.
 - Round wind modifiers and per-swing distance variance.
 - Permanent upgrades for yards per swing, starting balls, and yard multipliers.
 - Partial upgrade investments with next-level stat previews.

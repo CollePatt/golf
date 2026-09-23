@@ -14,14 +14,21 @@ import { allocateToUpgrade } from './logic/upgradeLogic.js';
 import { saveGame, loadGame, clearSave } from './logic/storage.js';
 import HoleScreen from './components/HoleScreen.jsx';
 import UpgradeScreen from './components/UpgradeScreen.jsx';
+import ScorecardPanel from './components/ScorecardPanel.jsx';
+import GuidePanel from './components/GuidePanel.jsx';
 import './App.css';
 
 export default function App() {
   const [state, setState] = useState(() => loadGame() || createInitialState());
+  const [activeTab, setActiveTab] = useState(() => state.phase === 'upgrade' ? 'upgrades' : 'play');
 
   useEffect(() => {
     saveGame(state);
   }, [state]);
+
+  useEffect(() => {
+    if (state.phase === 'upgrade') setActiveTab('upgrades');
+  }, [state.phase]);
 
   function handleSwing() {
     setState(s => {
@@ -127,6 +134,7 @@ export default function App() {
   }
 
   function handleStartNextRound() {
+    setActiveTab('play');
     setState(s => ({
       ...s,
       phase: 'run',
@@ -147,14 +155,45 @@ export default function App() {
 
   function handleReset() {
     clearSave();
+    setActiveTab('play');
     setState(createInitialState());
   }
 
+  const tabs = [
+    { id: 'play', label: 'Play' },
+    { id: 'upgrades', label: 'Upgrades', badge: state.phase === 'upgrade' && state.yardsToAllocate > 0 ? 'Spend' : null },
+    { id: 'scorecard', label: 'Scorecard' },
+    { id: 'guide', label: 'Guide' },
+  ];
+
   return (
     <div className="app">
-      <h1>Golf</h1>
+      <header className="app-header">
+        <div>
+          <p className="eyebrow">Incremental golf</p>
+          <h1>Golf</h1>
+        </div>
+        <div className="goal-banner">
+          <span>Final Goal</span>
+          <strong>Complete 18 holes, then beat your best score.</strong>
+        </div>
+      </header>
 
-      {state.phase === 'run' && (
+      <nav className="tabs" aria-label="Game sections">
+        {tabs.map(tab => (
+          <button
+            key={tab.id}
+            type="button"
+            className={`tab-btn ${activeTab === tab.id ? 'active' : ''}`}
+            onClick={() => setActiveTab(tab.id)}
+          >
+            {tab.label}
+            {tab.badge && <span>{tab.badge}</span>}
+          </button>
+        ))}
+      </nav>
+
+      {activeTab === 'play' && state.phase === 'run' && (
         <HoleScreen
           state={state}
           onSwing={handleSwing}
@@ -162,13 +201,27 @@ export default function App() {
         />
       )}
 
-      {state.phase === 'upgrade' && (
+      {activeTab === 'play' && state.phase === 'upgrade' && (
+        <div className="screen">
+          <h2>Round Ended</h2>
+          <p className="hint">Spend your earned yards in the upgrades tab, then start the next round.</p>
+          <button className="next-btn" onClick={() => setActiveTab('upgrades')}>
+            View Upgrades
+          </button>
+        </div>
+      )}
+
+      {activeTab === 'upgrades' && (
         <UpgradeScreen
           state={state}
           onAllocate={handleAllocate}
           onStartNextRound={handleStartNextRound}
         />
       )}
+
+      {activeTab === 'scorecard' && <ScorecardPanel state={state} />}
+
+      {activeTab === 'guide' && <GuidePanel />}
 
       <button className="reset-btn" onClick={handleReset}>
         Reset Game

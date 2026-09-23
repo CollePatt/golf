@@ -4,31 +4,51 @@
   padding: 0;
 }
 
+html,
+body {
+  overflow-x: hidden;
+}
+
 body {
   font-family: system-ui, sans-serif;
-  background: #1a2e1a;
+  background: #111916;
   color: #e8f5e9;
   min-height: 100vh;
 }
 
 .app {
-  max-width: 480px;
+  width: min(1120px, calc(100% - 2rem));
   margin: 0 auto;
   padding: 2rem 1rem;
 }
 
+.app-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: end;
+  margin-bottom: 1rem;
+}
+
+.eyebrow {
+  color: #f1d58a;
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
 h1 {
-  font-size: 2rem;
-  text-align: center;
-  margin-bottom: 1.5rem;
+  font-size: clamp(2rem, 6vw, 4rem);
+  line-height: 0.95;
   color: #81c784;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.02em;
   text-transform: uppercase;
 }
 
 h2 {
-  font-size: 1.4rem;
-  margin-bottom: 1rem;
+  font-size: clamp(1.35rem, 3vw, 2rem);
+  line-height: 1.05;
   color: #a5d6a7;
 }
 
@@ -41,26 +61,163 @@ h3 {
 }
 
 .screen {
-  background: #243524;
-  border-radius: 10px;
-  padding: 1.5rem;
-  border: 1px solid #2e4a2e;
+  background: #1f3028;
+  border-radius: 8px;
+  padding: clamp(1rem, 3vw, 1.5rem);
+  border: 1px solid #385045;
+}
+
+.screen-heading {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: start;
+  margin-bottom: 1rem;
+}
+
+.goal-banner {
+  max-width: 360px;
+  padding: 0.8rem 1rem;
+  border: 1px solid #4f6b5f;
+  border-radius: 8px;
+  background: #16231f;
+}
+
+.goal-banner span,
+.goal-banner strong {
+  display: block;
+}
+
+.goal-banner span {
+  color: #f1d58a;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.goal-banner strong {
+  margin-top: 0.2rem;
+  color: #ffffff;
+  font-size: 0.95rem;
+}
+
+.tabs {
+  display: flex;
+  gap: 0.4rem;
+  margin-bottom: 1rem;
+  padding: 0.35rem;
+  border: 1px solid #32473e;
+  border-radius: 8px;
+  background: #15211d;
+  overflow-x: auto;
+}
+
+.tab-btn {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.4rem;
+  min-height: 42px;
+  padding: 0.55rem 0.9rem;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: transparent;
+  color: #b8cbbf;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.tab-btn:hover {
+  background: #20332b;
+  color: #ffffff;
+}
+
+.tab-btn.active {
+  background: #2c4a3d;
+  border-color: #5f7f70;
+  color: #ffffff;
+}
+
+.tab-btn span {
+  padding: 0.12rem 0.4rem;
+  border-radius: 999px;
+  background: #f1d58a;
+  color: #17211d;
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.hole-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(260px, 320px);
+  gap: 1rem;
+  align-items: start;
+}
+
+.hole-main,
+.hole-sidebar {
+  min-width: 0;
 }
 
 .hole-canvas {
   display: block;
   width: 100%;
-  height: 160px;
+  height: 240px;
   border-radius: 8px;
-  margin-bottom: 1rem;
+  margin-bottom: 0;
+}
+
+.swing-panel {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 0.85rem;
+  padding: 0.85rem;
+  border: 1px solid #385045;
+  border-radius: 8px;
+  background: #16231f;
+}
+
+.swing-panel span,
+.swing-panel strong {
+  display: block;
+}
+
+.swing-panel span {
+  color: #81c784;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.swing-panel strong {
+  margin-top: 0.2rem;
+  color: #ffffff;
+  font-size: 1.35rem;
+}
+
+.swing-panel p {
+  margin-top: 0.25rem;
+  color: #c8e6c9;
+  font-size: 0.9rem;
 }
 
 .stats {
+  display: grid;
+  gap: 0.45rem;
   margin-bottom: 0.5rem;
 }
 
 .stat {
-  margin-bottom: 0.4rem;
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0;
   font-size: 1rem;
   color: #c8e6c9;
 }
@@ -83,7 +240,7 @@ h3 {
   padding: 0.75rem;
   border: 1px solid #335633;
   border-radius: 8px;
-  background: #182c18;
+  background: #16231f;
 }
 
 .round-modifier span,
@@ -125,6 +282,105 @@ h3 {
   background: #162816;
   color: #6f916f;
   text-align: center;
+}
+
+.scorecard-grid.compact {
+  grid-template-columns: repeat(6, minmax(34px, 1fr));
+  margin: 0;
+}
+
+.score-popover-anchor {
+  position: relative;
+  outline: none;
+}
+
+.score-popover-anchor:focus-visible .summary-pill {
+  box-shadow: 0 0 0 2px #f1d58a;
+}
+
+.scorecard-popover {
+  position: absolute;
+  top: calc(100% + 0.55rem);
+  right: 0;
+  z-index: 5;
+  width: min(360px, calc(100vw - 2rem));
+  padding: 0.75rem;
+  border: 1px solid #5f7f70;
+  border-radius: 8px;
+  background: #111916;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.35);
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(-4px);
+  transition: opacity 0.12s ease, transform 0.12s ease;
+}
+
+.score-popover-anchor:hover .scorecard-popover,
+.score-popover-anchor:focus-within .scorecard-popover {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0);
+}
+
+.summary-pill {
+  min-width: 96px;
+  padding: 0.65rem 0.85rem;
+  border: 1px solid #5f7f70;
+  border-radius: 8px;
+  background: #16231f;
+  text-align: right;
+}
+
+.summary-pill span,
+.summary-pill strong {
+  display: block;
+}
+
+.summary-pill span {
+  color: #f1d58a;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.summary-pill strong {
+  margin-top: 0.15rem;
+  color: #ffffff;
+  font-size: 1.35rem;
+}
+
+.summary-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.summary-tile {
+  padding: 0.85rem;
+  border: 1px solid #385045;
+  border-radius: 8px;
+  background: #16231f;
+}
+
+.summary-tile span,
+.summary-tile strong {
+  display: block;
+}
+
+.summary-tile span {
+  color: #81c784;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.summary-tile strong {
+  margin-top: 0.25rem;
+  color: #ffffff;
+  font-size: 1.2rem;
 }
 
 .scorecard-cell span,
@@ -172,6 +428,76 @@ h3 {
   border-radius: 8px;
 }
 
+.scorecard-table-wrap {
+  overflow-x: auto;
+  border: 1px solid #2e4a2e;
+  border-radius: 8px;
+}
+
+.scorecard-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 520px;
+  background: #162816;
+}
+
+.scorecard-table th,
+.scorecard-table td {
+  padding: 0.65rem;
+  border-bottom: 1px solid #2e4a2e;
+  text-align: right;
+  font-size: 0.9rem;
+}
+
+.scorecard-table th:first-child,
+.scorecard-table td:first-child {
+  text-align: left;
+}
+
+.scorecard-table th {
+  color: #81c784;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.scorecard-table td {
+  color: #e8f5e9;
+}
+
+.scorecard-table tr:last-child td {
+  border-bottom: none;
+}
+
+.scorecard-table .current-row td {
+  background: rgba(241, 213, 138, 0.08);
+}
+
+.guide-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.85rem;
+}
+
+.guide-card {
+  padding: 1rem;
+  border: 1px solid #385045;
+  border-radius: 8px;
+  background: #16231f;
+}
+
+.guide-card h3 {
+  margin-top: 0;
+}
+
+.guide-card ul {
+  display: grid;
+  gap: 0.55rem;
+  padding-left: 1.1rem;
+  color: #c8e6c9;
+  font-size: 0.95rem;
+}
+
 .recap-table {
   width: 100%;
   border-collapse: collapse;
@@ -209,10 +535,11 @@ h3 {
 
 /* Swing button */
 .swing-btn {
-  display: block;
-  width: 100%;
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  min-width: 180px;
   padding: 1rem;
-  margin-top: 1.5rem;
   font-size: 1.2rem;
   font-weight: bold;
   background: #388e3c;
@@ -363,4 +690,58 @@ h3 {
 .reset-btn:hover {
   color: #81c784;
   border-color: #4a6a4a;
+}
+
+@media (max-width: 820px) {
+  .app {
+    width: min(100%, calc(100% - 1rem));
+    padding: 1rem 0.5rem;
+  }
+
+  .app-header,
+  .screen-heading,
+  .swing-panel,
+  .round-modifier {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .goal-banner {
+    max-width: none;
+  }
+
+  .tabs {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .hole-layout,
+  .summary-grid,
+  .guide-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .hole-canvas {
+    height: 220px;
+  }
+
+  .swing-btn {
+    width: 100%;
+  }
+
+  .round-modifier p {
+    text-align: left;
+  }
+
+  .scorecard-popover {
+    left: 0;
+    right: auto;
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .score-popover-anchor,
+  .summary-pill {
+    width: 100%;
+  }
 }

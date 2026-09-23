@@ -1,10 +1,10 @@
 import { useRef, useEffect } from 'react'
 
 const SCALE = 4
-const H = 160
-const GROUND_Y = 118
-const BALL_R = 5
-const ARC_H = 58
+const H = 240
+const GROUND_Y = 178
+const BALL_R = 6
+const ARC_H = 88
 const ANIM_MS = 680
 const CAM_LERP = 0.09
 
