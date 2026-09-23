@@ -1,13 +1,33 @@
 # Golf
 
-A small incremental golf game built with React and Vite.
+Golf is a tiny incremental game about grinding through an 18-hole course, turning every yard into upgrades, and coming back stronger next round.
 
-The current loop is intentionally simple:
+It is built with React and Vite, saved locally in the browser, and intentionally kept small enough to iterate on quickly.
 
-1. Swing through an 18-hole round.
+## Screenshot
+
+Runtime screenshots can live in `docs/images/`.
+
+<!--
+After adding a screenshot, uncomment this line:
+
+![Golf runtime screenshot](docs/images/runtime.png)
+-->
+
+## Gameplay Loop
+
+1. Swing through an 18-hole round with a limited number of balls.
 2. Earn yardage from every swing.
 3. Spend earned yards on permanent upgrades.
-4. Start the next round stronger.
+4. Start the next round with better stats.
+
+## Current Features
+
+- 18-hole run structure with increasing target distances.
+- Animated fairway view with ball movement and camera follow.
+- Permanent upgrades for yards per swing, starting balls, and yard multipliers.
+- Local storage save/load support.
+- Round-end upgrade screen.
 
 ## Run Locally
 
@@ -22,17 +42,20 @@ npm run dev
 npm run build
 ```
 
-## Current Gameplay
-
-- Each hole has a yardage target.
-- Every swing advances the ball by your current yards-per-swing stat.
-- Balls are limited each round.
-- Between rounds, earned yards can be invested into upgrades.
-- Progress is saved in local storage.
-
 ## Project Shape
 
 - `src/App.jsx` owns the main game state transitions.
 - `src/logic/` contains save, swing, upgrade, and round helpers.
 - `src/data/upgrades.js` defines upgrade costs and effects.
 - `src/components/` contains the game and upgrade screens.
+
+## Roadmap
+
+The next wave is focused on making the game feel more like golf and more replayable:
+
+- Scorecards, par, and best-round tracking.
+- Swing variance, wind, and other run modifiers.
+- Better upgrade controls and next-level previews.
+- Prestige scoring and Tier 2 progression.
+
+See [ROADMAP.md](ROADMAP.md) for the living backlog.
