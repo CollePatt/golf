@@ -43,7 +43,6 @@ Open questions: exact scoring curve (par per hole? a global shot budget?), wheth
 
 1. **Scorecard and best round** - Track per-hole shots, total score, and best completed round in local storage.
 2. **Par targets** - Give each hole a par value so round results feel more like golf than pure distance clearing.
-3. **Round recap** - Show completed holes, total shots, yards earned, and upgrades gained before the next run button.
-4. **Achievements** - Award small one-time yard bonuses for milestones like first birdie, first 1,000-yard round, or finishing 18 holes.
-5. **Prestige scoring** - Convert completed-round score into prestige points, then reset Tier 1 upgrades for Tier 2 progress.
-6. **Auto swing unlock** - Add an early idle mechanic that swings once every few seconds after the player buys it.
+3. **Achievements** - Award small one-time yard bonuses for milestones like first birdie, first 1,000-yard round, or finishing 18 holes.
+4. **Prestige scoring** - Convert completed-round score into prestige points, then reset Tier 1 upgrades for Tier 2 progress.
+5. **Auto swing unlock** - Add an early idle mechanic that swings once every few seconds after the player buys it.
