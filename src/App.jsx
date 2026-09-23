@@ -8,7 +8,8 @@ import {
   summarizeCompletedRound,
   isBetterCompletedRound,
 } from './logic/gameState.js';
-import { getYardsPerSwing, getStartingBalls } from './logic/swingLogic.js';
+import { rollWind } from './logic/runModifiers.js';
+import { getExpectedYardsPerSwing, getStartingBalls, rollSwingYards } from './logic/swingLogic.js';
 import { allocateToUpgrade } from './logic/upgradeLogic.js';
 import { saveGame, loadGame, clearSave } from './logic/storage.js';
 import HoleScreen from './components/HoleScreen.jsx';
@@ -24,7 +25,8 @@ export default function App() {
 
   function handleSwing() {
     setState(s => {
-      const yards = getYardsPerSwing(s.upgrades);
+      const swing = rollSwingYards(s.upgrades, s.wind);
+      const yards = swing.yards;
       const newYardsThisHole = s.yardsThisHole + yards;
       const newBalls = s.ballsLeft - 1;
       const newHoleShots = s.currentHoleShots + 1;
@@ -47,6 +49,7 @@ export default function App() {
           ballsLeft: newBalls,
           totalShots: newTotalShots,
           totalYardsThisRound: newTotalYards,
+          lastSwing: swing,
           scorecard: nextScorecard,
           roundsCompleted: s.roundsCompleted + 1,
           bestCompletedRound: isBetterCompletedRound(completedRound, s.bestCompletedRound)
@@ -69,6 +72,7 @@ export default function App() {
           ballsLeft: 0,
           totalShots: newTotalShots,
           totalYardsThisRound: newTotalYards,
+          lastSwing: swing,
           scorecard: nextScorecard,
           phase: 'upgrade',
           roundResult: 'outOfBalls',
@@ -88,6 +92,7 @@ export default function App() {
           ballsLeft: newBalls,
           totalShots: newTotalShots,
           totalYardsThisRound: newTotalYards,
+          lastSwing: swing,
           scorecard: nextScorecard,
         };
       }
@@ -100,6 +105,7 @@ export default function App() {
         ballsLeft: newBalls,
         totalShots: newTotalShots,
         totalYardsThisRound: newTotalYards,
+        lastSwing: swing,
       };
     });
   }
@@ -129,6 +135,8 @@ export default function App() {
       totalShots: 0,
       totalYardsThisRound: 0,
       yardsToAllocate: 0,
+      wind: rollWind(),
+      lastSwing: null,
       scorecard: createScorecard(),
       roundResult: null,
     }));
@@ -147,7 +155,7 @@ export default function App() {
         <HoleScreen
           state={state}
           onSwing={handleSwing}
-          yardsPerSwing={getYardsPerSwing(state.upgrades)}
+          yardsPerSwing={getExpectedYardsPerSwing(state.upgrades, state.wind)}
         />
       )}
 

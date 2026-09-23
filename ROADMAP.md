@@ -43,11 +43,9 @@ Open questions: exact scoring curve (par per hole? a global shot budget?), wheth
 
 1. **Scorecard and best round** - Track per-hole shots, total score, and best completed round in local storage.
 2. **Par targets** - Give each hole a par value so round results feel more like golf than pure distance clearing.
-3. **Swing variance** - Add a small random range around yards-per-swing, with rare perfect swings for a little moment-to-moment suspense.
-4. **Wind modifier** - Apply a round-level wind bonus or penalty that changes every run and is shown on the hole screen.
-5. **Bulk upgrade buttons** - Add "invest 10%", "invest 50%", and "invest all" controls so late-round spending is less clicky.
-6. **Upgrade previews** - Show the next-level stat impact before spending yards.
-7. **Round recap** - Show completed holes, total shots, yards earned, and upgrades gained before the next run button.
-8. **Achievements** - Award small one-time yard bonuses for milestones like first birdie, first 1,000-yard round, or finishing 18 holes.
-9. **Prestige scoring** - Convert completed-round score into prestige points, then reset Tier 1 upgrades for Tier 2 progress.
-10. **Auto swing unlock** - Add an early idle mechanic that swings once every few seconds after the player buys it.
+3. **Bulk upgrade buttons** - Add "invest 10%", "invest 50%", and "invest all" controls so late-round spending is less clicky.
+4. **Upgrade previews** - Show the next-level stat impact before spending yards.
+5. **Round recap** - Show completed holes, total shots, yards earned, and upgrades gained before the next run button.
+6. **Achievements** - Award small one-time yard bonuses for milestones like first birdie, first 1,000-yard round, or finishing 18 holes.
+7. **Prestige scoring** - Convert completed-round score into prestige points, then reset Tier 1 upgrades for Tier 2 progress.
+8. **Auto swing unlock** - Add an early idle mechanic that swings once every few seconds after the player buys it.

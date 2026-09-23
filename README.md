@@ -25,6 +25,7 @@ After adding a screenshot, uncomment this line:
 
 - 18-hole run structure with increasing target distances.
 - Animated fairway view with ball movement and camera follow.
+- Round wind modifiers and per-swing distance variance.
 - Permanent upgrades for yards per swing, starting balls, and yard multipliers.
 - Local storage save/load support.
 - Round-end upgrade screen.
@@ -54,7 +55,6 @@ npm run build
 The next wave is focused on making the game feel more like golf and more replayable:
 
 - Scorecards, par, and best-round tracking.
-- Swing variance, wind, and other run modifiers.
 - Better upgrade controls and next-level previews.
 - Prestige scoring and Tier 2 progression.
 

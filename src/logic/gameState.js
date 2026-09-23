@@ -1,6 +1,7 @@
 import { UPGRADES } from '../data/upgrades.js';
+import { normalizeWind, rollWind } from './runModifiers.js';
 
-export const SAVE_VERSION = 3;
+export const SAVE_VERSION = 4;
 
 export const BASE_YARDS_PER_SWING = 25;
 export const BASE_STARTING_BALLS = 10;
@@ -53,6 +54,8 @@ export function createInitialState() {
     totalYardsThisRound: 0,        // sum of yards hit this round (upgrade currency)
     yardsToAllocate: 0,            // yards available to spend in upgrade phase
     upgrades: buildInitialUpgrades(),
+    wind: rollWind(),
+    lastSwing: null,
     scorecard: createScorecard(),
     roundsCompleted: 0,
     bestCompletedRound: null,
@@ -103,6 +106,8 @@ export function normalizeState(state) {
       : yardsForHole(normalizedHole),
     currentHoleShots: Number.isFinite(state?.currentHoleShots) ? state.currentHoleShots : 0,
     upgrades: normalizeUpgradeState(state?.upgrades),
+    wind: normalizeWind(state?.wind),
+    lastSwing: state?.lastSwing || null,
     scorecard: normalizeScorecard(state?.scorecard),
     roundsCompleted: Number.isFinite(state?.roundsCompleted) ? state.roundsCompleted : 0,
     bestCompletedRound: state?.bestCompletedRound || null,
