@@ -1,0 +1,214 @@
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: system-ui, sans-serif;
+  background: #1a2e1a;
+  color: #e8f5e9;
+  min-height: 100vh;
+}
+
+.app {
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 2rem 1rem;
+}
+
+h1 {
+  font-size: 2rem;
+  text-align: center;
+  margin-bottom: 1.5rem;
+  color: #81c784;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+h2 {
+  font-size: 1.4rem;
+  margin-bottom: 1rem;
+  color: #a5d6a7;
+}
+
+h3 {
+  font-size: 1rem;
+  margin: 1.5rem 0 0.4rem;
+  color: #a5d6a7;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.screen {
+  background: #243524;
+  border-radius: 10px;
+  padding: 1.5rem;
+  border: 1px solid #2e4a2e;
+}
+
+.hole-canvas {
+  display: block;
+  width: 100%;
+  height: 160px;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+}
+
+.stats {
+  margin-bottom: 0.5rem;
+}
+
+.stat {
+  margin-bottom: 0.4rem;
+  font-size: 1rem;
+  color: #c8e6c9;
+}
+
+.stat strong {
+  color: #ffffff;
+}
+
+.hint {
+  font-size: 0.85rem;
+  color: #81c784;
+  margin: 0.5rem 0 1rem;
+}
+
+/* Swing button */
+.swing-btn {
+  display: block;
+  width: 100%;
+  padding: 1rem;
+  margin-top: 1.5rem;
+  font-size: 1.2rem;
+  font-weight: bold;
+  background: #388e3c;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.swing-btn:hover {
+  background: #43a047;
+}
+
+.swing-btn:active {
+  background: #2e7d32;
+}
+
+/* Upgrade card */
+.upgrade-card {
+  background: #1e3a1e;
+  border: 1px solid #2e4a2e;
+  border-radius: 8px;
+  padding: 0.9rem;
+  margin-bottom: 0.75rem;
+}
+
+.upgrade-card.unlocked {
+  border-color: #66bb6a;
+}
+
+.upgrade-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 0.2rem;
+}
+
+.upgrade-label {
+  font-weight: bold;
+  color: #e8f5e9;
+}
+
+.upgrade-status {
+  font-size: 0.82rem;
+  color: #a5d6a7;
+}
+
+.upgrade-card.unlocked .upgrade-status {
+  color: #66bb6a;
+}
+
+.upgrade-desc {
+  font-size: 0.85rem;
+  color: #81c784;
+  margin-bottom: 0.6rem;
+}
+
+.progress-bar {
+  height: 8px;
+  background: #0d1f0d;
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 0.7rem;
+}
+
+.progress-fill {
+  height: 100%;
+  background: #4caf50;
+  border-radius: 4px;
+  transition: width 0.15s ease;
+}
+
+.upgrade-card.unlocked .progress-fill {
+  background: #66bb6a;
+}
+
+.allocate-btn {
+  padding: 0.35rem 0.8rem;
+  font-size: 0.85rem;
+  background: #2e7d32;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.allocate-btn:hover:not(:disabled) {
+  background: #388e3c;
+}
+
+.allocate-btn:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+/* Next run button */
+.next-btn {
+  display: block;
+  width: 100%;
+  padding: 0.85rem;
+  margin-top: 1.5rem;
+  font-size: 1rem;
+  font-weight: bold;
+  background: #1565c0;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.next-btn:hover {
+  background: #1976d2;
+}
+
+/* Reset button */
+.reset-btn {
+  display: block;
+  margin: 1.25rem auto 0;
+  padding: 0.35rem 0.9rem;
+  font-size: 0.78rem;
+  background: transparent;
+  color: #4a6a4a;
+  border: 1px solid #2e4a2e;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.reset-btn:hover {
+  color: #81c784;
+  border-color: #4a6a4a;
+}
