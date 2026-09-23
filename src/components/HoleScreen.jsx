@@ -15,6 +15,7 @@ export default function HoleScreen({
   onToggleAutoSwing,
   yardsPerSwing,
   autoSwingIntervalMs,
+  focusReady,
 }) {
   const {
     hole,
@@ -28,6 +29,7 @@ export default function HoleScreen({
     wind,
     lastSwing,
     autoSwingEnabled,
+    focusMeter,
   } = state;
   const course = getCourseById(state.courseId);
   const holeDefinition = getHoleDefinition(state.courseId, hole);
@@ -80,11 +82,26 @@ export default function HoleScreen({
             <div>
               <span>Expected Swing</span>
               <strong>{yardsPerSwing} yds</strong>
-              {lastSwing && <p>Last: {lastSwing.yards} yds ({lastSwing.quality})</p>}
+              {lastSwing && (
+                <p>
+                  Last: {lastSwing.yards} yds ({lastSwing.quality}
+                  {lastSwing.source === 'auto' ? ', auto' : ''})
+                </p>
+              )}
             </div>
             <button className="swing-btn" onClick={onSwing}>
-              Swing
+              {focusMeter >= focusReady ? 'Focused Swing' : 'Swing'}
             </button>
+          </div>
+          <div className="focus-panel">
+            <div className="focus-header">
+              <span>Focus</span>
+              <strong>{focusMeter} / {focusReady}</strong>
+            </div>
+            <div className="focus-bar" aria-label="Manual focus meter">
+              <div className="focus-fill" style={{ width: `${Math.min(100, focusMeter)}%` }} />
+            </div>
+            <p>Manual swings build Focus. A full meter powers up your next manual shot.</p>
           </div>
           <div className={`auto-swing-panel ${autoSwingIntervalMs ? 'unlocked' : ''}`}>
             <div>

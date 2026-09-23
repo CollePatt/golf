@@ -14,6 +14,7 @@ export default function GuidePanel() {
           <ul>
             <li>Each swing spends one ball.</li>
             <li>Clear the target distance to advance to the next hole.</li>
+            <li>Manual swings build Focus; a full meter powers up your next manual shot.</li>
             <li>The round ends after hole 18 or when you run out of balls.</li>
             <li>Every yard hit becomes upgrade currency after the round.</li>
           </ul>
