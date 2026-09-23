@@ -120,16 +120,23 @@ export default function HoleScreen({
         </div>
 
         <aside className="hole-sidebar" aria-label="Round status">
-          <div className="stats">
-            <p className="stat">Target: <strong>{targetDistance} yds</strong></p>
-            <p className="stat">Par: <strong>{parForHole(hole)}</strong></p>
-            <p className="stat">Yards this hole: <strong>{yardsThisHole}</strong></p>
-            <p className="stat">Remaining: <strong>{remaining} yds</strong></p>
-            <p className="stat">Balls left: <strong>{ballsLeft}</strong></p>
-            <p className="stat">Shots this hole: <strong>{currentHoleShots}</strong></p>
-            <p className="stat">Shots this round: <strong>{totalShots}</strong></p>
-            <p className="stat">Holes scored: <strong>{completedHoles.length}</strong></p>
-            <p className="stat">Yards earned: <strong>{totalYardsThisRound}</strong></p>
+          <div className="quick-stats" aria-label="Key round stats">
+            <div className="quick-stat">
+              <span>Need</span>
+              <strong>{remaining} yds</strong>
+            </div>
+            <div className="quick-stat">
+              <span>Balls</span>
+              <strong>{ballsLeft}</strong>
+            </div>
+            <div className="quick-stat">
+              <span>Hole Shots</span>
+              <strong>{currentHoleShots}</strong>
+            </div>
+            <div className="quick-stat">
+              <span>Earned</span>
+              <strong>{totalYardsThisRound}</strong>
+            </div>
           </div>
           <div className="round-modifier">
             <div>
@@ -143,6 +150,21 @@ export default function HoleScreen({
             <strong>{holeDefinition.trait.label}</strong>
             <p>{holeDefinition.trait.description}</p>
           </div>
+          <details className="all-stats">
+            <summary>All Stats</summary>
+            <div className="stats">
+              <p className="stat">Target: <strong>{targetDistance} yds</strong></p>
+              <p className="stat">Par: <strong>{parForHole(hole)}</strong></p>
+              <p className="stat">Yards this hole: <strong>{yardsThisHole}</strong></p>
+              <p className="stat">Remaining: <strong>{remaining} yds</strong></p>
+              <p className="stat">Balls left: <strong>{ballsLeft}</strong></p>
+              <p className="stat">Shots this hole: <strong>{currentHoleShots}</strong></p>
+              <p className="stat">Shots this round: <strong>{totalShots}</strong></p>
+              <p className="stat">Holes cleared: <strong>{completedHoles.length}</strong></p>
+              <p className="stat">Yards earned: <strong>{totalYardsThisRound}</strong></p>
+              <p className="stat">Score to par: <strong>{formatScoreToPar(scoreToPar)}</strong></p>
+            </div>
+          </details>
         </aside>
       </div>
     </div>
