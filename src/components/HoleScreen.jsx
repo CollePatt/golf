@@ -26,49 +26,72 @@ export default function HoleScreen({ state, onSwing, yardsPerSwing }) {
 
   return (
     <div className="screen">
-      <h2>Hole {hole} / {HOLES_PER_ROUND}</h2>
-      <GolfHoleCanvas yardsThisRun={yardsThisHole} targetDistance={targetDistance} />
-      <div className="stats">
-        <p className="stat">Target: <strong>{targetDistance} yds</strong></p>
-        <p className="stat">Par: <strong>{parForHole(hole)}</strong></p>
-        <p className="stat">Yards this hole: <strong>{yardsThisHole}</strong></p>
-        <p className="stat">Remaining: <strong>{remaining} yds</strong></p>
-        <p className="stat">Balls left: <strong>{ballsLeft}</strong></p>
-        <p className="stat">Shots this hole: <strong>{currentHoleShots}</strong></p>
-        <p className="stat">Shots this round: <strong>{totalShots}</strong></p>
-        <p className="stat">Score: <strong>{formatScoreToPar(scoreToPar)}</strong></p>
-        <p className="stat">Yards earned: <strong>{totalYardsThisRound}</strong></p>
-      </div>
-      <div className="round-modifier">
+      <div className="screen-heading">
         <div>
-          <span>Wind</span>
-          <strong>{wind.label}</strong>
+          <h2>Hole {hole} / {HOLES_PER_ROUND}</h2>
+          <p className="hint">Clear {remaining} more yards to reach the next tee.</p>
         </div>
-        <p>{wind.description}</p>
-      </div>
-      <div className="scorecard-grid" aria-label="Round scorecard">
-        {scorecard.map(entry => {
-          const isCurrent = entry.hole === hole;
-          const isComplete = Number.isFinite(entry.shots);
-          return (
-            <div
-              key={entry.hole}
-              className={`scorecard-cell ${isCurrent ? 'current' : ''} ${isComplete ? 'complete' : ''}`}
-            >
-              <span>{entry.hole}</span>
-              <strong>{isComplete ? formatScoreToPar(entry.scoreToPar) : '-'}</strong>
+        <div className="score-popover-anchor" tabIndex={0}>
+          <div className="summary-pill">
+            <span>Score</span>
+            <strong>{formatScoreToPar(scoreToPar)}</strong>
+          </div>
+          <div className="scorecard-popover" aria-hidden="true">
+            <div className="scorecard-grid compact" aria-label="Round scorecard preview">
+              {scorecard.map(entry => {
+                const isCurrent = entry.hole === hole;
+                const isComplete = Number.isFinite(entry.shots);
+                return (
+                  <div
+                    key={entry.hole}
+                    className={`scorecard-cell ${isCurrent ? 'current' : ''} ${isComplete ? 'complete' : ''}`}
+                  >
+                    <span>{entry.hole}</span>
+                    <strong>{isComplete ? formatScoreToPar(entry.scoreToPar) : '-'}</strong>
+                  </div>
+                );
+              })}
             </div>
-          );
-        })}
+          </div>
+        </div>
       </div>
-      <p className="hint">{completedHoles.length} holes scored this round.</p>
-      <p className="hint">
-        Expected swing: {yardsPerSwing} yards
-        {lastSwing ? ` | Last swing: ${lastSwing.yards} yards (${lastSwing.quality})` : ''}
-      </p>
-      <button className="swing-btn" onClick={onSwing}>
-        Swing
-      </button>
+
+      <div className="hole-layout">
+        <div className="hole-main">
+          <GolfHoleCanvas yardsThisRun={yardsThisHole} targetDistance={targetDistance} />
+          <div className="swing-panel">
+            <div>
+              <span>Expected Swing</span>
+              <strong>{yardsPerSwing} yds</strong>
+              {lastSwing && <p>Last: {lastSwing.yards} yds ({lastSwing.quality})</p>}
+            </div>
+            <button className="swing-btn" onClick={onSwing}>
+              Swing
+            </button>
+          </div>
+        </div>
+
+        <aside className="hole-sidebar" aria-label="Round status">
+          <div className="stats">
+            <p className="stat">Target: <strong>{targetDistance} yds</strong></p>
+            <p className="stat">Par: <strong>{parForHole(hole)}</strong></p>
+            <p className="stat">Yards this hole: <strong>{yardsThisHole}</strong></p>
+            <p className="stat">Remaining: <strong>{remaining} yds</strong></p>
+            <p className="stat">Balls left: <strong>{ballsLeft}</strong></p>
+            <p className="stat">Shots this hole: <strong>{currentHoleShots}</strong></p>
+            <p className="stat">Shots this round: <strong>{totalShots}</strong></p>
+            <p className="stat">Holes scored: <strong>{completedHoles.length}</strong></p>
+            <p className="stat">Yards earned: <strong>{totalYardsThisRound}</strong></p>
+          </div>
+          <div className="round-modifier">
+            <div>
+              <span>Wind</span>
+              <strong>{wind.label}</strong>
+            </div>
+            <p>{wind.description}</p>
+          </div>
+        </aside>
+      </div>
     </div>
   );
 }

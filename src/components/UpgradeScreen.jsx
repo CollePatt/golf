@@ -15,8 +15,14 @@ export default function UpgradeScreen({ state, onAllocate, onStartNextRound }) {
     bestCompletedRound,
   } = state;
 
-  const heading = roundResult === 'complete' ? 'Round Complete!' : 'Out of Balls';
-  const subheading = roundResult === 'complete'
+  const heading = state.phase === 'run'
+    ? 'Upgrades'
+    : roundResult === 'complete'
+    ? 'Round Complete!'
+    : 'Out of Balls';
+  const subheading = state.phase === 'run'
+    ? 'Finish the current round to spend earned yards.'
+    : roundResult === 'complete'
     ? `All 18 holes in ${totalShots} shots.`
     : `Reached hole ${hole} in ${totalShots} shots.`;
   const completedHoles = getCompletedHoles(scorecard);
@@ -41,10 +47,14 @@ export default function UpgradeScreen({ state, onAllocate, onStartNextRound }) {
         <p className="stat">Yards to spend: <strong>{yardsToAllocate}</strong></p>
       </div>
 
-      <RoundRecap scorecard={scorecard} />
+      {state.phase === 'upgrade' && <RoundRecap scorecard={scorecard} />}
 
       <h3>Upgrades</h3>
-      <p className="hint">Click an upgrade to invest your remaining yards into it.</p>
+      <p className="hint">
+        {state.phase === 'upgrade'
+          ? 'Choose how much of your remaining yards to invest.'
+          : 'Upgrade spending unlocks after the current round ends.'}
+      </p>
 
       {UPGRADES.map(upgrade => (
         <UpgradeBar
@@ -57,9 +67,11 @@ export default function UpgradeScreen({ state, onAllocate, onStartNextRound }) {
         />
       ))}
 
-      <button className="next-btn" onClick={onStartNextRound}>
-        Start New Round
-      </button>
+      {state.phase === 'upgrade' && (
+        <button className="next-btn" onClick={onStartNextRound}>
+          Start New Round
+        </button>
+      )}
     </div>
   );
 }
