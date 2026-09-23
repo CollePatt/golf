@@ -12,7 +12,7 @@ function easeOut(t) {
   return 1 - (1 - t) * (1 - t)
 }
 
-export default function GolfHoleCanvas({ yardsThisRun, targetDistance }) {
+export default function GolfHoleCanvas({ yardsThisRun, targetDistance, theme }) {
   const canvasRef = useRef(null)
   const rafRef = useRef(null)
   const prevYardsRef = useRef(0)
@@ -66,17 +66,17 @@ export default function GolfHoleCanvas({ yardsThisRun, targetDistance }) {
 
       // Sky
       const skyGrad = ctx.createLinearGradient(0, 0, 0, GROUND_Y)
-      skyGrad.addColorStop(0, '#5b9fd4')
-      skyGrad.addColorStop(1, '#b8d9ef')
+      skyGrad.addColorStop(0, theme.skyTop)
+      skyGrad.addColorStop(1, theme.skyBottom)
       ctx.fillStyle = skyGrad
       ctx.fillRect(0, 0, W, GROUND_Y)
 
       // Ground body
-      ctx.fillStyle = '#3a6b32'
+      ctx.fillStyle = theme.ground
       ctx.fillRect(0, GROUND_Y, W, H - GROUND_Y)
 
       // Fairway top stripe
-      ctx.fillStyle = '#4e8a43'
+      ctx.fillStyle = theme.fairway
       ctx.fillRect(0, GROUND_Y, W, 10)
 
       // Yardage tick marks
@@ -110,7 +110,7 @@ export default function GolfHoleCanvas({ yardsThisRun, targetDistance }) {
         ctx.moveTo(x, GROUND_Y)
         ctx.lineTo(x, GROUND_Y - 46)
         ctx.stroke()
-        ctx.fillStyle = '#e53935'
+        ctx.fillStyle = theme.flag
         ctx.beginPath()
         ctx.moveTo(x, GROUND_Y - 46)
         ctx.lineTo(x + 16, GROUND_Y - 38)
@@ -157,7 +157,7 @@ export default function GolfHoleCanvas({ yardsThisRun, targetDistance }) {
 
     rafRef.current = requestAnimationFrame(draw)
     return () => cancelAnimationFrame(rafRef.current)
-  }, [targetDistance])
+  }, [targetDistance, theme])
 
   // Trigger arc animation on each swing
   useEffect(() => {

@@ -27,6 +27,7 @@ After adding a screenshot, uncomment this line:
 - Animated fairway view with ball movement and camera follow.
 - Wider tabbed layout for play, upgrades, scorecard, and guide screens.
 - On-screen rules and a clear goal for new players.
+- Named holes with light gameplay traits and changing course palettes.
 - Round wind modifiers and per-swing distance variance.
 - Permanent upgrades for yards per swing, starting balls, and yard multipliers.
 - Partial upgrade investments with next-level stat previews.

@@ -1,7 +1,8 @@
 import { UPGRADES } from '../data/upgrades.js';
+import { COURSES, getCourseById } from '../data/courses.js';
 import { normalizeWind, rollWind } from './runModifiers.js';
 
-export const SAVE_VERSION = 5;
+export const SAVE_VERSION = 6;
 
 export const BASE_YARDS_PER_SWING = 25;
 export const BASE_STARTING_BALLS = 10;
@@ -45,6 +46,7 @@ export function createInitialState() {
   return {
     version: SAVE_VERSION,
     phase: 'run',                  // 'run' | 'upgrade'
+    courseId: COURSES[0].id,
     hole: 1,
     targetDistance: yardsForHole(1),
     yardsThisHole: 0,              // resets each hole
@@ -101,6 +103,7 @@ export function normalizeState(state) {
     ...initial,
     ...state,
     version: SAVE_VERSION,
+    courseId: getCourseById(state?.courseId).id,
     hole: normalizedHole,
     targetDistance: Number.isFinite(state?.targetDistance)
       ? state.targetDistance

@@ -41,8 +41,8 @@ Open questions: exact scoring curve (par per hole? a global shot budget?), wheth
 
 ## Easy Next Additions
 
-1. **Scorecard and best round** - Track per-hole shots, total score, and best completed round in local storage.
-2. **Par targets** - Give each hole a par value so round results feel more like golf than pure distance clearing.
-3. **Achievements** - Award small one-time yard bonuses for milestones like first birdie, first 1,000-yard round, or finishing 18 holes.
-4. **Prestige scoring** - Convert completed-round score into prestige points, then reset Tier 1 upgrades for Tier 2 progress.
+1. **Achievements** - Award small one-time yard bonuses for milestones like first birdie, first 1,000-yard round, or finishing 18 holes.
+2. **Prestige scoring** - Convert completed-round score into prestige points, then reset Tier 1 upgrades for Tier 2 progress.
+3. **Course completion perks** - Let players choose a temporary benefit after beating all 18 holes and carry it into the next course.
+4. **Course 2: Moon Links** - Add a low-gravity second course with stranger target distances and visual treatment.
 5. **Auto upgrade routing** - Let players nominate a favorite upgrade for future automation systems.
