@@ -4,6 +4,7 @@
 //   addYards : adds value × level to yards per swing
 //   multYards: multiplies yards per swing by value^level
 //   addBalls : adds value × level to starting balls
+//   autoSwing: unlocks automatic swings and speeds them up with each level
 //
 // Cost to buy the next level (level → level+1) is:
 //   baseCost × costGrowth ^ level
@@ -36,6 +37,15 @@ export const UPGRADES = [
     costGrowth: 1.4,
     maxLevel: 10,
     effects: [{ type: 'multYards', value: 1.1 }],
+  },
+  {
+    id: 'autoCaddie',
+    label: 'Auto Caddie',
+    description: 'Automatically swings; each level swings faster',
+    baseCost: 600,
+    costGrowth: 1.55,
+    maxLevel: 10,
+    effects: [{ type: 'autoSwing', value: 1 }],
   },
 ];
 

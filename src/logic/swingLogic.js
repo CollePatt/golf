@@ -53,3 +53,22 @@ export function getStartingBalls(upgrades) {
   });
   return balls;
 }
+
+export function getAutoSwingLevel(upgrades) {
+  let autoLevel = 0;
+  forEachActiveEffect(upgrades, (e, level) => {
+    if (e.type === 'autoSwing') autoLevel += e.value * level;
+  });
+  return autoLevel;
+}
+
+export function getAutoSwingIntervalMs(upgrades) {
+  const autoLevel = getAutoSwingLevel(upgrades);
+  if (autoLevel <= 0) return null;
+  return Math.max(900, Math.round(5000 * Math.pow(0.78, autoLevel - 1)));
+}
+
+export function formatAutoSwingInterval(intervalMs) {
+  if (!intervalMs) return 'Locked';
+  return `${(intervalMs / 1000).toFixed(1)}s`;
+}

@@ -1,5 +1,10 @@
 import { getUpgradeCost } from '../data/upgrades.js';
-import { getStartingBalls, getYardsPerSwing } from '../logic/swingLogic.js';
+import {
+  formatAutoSwingInterval,
+  getAutoSwingIntervalMs,
+  getStartingBalls,
+  getYardsPerSwing,
+} from '../logic/swingLogic.js';
 
 function buildPreview(upgrade, upgradeState, upgrades) {
   if (upgradeState.level >= upgrade.maxLevel) return 'Max level reached';
@@ -17,6 +22,8 @@ function buildPreview(upgrade, upgradeState, upgrades) {
   const nextYards = getYardsPerSwing(nextUpgrades);
   const currentBalls = getStartingBalls(upgrades);
   const nextBalls = getStartingBalls(nextUpgrades);
+  const currentAutoSwing = getAutoSwingIntervalMs(upgrades);
+  const nextAutoSwing = getAutoSwingIntervalMs(nextUpgrades);
   const changes = [];
 
   if (nextYards !== currentYards) {
@@ -24,6 +31,9 @@ function buildPreview(upgrade, upgradeState, upgrades) {
   }
   if (nextBalls !== currentBalls) {
     changes.push(`${currentBalls} -> ${nextBalls} balls`);
+  }
+  if (nextAutoSwing !== currentAutoSwing) {
+    changes.push(`${formatAutoSwingInterval(currentAutoSwing)} -> ${formatAutoSwingInterval(nextAutoSwing)} auto`);
   }
 
   return changes.length ? `Next: ${changes.join(', ')}` : 'Next level improves this upgrade';

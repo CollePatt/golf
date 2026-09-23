@@ -6,8 +6,15 @@ import {
   getScoreToPar,
   parForHole,
 } from '../logic/gameState.js';
+import { formatAutoSwingInterval } from '../logic/swingLogic.js';
 
-export default function HoleScreen({ state, onSwing, yardsPerSwing }) {
+export default function HoleScreen({
+  state,
+  onSwing,
+  onToggleAutoSwing,
+  yardsPerSwing,
+  autoSwingIntervalMs,
+}) {
   const {
     hole,
     targetDistance,
@@ -19,6 +26,7 @@ export default function HoleScreen({ state, onSwing, yardsPerSwing }) {
     scorecard,
     wind,
     lastSwing,
+    autoSwingEnabled,
   } = state;
   const remaining = Math.max(0, targetDistance - yardsThisHole);
   const completedHoles = getCompletedHoles(scorecard);
@@ -67,6 +75,20 @@ export default function HoleScreen({ state, onSwing, yardsPerSwing }) {
             </div>
             <button className="swing-btn" onClick={onSwing}>
               Swing
+            </button>
+          </div>
+          <div className={`auto-swing-panel ${autoSwingIntervalMs ? 'unlocked' : ''}`}>
+            <div>
+              <span>Auto Caddie</span>
+              <strong>{autoSwingIntervalMs ? `${formatAutoSwingInterval(autoSwingIntervalMs)} / swing` : 'Locked'}</strong>
+            </div>
+            <button
+              className="toggle-btn"
+              onClick={onToggleAutoSwing}
+              disabled={!autoSwingIntervalMs}
+              aria-pressed={autoSwingEnabled}
+            >
+              {autoSwingEnabled && autoSwingIntervalMs ? 'On' : 'Off'}
             </button>
           </div>
         </div>

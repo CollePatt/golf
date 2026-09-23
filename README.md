@@ -30,6 +30,7 @@ After adding a screenshot, uncomment this line:
 - Round wind modifiers and per-swing distance variance.
 - Permanent upgrades for yards per swing, starting balls, and yard multipliers.
 - Partial upgrade investments with next-level stat previews.
+- Unlockable Auto Caddie for idle swings with upgradeable speed.
 - Round recap table with per-hole score details.
 - Local storage save/load support.
 - Round-end upgrade screen.
