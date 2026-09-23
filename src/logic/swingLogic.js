@@ -23,12 +23,15 @@ export function getYardsPerSwing(upgrades) {
   return Math.round(yards * mult);
 }
 
-export function getExpectedYardsPerSwing(upgrades, wind) {
-  return Math.max(1, Math.round(getYardsPerSwing(upgrades) * normalizeWind(wind).multiplier));
+export function getExpectedYardsPerSwing(upgrades, wind, holeDefinition = null) {
+  const holeMultiplier = holeDefinition?.trait?.distanceMultiplier ?? 1;
+  return Math.max(1, Math.round(
+    getYardsPerSwing(upgrades) * normalizeWind(wind).multiplier * holeMultiplier
+  ));
 }
 
-export function rollSwingYards(upgrades, wind) {
-  const expectedYards = getExpectedYardsPerSwing(upgrades, wind);
+export function rollSwingYards(upgrades, wind, holeDefinition = null) {
+  const expectedYards = getExpectedYardsPerSwing(upgrades, wind, holeDefinition);
   const perfect = Math.random() < 0.06;
   const variance = perfect ? 1.35 : 0.92 + Math.random() * 0.16;
   const yards = Math.max(1, Math.round(expectedYards * variance));

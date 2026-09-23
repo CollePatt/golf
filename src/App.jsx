@@ -15,6 +15,7 @@ import {
   getStartingBalls,
   rollSwingYards,
 } from './logic/swingLogic.js';
+import { getHoleDefinition } from './data/courses.js';
 import { allocateToUpgrade } from './logic/upgradeLogic.js';
 import { saveGame, loadGame, clearSave } from './logic/storage.js';
 import HoleScreen from './components/HoleScreen.jsx';
@@ -26,7 +27,8 @@ import './App.css';
 function advanceSwingState(s) {
   if (s.phase !== 'run' || s.ballsLeft <= 0) return s;
 
-  const swing = rollSwingYards(s.upgrades, s.wind);
+  const holeDefinition = getHoleDefinition(s.courseId, s.hole);
+  const swing = rollSwingYards(s.upgrades, s.wind, holeDefinition);
   const yards = swing.yards;
   const newYardsThisHole = s.yardsThisHole + yards;
   const newBalls = s.ballsLeft - 1;
@@ -227,7 +229,11 @@ export default function App() {
           state={state}
           onSwing={handleSwing}
           onToggleAutoSwing={handleToggleAutoSwing}
-          yardsPerSwing={getExpectedYardsPerSwing(state.upgrades, state.wind)}
+          yardsPerSwing={getExpectedYardsPerSwing(
+            state.upgrades,
+            state.wind,
+            getHoleDefinition(state.courseId, state.hole)
+          )}
           autoSwingIntervalMs={autoSwingIntervalMs}
         />
       )}

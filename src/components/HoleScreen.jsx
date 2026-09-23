@@ -1,4 +1,5 @@
 import GolfHoleCanvas from './GolfHoleCanvas.jsx'
+import { getCourseById, getCourseTheme, getHoleDefinition } from '../data/courses.js';
 import {
   HOLES_PER_ROUND,
   formatScoreToPar,
@@ -28,6 +29,9 @@ export default function HoleScreen({
     lastSwing,
     autoSwingEnabled,
   } = state;
+  const course = getCourseById(state.courseId);
+  const holeDefinition = getHoleDefinition(state.courseId, hole);
+  const theme = getCourseTheme(holeDefinition.theme);
   const remaining = Math.max(0, targetDistance - yardsThisHole);
   const completedHoles = getCompletedHoles(scorecard);
   const scoreToPar = getScoreToPar(scorecard);
@@ -37,7 +41,8 @@ export default function HoleScreen({
       <div className="screen-heading">
         <div>
           <h2>Hole {hole} / {HOLES_PER_ROUND}</h2>
-          <p className="hint">Clear {remaining} more yards to reach the next tee.</p>
+          <p className="hole-name">{holeDefinition.name}</p>
+          <p className="hint">{course.name} | Clear {remaining} more yards to reach the next tee.</p>
         </div>
         <div className="score-popover-anchor" tabIndex={0}>
           <div className="summary-pill">
@@ -66,7 +71,11 @@ export default function HoleScreen({
 
       <div className="hole-layout">
         <div className="hole-main">
-          <GolfHoleCanvas yardsThisRun={yardsThisHole} targetDistance={targetDistance} />
+          <GolfHoleCanvas
+            yardsThisRun={yardsThisHole}
+            targetDistance={targetDistance}
+            theme={theme}
+          />
           <div className="swing-panel">
             <div>
               <span>Expected Swing</span>
@@ -111,6 +120,11 @@ export default function HoleScreen({
               <strong>{wind.label}</strong>
             </div>
             <p>{wind.description}</p>
+          </div>
+          <div className="hole-trait-panel">
+            <span>Hole Trait</span>
+            <strong>{holeDefinition.trait.label}</strong>
+            <p>{holeDefinition.trait.description}</p>
           </div>
         </aside>
       </div>

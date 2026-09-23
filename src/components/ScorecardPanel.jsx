@@ -4,9 +4,11 @@ import {
   getCompletedHoles,
   getScoreToPar,
 } from '../logic/gameState.js';
+import { getCourseById, getHoleDefinition } from '../data/courses.js';
 
 export default function ScorecardPanel({ state }) {
   const { scorecard, hole, bestCompletedRound, totalShots } = state;
+  const course = getCourseById(state.courseId);
   const completedHoles = getCompletedHoles(scorecard);
   const scoreToPar = getScoreToPar(scorecard);
 
@@ -15,7 +17,7 @@ export default function ScorecardPanel({ state }) {
       <div className="screen-heading">
         <div>
           <h2>Scorecard</h2>
-          <p className="hint">Track the current round without crowding the swing view.</p>
+          <p className="hint">{course.name} | Track the current round without crowding the swing view.</p>
         </div>
         <div className="summary-pill">
           <span>Current</span>
@@ -57,9 +59,13 @@ export default function ScorecardPanel({ state }) {
             {scorecard.map(entry => {
               const isCurrent = entry.hole === hole;
               const isComplete = Number.isFinite(entry.shots);
+              const holeDefinition = getHoleDefinition(state.courseId, entry.hole);
               return (
                 <tr key={entry.hole} className={isCurrent ? 'current-row' : ''}>
-                  <td>{entry.hole}</td>
+                  <td>
+                    <strong>{entry.hole}</strong>
+                    <span>{holeDefinition.name}</span>
+                  </td>
                   <td>{entry.targetDistance}</td>
                   <td>{entry.par}</td>
                   <td>{isComplete ? entry.shots : '-'}</td>
