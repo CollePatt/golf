@@ -17,6 +17,8 @@ export default function HoleScreen({ state, onSwing, yardsPerSwing }) {
     totalShots,
     totalYardsThisRound,
     scorecard,
+    wind,
+    lastSwing,
   } = state;
   const remaining = Math.max(0, targetDistance - yardsThisHole);
   const completedHoles = getCompletedHoles(scorecard);
@@ -37,6 +39,13 @@ export default function HoleScreen({ state, onSwing, yardsPerSwing }) {
         <p className="stat">Score: <strong>{formatScoreToPar(scoreToPar)}</strong></p>
         <p className="stat">Yards earned: <strong>{totalYardsThisRound}</strong></p>
       </div>
+      <div className="round-modifier">
+        <div>
+          <span>Wind</span>
+          <strong>{wind.label}</strong>
+        </div>
+        <p>{wind.description}</p>
+      </div>
       <div className="scorecard-grid" aria-label="Round scorecard">
         {scorecard.map(entry => {
           const isCurrent = entry.hole === hole;
@@ -53,7 +62,10 @@ export default function HoleScreen({ state, onSwing, yardsPerSwing }) {
         })}
       </div>
       <p className="hint">{completedHoles.length} holes scored this round.</p>
-      <p className="hint">Each swing: +{yardsPerSwing} yards</p>
+      <p className="hint">
+        Expected swing: {yardsPerSwing} yards
+        {lastSwing ? ` | Last swing: ${lastSwing.yards} yards (${lastSwing.quality})` : ''}
+      </p>
       <button className="swing-btn" onClick={onSwing}>
         Swing
       </button>

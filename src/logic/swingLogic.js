@@ -1,5 +1,6 @@
 import { BASE_YARDS_PER_SWING, BASE_STARTING_BALLS } from './gameState.js';
 import { UPGRADES } from '../data/upgrades.js';
+import { normalizeWind } from './runModifiers.js';
 
 // Iterate every upgrade definition and apply its effects scaled by current level.
 // Additive effects scale linearly with level; multipliers scale exponentially.
@@ -20,6 +21,28 @@ export function getYardsPerSwing(upgrades) {
     else if (e.type === 'multYards') mult *= Math.pow(e.value, level);
   });
   return Math.round(yards * mult);
+}
+
+export function getExpectedYardsPerSwing(upgrades, wind) {
+  return Math.max(1, Math.round(getYardsPerSwing(upgrades) * normalizeWind(wind).multiplier));
+}
+
+export function rollSwingYards(upgrades, wind) {
+  const expectedYards = getExpectedYardsPerSwing(upgrades, wind);
+  const perfect = Math.random() < 0.06;
+  const variance = perfect ? 1.35 : 0.92 + Math.random() * 0.16;
+  const yards = Math.max(1, Math.round(expectedYards * variance));
+
+  let quality = 'Steady';
+  if (perfect) quality = 'Perfect';
+  else if (variance >= 1.04) quality = 'Clean';
+  else if (variance <= 0.96) quality = 'Soft';
+
+  return {
+    yards,
+    expectedYards,
+    quality,
+  };
 }
 
 // Starting balls: base + Σ addBalls × level
