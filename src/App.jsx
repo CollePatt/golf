@@ -1,5 +1,13 @@
 import { useState, useEffect } from 'react';
-import { createInitialState, yardsForHole, HOLES_PER_ROUND } from './logic/gameState.js';
+import {
+  createInitialState,
+  createScorecard,
+  yardsForHole,
+  HOLES_PER_ROUND,
+  recordHoleScore,
+  summarizeCompletedRound,
+  isBetterCompletedRound,
+} from './logic/gameState.js';
 import { getYardsPerSwing, getStartingBalls } from './logic/swingLogic.js';
 import { allocateToUpgrade } from './logic/upgradeLogic.js';
 import { saveGame, loadGame, clearSave } from './logic/storage.js';
@@ -19,33 +27,49 @@ export default function App() {
       const yards = getYardsPerSwing(s.upgrades);
       const newYardsThisHole = s.yardsThisHole + yards;
       const newBalls = s.ballsLeft - 1;
+      const newHoleShots = s.currentHoleShots + 1;
       const newTotalShots = s.totalShots + 1;
       const newTotalYards = s.totalYardsThisRound + yards;
 
       const holeCleared = newYardsThisHole >= s.targetDistance;
       const lastHole = s.hole >= HOLES_PER_ROUND;
+      const nextScorecard = holeCleared
+        ? recordHoleScore(s.scorecard, s.hole, newHoleShots)
+        : s.scorecard;
 
       // Round ends: completed all 18 holes, or ran out of balls.
       if (holeCleared && lastHole) {
+        const completedRound = summarizeCompletedRound(nextScorecard, newTotalShots, newTotalYards);
         return {
           ...s,
           yardsThisHole: newYardsThisHole,
+          currentHoleShots: newHoleShots,
           ballsLeft: newBalls,
           totalShots: newTotalShots,
           totalYardsThisRound: newTotalYards,
+          scorecard: nextScorecard,
+          roundsCompleted: s.roundsCompleted + 1,
+          bestCompletedRound: isBetterCompletedRound(completedRound, s.bestCompletedRound)
+            ? completedRound
+            : s.bestCompletedRound,
           phase: 'upgrade',
           roundResult: 'complete',
           yardsToAllocate: newTotalYards,
         };
       }
 
-      if (newBalls <= 0 && !holeCleared) {
+      if (newBalls <= 0) {
+        const reachedHole = holeCleared ? Math.min(HOLES_PER_ROUND, s.hole + 1) : s.hole;
         return {
           ...s,
-          yardsThisHole: newYardsThisHole,
+          hole: reachedHole,
+          targetDistance: yardsForHole(reachedHole),
+          yardsThisHole: holeCleared ? 0 : newYardsThisHole,
+          currentHoleShots: holeCleared ? 0 : newHoleShots,
           ballsLeft: 0,
           totalShots: newTotalShots,
           totalYardsThisRound: newTotalYards,
+          scorecard: nextScorecard,
           phase: 'upgrade',
           roundResult: 'outOfBalls',
           yardsToAllocate: newTotalYards,
@@ -60,9 +84,11 @@ export default function App() {
           hole: nextHole,
           targetDistance: yardsForHole(nextHole),
           yardsThisHole: 0,
+          currentHoleShots: 0,
           ballsLeft: newBalls,
           totalShots: newTotalShots,
           totalYardsThisRound: newTotalYards,
+          scorecard: nextScorecard,
         };
       }
 
@@ -70,6 +96,7 @@ export default function App() {
       return {
         ...s,
         yardsThisHole: newYardsThisHole,
+        currentHoleShots: newHoleShots,
         ballsLeft: newBalls,
         totalShots: newTotalShots,
         totalYardsThisRound: newTotalYards,
@@ -97,10 +124,12 @@ export default function App() {
       hole: 1,
       targetDistance: yardsForHole(1),
       yardsThisHole: 0,
+      currentHoleShots: 0,
       ballsLeft: getStartingBalls(s.upgrades),
       totalShots: 0,
       totalYardsThisRound: 0,
       yardsToAllocate: 0,
+      scorecard: createScorecard(),
       roundResult: null,
     }));
   }

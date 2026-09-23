@@ -1,4 +1,4 @@
-import { SAVE_VERSION } from './gameState.js';
+import { SAVE_VERSION, normalizeState } from './gameState.js';
 
 const SAVE_KEY = 'golf_save';
 
@@ -15,12 +15,12 @@ export function loadGame() {
     const raw = localStorage.getItem(SAVE_KEY);
     if (!raw) return null;
     const parsed = JSON.parse(raw);
-    if (parsed?.version !== SAVE_VERSION) {
-      // Schema changed — drop the stale save rather than try to migrate.
+    if (!parsed?.version || parsed.version > SAVE_VERSION) {
+      // Unknown future saves are safer to drop than to interpret.
       localStorage.removeItem(SAVE_KEY);
       return null;
     }
-    return parsed;
+    return normalizeState(parsed);
   } catch (e) {
     console.warn('Could not load game:', e);
     return null;

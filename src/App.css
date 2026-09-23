@@ -75,6 +75,53 @@ h3 {
   margin: 0.5rem 0 1rem;
 }
 
+.scorecard-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 0.35rem;
+  margin: 0.85rem 0 0.35rem;
+}
+
+.scorecard-cell {
+  min-height: 42px;
+  padding: 0.35rem;
+  border: 1px solid #2e4a2e;
+  border-radius: 6px;
+  background: #162816;
+  color: #6f916f;
+  text-align: center;
+}
+
+.scorecard-cell span,
+.scorecard-cell strong {
+  display: block;
+}
+
+.scorecard-cell span {
+  font-size: 0.68rem;
+  line-height: 1;
+}
+
+.scorecard-cell strong {
+  margin-top: 0.25rem;
+  color: #9fbd9f;
+  font-size: 0.82rem;
+}
+
+.scorecard-cell.complete {
+  border-color: #4f7d4f;
+  color: #a5d6a7;
+}
+
+.scorecard-cell.complete strong {
+  color: #ffffff;
+}
+
+.scorecard-cell.current {
+  border-color: #ffd166;
+  box-shadow: 0 0 0 1px rgba(255, 209, 102, 0.35);
+}
+
 /* Swing button */
 .swing-btn {
   display: block;
