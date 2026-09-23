@@ -45,6 +45,12 @@ npm run dev
 npm run build
 ```
 
+## Public Build
+
+GitHub Pages is deployed from `main` with the workflow in `.github/workflows/deploy-pages.yml`.
+
+The Pages build uses `/golf/` as the asset base path. Local development continues to run from `/`.
+
 ## Project Shape
 
 - `src/App.jsx` owns the main game state transitions.
