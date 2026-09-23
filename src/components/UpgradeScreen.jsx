@@ -48,6 +48,7 @@ export default function UpgradeScreen({ state, onAllocate, onStartNextRound }) {
           key={upgrade.id}
           upgrade={upgrade}
           upgradeState={upgrades[upgrade.id]}
+          upgrades={upgrades}
           yardsToAllocate={yardsToAllocate}
           onAllocate={onAllocate}
         />
