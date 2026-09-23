@@ -157,6 +157,56 @@ h3 {
   box-shadow: 0 0 0 1px rgba(255, 209, 102, 0.35);
 }
 
+.round-recap {
+  margin-top: 1rem;
+}
+
+.empty-recap {
+  color: #81c784;
+  font-size: 0.9rem;
+}
+
+.recap-table-wrap {
+  overflow-x: auto;
+  border: 1px solid #2e4a2e;
+  border-radius: 8px;
+}
+
+.recap-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 360px;
+  background: #162816;
+}
+
+.recap-table th,
+.recap-table td {
+  padding: 0.5rem;
+  border-bottom: 1px solid #2e4a2e;
+  text-align: right;
+  font-size: 0.85rem;
+}
+
+.recap-table th:first-child,
+.recap-table td:first-child {
+  text-align: left;
+}
+
+.recap-table th {
+  color: #81c784;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.recap-table td {
+  color: #e8f5e9;
+}
+
+.recap-table tr:last-child td {
+  border-bottom: none;
+}
+
 /* Swing button */
 .swing-btn {
   display: block;

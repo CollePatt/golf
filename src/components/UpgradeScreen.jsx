@@ -1,5 +1,6 @@
 import { UPGRADES } from '../data/upgrades.js';
 import { formatScoreToPar, getCompletedHoles, getScoreToPar } from '../logic/gameState.js';
+import RoundRecap from './RoundRecap.jsx';
 import UpgradeBar from './UpgradeBar.jsx';
 
 export default function UpgradeScreen({ state, onAllocate, onStartNextRound }) {
@@ -39,6 +40,8 @@ export default function UpgradeScreen({ state, onAllocate, onStartNextRound }) {
         <p className="stat">Yards earned this round: <strong>{totalYardsThisRound}</strong></p>
         <p className="stat">Yards to spend: <strong>{yardsToAllocate}</strong></p>
       </div>
+
+      <RoundRecap scorecard={scorecard} />
 
       <h3>Upgrades</h3>
       <p className="hint">Click an upgrade to invest your remaining yards into it.</p>

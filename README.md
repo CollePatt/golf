@@ -28,6 +28,7 @@ After adding a screenshot, uncomment this line:
 - Round wind modifiers and per-swing distance variance.
 - Permanent upgrades for yards per swing, starting balls, and yard multipliers.
 - Partial upgrade investments with next-level stat previews.
+- Round recap table with per-hole score details.
 - Local storage save/load support.
 - Round-end upgrade screen.
 
@@ -56,6 +57,7 @@ npm run build
 The next wave is focused on making the game feel more like golf and more replayable:
 
 - Scorecards, par, and best-round tracking.
+- Achievements and one-time milestone rewards.
 - Prestige scoring and Tier 2 progression.
 
 See [ROADMAP.md](ROADMAP.md) for the living backlog.
