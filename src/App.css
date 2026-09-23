@@ -182,6 +182,63 @@ h3 {
   background: #16231f;
 }
 
+.auto-swing-panel {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 0.65rem;
+  padding: 0.75rem 0.85rem;
+  border: 1px solid #385045;
+  border-radius: 8px;
+  background: #16231f;
+  opacity: 0.72;
+}
+
+.auto-swing-panel.unlocked {
+  opacity: 1;
+}
+
+.auto-swing-panel span,
+.auto-swing-panel strong {
+  display: block;
+}
+
+.auto-swing-panel span {
+  color: #81c784;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.auto-swing-panel strong {
+  margin-top: 0.2rem;
+  color: #ffffff;
+}
+
+.toggle-btn {
+  min-width: 76px;
+  padding: 0.45rem 0.7rem;
+  border: 1px solid #4f7d4f;
+  border-radius: 999px;
+  background: #2e7d32;
+  color: #ffffff;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.toggle-btn[aria-pressed="false"] {
+  border-color: #4f6b5f;
+  background: #22342d;
+  color: #b8cbbf;
+}
+
+.toggle-btn:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
 .swing-panel span,
 .swing-panel strong {
   display: block;
@@ -701,6 +758,7 @@ h3 {
   .app-header,
   .screen-heading,
   .swing-panel,
+  .auto-swing-panel,
   .round-modifier {
     align-items: stretch;
     flex-direction: column;

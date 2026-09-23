@@ -33,6 +33,7 @@ export default function GuidePanel() {
           <h3>Progression</h3>
           <ul>
             <li>Spend yards on clubs, extra balls, and multipliers.</li>
+            <li>Unlock Auto Caddie to keep swinging while you look away.</li>
             <li>Use the upgrade tab after each run to invest your earnings.</li>
             <li>The long-term target is a prestige layer after completed rounds.</li>
           </ul>

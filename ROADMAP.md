@@ -45,4 +45,4 @@ Open questions: exact scoring curve (par per hole? a global shot budget?), wheth
 2. **Par targets** - Give each hole a par value so round results feel more like golf than pure distance clearing.
 3. **Achievements** - Award small one-time yard bonuses for milestones like first birdie, first 1,000-yard round, or finishing 18 holes.
 4. **Prestige scoring** - Convert completed-round score into prestige points, then reset Tier 1 upgrades for Tier 2 progress.
-5. **Auto swing unlock** - Add an early idle mechanic that swings once every few seconds after the player buys it.
+5. **Auto upgrade routing** - Let players nominate a favorite upgrade for future automation systems.
