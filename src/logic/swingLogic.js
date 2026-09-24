@@ -1,5 +1,6 @@
 import { BASE_YARDS_PER_SWING, BASE_STARTING_BALLS } from './gameState.js';
 import { UPGRADES } from '../data/upgrades.js';
+import { rollShotEvent } from '../data/shotEvents.js';
 import { normalizeWind } from './runModifiers.js';
 
 // Iterate every upgrade definition and apply its effects scaled by current level.
@@ -34,8 +35,10 @@ export function rollSwingYards(upgrades, wind, holeDefinition = null, options = 
   const expectedYards = getExpectedYardsPerSwing(upgrades, wind, holeDefinition);
   const focused = Boolean(options.focused);
   const perfect = !focused && Math.random() < 0.06;
+  const event = rollShotEvent();
   const variance = perfect ? 1.35 : 0.92 + Math.random() * 0.16;
-  const yards = Math.max(1, Math.round(expectedYards * (focused ? 1.5 : variance)));
+  const eventMultiplier = event?.multiplier ?? 1;
+  const yards = Math.max(1, Math.round(expectedYards * (focused ? 1.5 : variance) * eventMultiplier));
 
   let quality = 'Steady';
   if (focused) quality = 'Focused';
@@ -48,6 +51,7 @@ export function rollSwingYards(upgrades, wind, holeDefinition = null, options = 
     expectedYards,
     quality,
     source: options.source || 'manual',
+    event,
   };
 }
 

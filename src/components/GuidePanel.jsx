@@ -28,6 +28,7 @@ export default function GuidePanel() {
             <li>Fewer shots improves your score to par.</li>
             <li>Your best completed round is saved automatically.</li>
             <li>Wind and swing quality can change each shot's distance.</li>
+            <li>Rare shot events can add bounces, focus boosts, or rough lies.</li>
           </ul>
         </section>
 

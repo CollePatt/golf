@@ -30,6 +30,7 @@ After adding a screenshot, uncomment this line:
 - On-screen rules and a clear goal for new players.
 - Named holes with light gameplay traits and changing course palettes.
 - Round wind modifiers and per-swing distance variance.
+- Rare shot events such as bounces, cart paths, crowd boosts, and rough lies.
 - Manual Focus meter that rewards active play with stronger shots.
 - Achievements and lifetime stats with bonus yard rewards.
 - Permanent upgrades for yards per swing, starting balls, and yard multipliers.

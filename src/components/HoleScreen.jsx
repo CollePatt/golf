@@ -88,6 +88,11 @@ export default function HoleScreen({
                   {lastSwing.source === 'auto' ? ', auto' : ''})
                 </p>
               )}
+              {lastSwing?.event && (
+                <p className="shot-event-line">
+                  {lastSwing.event.label}: {lastSwing.event.description}
+                </p>
+              )}
             </div>
             <button className="swing-btn" onClick={onSwing}>
               {focusMeter >= focusReady ? 'Focused Swing' : 'Swing'}
