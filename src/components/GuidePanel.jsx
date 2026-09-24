@@ -15,6 +15,7 @@ export default function GuidePanel() {
             <li>Each swing spends one ball.</li>
             <li>Clear the target distance to advance to the next hole.</li>
             <li>Manual swings build Focus; a full meter powers up your next manual shot.</li>
+            <li>Swing modes trade consistency, Focus gain, and distance.</li>
             <li>The round ends after hole 18 or when you run out of balls.</li>
             <li>Every yard hit becomes upgrade currency after the round.</li>
             <li>Achievements pay bonus yards when you hit lifetime milestones.</li>
@@ -29,6 +30,7 @@ export default function GuidePanel() {
             <li>Fewer shots improves your score to par.</li>
             <li>Your best completed round is saved automatically.</li>
             <li>Wind and swing quality can change each shot's distance.</li>
+            <li>Safe shots are steadier, while aggressive shots can carry farther or miss harder.</li>
             <li>Rare shot events can add bounces, focus boosts, or rough lies.</li>
           </ul>
         </section>
