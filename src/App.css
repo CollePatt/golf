@@ -704,6 +704,83 @@ h3 {
   font-size: 0.95rem;
 }
 
+.lifetime-grid {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.achievement-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.75rem;
+}
+
+.achievement-card {
+  padding: 0.9rem;
+  border: 1px solid #385045;
+  border-radius: 8px;
+  background: #16231f;
+}
+
+.achievement-card.unlocked {
+  border-color: #f1d58a;
+  background: #1f3028;
+}
+
+.achievement-card span,
+.achievement-card strong {
+  display: block;
+}
+
+.achievement-card span {
+  color: #81c784;
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.achievement-card h3 {
+  margin-top: 0.2rem;
+  margin-bottom: 0.45rem;
+}
+
+.achievement-card p {
+  min-height: 42px;
+  color: #c8e6c9;
+  font-size: 0.9rem;
+}
+
+.achievement-card strong {
+  margin-top: 0.65rem;
+  color: #f1d58a;
+}
+
+.achievement-callout {
+  margin-bottom: 1rem;
+  padding: 0.85rem;
+  border: 1px solid #f1d58a;
+  border-radius: 8px;
+  background: rgba(241, 213, 138, 0.1);
+}
+
+.achievement-callout span,
+.achievement-callout strong {
+  display: block;
+}
+
+.achievement-callout span {
+  color: #f1d58a;
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.achievement-callout strong {
+  margin-top: 0.2rem;
+  color: #ffffff;
+}
+
 .recap-table {
   width: 100%;
   border-collapse: collapse;
@@ -924,6 +1001,7 @@ h3 {
 
   .hole-layout,
   .summary-grid,
+  .achievement-grid,
   .guide-grid {
     grid-template-columns: 1fr;
   }

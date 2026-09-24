@@ -2,7 +2,7 @@ import { UPGRADES } from '../data/upgrades.js';
 import { COURSES, getCourseById } from '../data/courses.js';
 import { normalizeWind, rollWind } from './runModifiers.js';
 
-export const SAVE_VERSION = 7;
+export const SAVE_VERSION = 8;
 
 export const BASE_YARDS_PER_SWING = 25;
 export const BASE_STARTING_BALLS = 10;
@@ -27,6 +27,21 @@ function buildInitialUpgrades() {
     upgrades[u.id] = { level: 0, progress: 0 };
   }
   return upgrades;
+}
+
+function createLifetimeStats() {
+  return {
+    swings: 0,
+    manualSwings: 0,
+    autoSwings: 0,
+    focusedSwings: 0,
+    perfectSwings: 0,
+    yards: 0,
+    holesCleared: 0,
+    coursesCompleted: 0,
+    bestSwing: 0,
+    achievementYards: 0,
+  };
 }
 
 export function createScorecard() {
@@ -60,6 +75,9 @@ export function createInitialState() {
     lastSwing: null,
     autoSwingEnabled: true,
     focusMeter: 0,
+    lifetimeStats: createLifetimeStats(),
+    achievements: {},
+    recentAchievements: [],
     scorecard: createScorecard(),
     roundsCompleted: 0,
     bestCompletedRound: null,
@@ -93,6 +111,13 @@ function normalizeScorecard(scorecard) {
   });
 }
 
+function normalizeLifetimeStats(lifetimeStats = {}) {
+  return {
+    ...createLifetimeStats(),
+    ...lifetimeStats,
+  };
+}
+
 export function normalizeState(state) {
   const initial = createInitialState();
   const normalizedHole = Math.min(
@@ -115,6 +140,9 @@ export function normalizeState(state) {
     lastSwing: state?.lastSwing || null,
     autoSwingEnabled: typeof state?.autoSwingEnabled === 'boolean' ? state.autoSwingEnabled : true,
     focusMeter: Number.isFinite(state?.focusMeter) ? state.focusMeter : 0,
+    lifetimeStats: normalizeLifetimeStats(state?.lifetimeStats),
+    achievements: state?.achievements || {},
+    recentAchievements: Array.isArray(state?.recentAchievements) ? state.recentAchievements : [],
     scorecard: normalizeScorecard(state?.scorecard),
     roundsCompleted: Number.isFinite(state?.roundsCompleted) ? state.roundsCompleted : 0,
     bestCompletedRound: state?.bestCompletedRound || null,

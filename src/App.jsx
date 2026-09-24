@@ -16,16 +16,59 @@ import {
   rollSwingYards,
 } from './logic/swingLogic.js';
 import { getHoleDefinition } from './data/courses.js';
+import { ACHIEVEMENTS } from './data/achievements.js';
 import { allocateToUpgrade } from './logic/upgradeLogic.js';
 import { saveGame, loadGame, clearSave } from './logic/storage.js';
 import HoleScreen from './components/HoleScreen.jsx';
 import UpgradeScreen from './components/UpgradeScreen.jsx';
 import ScorecardPanel from './components/ScorecardPanel.jsx';
+import AchievementsPanel from './components/AchievementsPanel.jsx';
 import GuidePanel from './components/GuidePanel.jsx';
 import './App.css';
 
 const FOCUS_GAIN_PER_MANUAL_SWING = 18;
 const FOCUS_READY = 100;
+
+function applyAchievementUnlocks(state) {
+  const newlyUnlocked = ACHIEVEMENTS.filter(achievement => (
+    !state.achievements[achievement.id] && achievement.isUnlocked(state)
+  ));
+
+  if (newlyUnlocked.length === 0) return state;
+
+  const rewardYards = newlyUnlocked.reduce((total, achievement) => total + achievement.rewardYards, 0);
+  const achievements = { ...state.achievements };
+  for (const achievement of newlyUnlocked) achievements[achievement.id] = true;
+
+  return {
+    ...state,
+    achievements,
+    recentAchievements: newlyUnlocked.map(achievement => achievement.id),
+    totalYardsThisRound: state.totalYardsThisRound + rewardYards,
+    yardsToAllocate: state.phase === 'upgrade'
+      ? state.yardsToAllocate + rewardYards
+      : state.yardsToAllocate,
+    lifetimeStats: {
+      ...state.lifetimeStats,
+      achievementYards: state.lifetimeStats.achievementYards + rewardYards,
+    },
+  };
+}
+
+function updateLifetimeStats(s, swing, holeCleared, courseCompleted) {
+  return {
+    ...s.lifetimeStats,
+    swings: s.lifetimeStats.swings + 1,
+    manualSwings: s.lifetimeStats.manualSwings + (swing.source === 'manual' ? 1 : 0),
+    autoSwings: s.lifetimeStats.autoSwings + (swing.source === 'auto' ? 1 : 0),
+    focusedSwings: s.lifetimeStats.focusedSwings + (swing.quality === 'Focused' ? 1 : 0),
+    perfectSwings: s.lifetimeStats.perfectSwings + (swing.quality === 'Perfect' ? 1 : 0),
+    yards: s.lifetimeStats.yards + swing.yards,
+    holesCleared: s.lifetimeStats.holesCleared + (holeCleared ? 1 : 0),
+    coursesCompleted: s.lifetimeStats.coursesCompleted + (courseCompleted ? 1 : 0),
+    bestSwing: Math.max(s.lifetimeStats.bestSwing, swing.yards),
+  };
+}
 
 function advanceSwingState(s, source = 'manual') {
   if (s.phase !== 'run' || s.ballsLeft <= 0) return s;
@@ -47,6 +90,8 @@ function advanceSwingState(s, source = 'manual') {
 
   const holeCleared = newYardsThisHole >= s.targetDistance;
   const lastHole = s.hole >= HOLES_PER_ROUND;
+  const courseCompleted = holeCleared && lastHole;
+  const lifetimeStats = updateLifetimeStats(s, swing, holeCleared, courseCompleted);
   const nextScorecard = holeCleared
     ? recordHoleScore(s.scorecard, s.hole, newHoleShots)
     : s.scorecard;
@@ -54,7 +99,7 @@ function advanceSwingState(s, source = 'manual') {
   // Round ends: completed all 18 holes, or ran out of balls.
   if (holeCleared && lastHole) {
     const completedRound = summarizeCompletedRound(nextScorecard, newTotalShots, newTotalYards);
-    return {
+    return applyAchievementUnlocks({
       ...s,
       yardsThisHole: newYardsThisHole,
       currentHoleShots: newHoleShots,
@@ -63,6 +108,7 @@ function advanceSwingState(s, source = 'manual') {
       totalYardsThisRound: newTotalYards,
       lastSwing: swing,
       focusMeter: newFocusMeter,
+      lifetimeStats,
       scorecard: nextScorecard,
       roundsCompleted: s.roundsCompleted + 1,
       bestCompletedRound: isBetterCompletedRound(completedRound, s.bestCompletedRound)
@@ -71,12 +117,12 @@ function advanceSwingState(s, source = 'manual') {
       phase: 'upgrade',
       roundResult: 'complete',
       yardsToAllocate: newTotalYards,
-    };
+    });
   }
 
   if (newBalls <= 0) {
     const reachedHole = holeCleared ? Math.min(HOLES_PER_ROUND, s.hole + 1) : s.hole;
-    return {
+    return applyAchievementUnlocks({
       ...s,
       hole: reachedHole,
       targetDistance: yardsForHole(reachedHole),
@@ -87,17 +133,18 @@ function advanceSwingState(s, source = 'manual') {
       totalYardsThisRound: newTotalYards,
       lastSwing: swing,
       focusMeter: newFocusMeter,
+      lifetimeStats,
       scorecard: nextScorecard,
       phase: 'upgrade',
       roundResult: 'outOfBalls',
       yardsToAllocate: newTotalYards,
-    };
+    });
   }
 
   // Mid-round: hole cleared, advance to the next hole and keep swinging.
   if (holeCleared) {
     const nextHole = s.hole + 1;
-    return {
+    return applyAchievementUnlocks({
       ...s,
       hole: nextHole,
       targetDistance: yardsForHole(nextHole),
@@ -108,12 +155,13 @@ function advanceSwingState(s, source = 'manual') {
       totalYardsThisRound: newTotalYards,
       lastSwing: swing,
       focusMeter: newFocusMeter,
+      lifetimeStats,
       scorecard: nextScorecard,
-    };
+    });
   }
 
   // Normal swing.
-  return {
+  return applyAchievementUnlocks({
     ...s,
     yardsThisHole: newYardsThisHole,
     currentHoleShots: newHoleShots,
@@ -122,7 +170,8 @@ function advanceSwingState(s, source = 'manual') {
     totalYardsThisRound: newTotalYards,
     lastSwing: swing,
     focusMeter: newFocusMeter,
-  };
+    lifetimeStats,
+  });
 }
 
 export default function App() {
@@ -193,6 +242,7 @@ export default function App() {
       wind: rollWind(),
       lastSwing: null,
       focusMeter: 0,
+      recentAchievements: [],
       scorecard: createScorecard(),
       roundResult: null,
     }));
@@ -208,6 +258,7 @@ export default function App() {
     { id: 'play', label: 'Play' },
     { id: 'upgrades', label: 'Upgrades', badge: state.phase === 'upgrade' && state.yardsToAllocate > 0 ? 'Spend' : null },
     { id: 'scorecard', label: 'Scorecard' },
+    { id: 'achievements', label: 'Achievements' },
     { id: 'guide', label: 'Guide' },
   ];
 
@@ -272,6 +323,8 @@ export default function App() {
       )}
 
       {activeTab === 'scorecard' && <ScorecardPanel state={state} />}
+
+      {activeTab === 'achievements' && <AchievementsPanel state={state} />}
 
       {activeTab === 'guide' && <GuidePanel />}
 
