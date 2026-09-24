@@ -23,6 +23,7 @@ import {
   getCoursePerkFocusGain,
   getCoursePerkStartingBalls,
 } from './data/coursePerks.js';
+import { getSwingMode } from './data/swingModes.js';
 import { allocateToUpgrade } from './logic/upgradeLogic.js';
 import { saveGame, loadGame, clearSave } from './logic/storage.js';
 import HoleScreen from './components/HoleScreen.jsx';
@@ -88,10 +89,12 @@ function advanceSwingState(s, source = 'manual') {
   const holeDefinition = getHoleDefinition(s.courseId, s.hole);
   const focused = source === 'manual' && s.focusMeter >= FOCUS_READY;
   const coursePerkDistanceMultiplier = getCoursePerkDistanceMultiplier(s.activeCoursePerk);
+  const swingMode = getSwingMode(s.selectedSwingMode);
   const swing = rollSwingYards(s.upgrades, s.wind, holeDefinition, {
     focused,
     source,
     distanceMultiplier: coursePerkDistanceMultiplier,
+    swingMode: swingMode.id,
   });
   const yards = swing.yards;
   const newYardsThisHole = s.yardsThisHole + yards;
@@ -100,6 +103,7 @@ function advanceSwingState(s, source = 'manual') {
   const newTotalShots = s.totalShots + 1;
   const newTotalYards = s.totalYardsThisRound + yards;
   const manualFocusGain = FOCUS_GAIN_PER_MANUAL_SWING
+    + swingMode.focusGainBonus
     + getCoursePerkFocusGain(s.activeCoursePerk)
     + (swing.event?.focusGain ?? 0);
   const newFocusMeter = source === 'manual'
@@ -230,6 +234,13 @@ export default function App() {
     }));
   }
 
+  function handleSelectSwingMode(modeId) {
+    setState(s => ({
+      ...s,
+      selectedSwingMode: getSwingMode(modeId).id,
+    }));
+  }
+
   function handleAllocate(upgradeId, amount) {
     setState(s => {
       const { upgradeState, yardsToAllocate } = allocateToUpgrade(
@@ -350,12 +361,14 @@ export default function App() {
         <HoleScreen
           state={state}
           onSwing={handleSwing}
+          onSelectSwingMode={handleSelectSwingMode}
           onToggleAutoSwing={handleToggleAutoSwing}
           yardsPerSwing={getExpectedYardsPerSwing(
             state.upgrades,
             state.wind,
             getHoleDefinition(state.courseId, state.hole),
-            getCoursePerkDistanceMultiplier(state.activeCoursePerk)
+            getCoursePerkDistanceMultiplier(state.activeCoursePerk),
+            state.selectedSwingMode
           )}
           autoSwingIntervalMs={autoSwingIntervalMs}
           focusReady={FOCUS_READY}

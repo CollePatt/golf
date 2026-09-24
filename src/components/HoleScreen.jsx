@@ -9,10 +9,12 @@ import {
 } from '../logic/gameState.js';
 import { formatAutoSwingInterval } from '../logic/swingLogic.js';
 import { getCoursePerkById } from '../data/coursePerks.js';
+import { SWING_MODES, getSwingMode } from '../data/swingModes.js';
 
 export default function HoleScreen({
   state,
   onSwing,
+  onSelectSwingMode,
   onToggleAutoSwing,
   yardsPerSwing,
   autoSwingIntervalMs,
@@ -35,6 +37,8 @@ export default function HoleScreen({
   const course = getCourseById(state.courseId);
   const holeDefinition = getHoleDefinition(state.courseId, hole);
   const activeCoursePerk = getCoursePerkById(state.activeCoursePerk);
+  const selectedSwingMode = getSwingMode(state.selectedSwingMode);
+  const lastSwingMode = lastSwing ? getSwingMode(lastSwing.swingMode) : null;
   const theme = getCourseTheme(holeDefinition.theme);
   const remaining = Math.max(0, targetDistance - yardsThisHole);
   const completedHoles = getCompletedHoles(scorecard);
@@ -80,13 +84,33 @@ export default function HoleScreen({
             targetDistance={targetDistance}
             theme={theme}
           />
+          <div className="swing-mode-panel">
+            <div className="swing-mode-heading">
+              <span>Swing Mode</span>
+              <strong>{selectedSwingMode.label}</strong>
+            </div>
+            <div className="swing-mode-selector" aria-label="Swing mode">
+              {SWING_MODES.map(mode => (
+                <button
+                  key={mode.id}
+                  type="button"
+                  className={`mode-btn ${selectedSwingMode.id === mode.id ? 'active' : ''}`}
+                  onClick={() => onSelectSwingMode(mode.id)}
+                  aria-pressed={selectedSwingMode.id === mode.id}
+                >
+                  <span>{mode.label}</span>
+                  <small>{mode.description}</small>
+                </button>
+              ))}
+            </div>
+          </div>
           <div className="swing-panel">
             <div>
               <span>Expected Swing</span>
               <strong>{yardsPerSwing} yds</strong>
               {lastSwing && (
                 <p>
-                  Last: {lastSwing.yards} yds ({lastSwing.quality}
+                  Last: {lastSwing.yards} yds ({lastSwing.quality}, {lastSwingMode.label}
                   {lastSwing.source === 'auto' ? ', auto' : ''})
                 </p>
               )}
@@ -169,6 +193,7 @@ export default function HoleScreen({
             <div className="stats">
               <p className="stat">Course: <strong>{course.name}</strong></p>
               <p className="stat">Course perk: <strong>{activeCoursePerk?.label || 'None'}</strong></p>
+              <p className="stat">Swing mode: <strong>{selectedSwingMode.label}</strong></p>
               <p className="stat">Target: <strong>{targetDistance} yds</strong></p>
               <p className="stat">Par: <strong>{parForHole(hole, state.courseId)}</strong></p>
               <p className="stat">Yards this hole: <strong>{yardsThisHole}</strong></p>

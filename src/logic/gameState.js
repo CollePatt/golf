@@ -1,9 +1,10 @@
 import { UPGRADES } from '../data/upgrades.js';
 import { COURSES, getCourseById } from '../data/courses.js';
 import { createCoursePerkChoices, getCoursePerkById } from '../data/coursePerks.js';
+import { getSwingMode } from '../data/swingModes.js';
 import { normalizeWind, rollWind } from './runModifiers.js';
 
-export const SAVE_VERSION = 9;
+export const SAVE_VERSION = 10;
 
 export const BASE_YARDS_PER_SWING = 25;
 export const BASE_STARTING_BALLS = 10;
@@ -76,6 +77,7 @@ export function createInitialState() {
     wind: rollWind(),
     lastSwing: null,
     autoSwingEnabled: true,
+    selectedSwingMode: 'normal',
     focusMeter: 0,
     activeCoursePerk: null,
     pendingCoursePerkChoices: [],
@@ -161,6 +163,7 @@ export function normalizeState(state) {
     wind: normalizeWind(state?.wind),
     lastSwing: state?.lastSwing || null,
     autoSwingEnabled: typeof state?.autoSwingEnabled === 'boolean' ? state.autoSwingEnabled : true,
+    selectedSwingMode: getSwingMode(state?.selectedSwingMode).id,
     focusMeter: Number.isFinite(state?.focusMeter) ? state.focusMeter : 0,
     activeCoursePerk: normalizeCoursePerk(state?.activeCoursePerk),
     pendingCoursePerkChoices: needsMigratedPerkChoices

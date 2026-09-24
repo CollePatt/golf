@@ -34,6 +34,7 @@ After adding a screenshot, uncomment this line:
 - Course-completion perk choices that carry into the next course attempt.
 - Round wind modifiers and per-swing distance variance.
 - Rare shot events such as bounces, cart paths, crowd boosts, and rough lies.
+- Safe, normal, and aggressive swing modes for light risk/reward shot choice.
 - Manual Focus meter that rewards active play with stronger shots.
 - Achievements and lifetime stats with bonus yard rewards.
 - Permanent upgrades for yards per swing, starting balls, and yard multipliers.
@@ -69,6 +70,7 @@ The Pages build uses `/golf/` as the asset base path. Local development continue
 - `src/data/upgrades.js` defines upgrade costs and effects.
 - `src/data/courses.js` defines course progression, hole themes, and yardage curves.
 - `src/data/coursePerks.js` defines temporary course-completion rewards.
+- `src/data/swingModes.js` defines safe, normal, and aggressive shot behavior.
 - `src/components/` contains the game and upgrade screens.
 
 ## Roadmap
@@ -77,6 +79,6 @@ The next wave is focused on making the game feel more like golf and more replaya
 
 - Course selection and richer course unlocks.
 - Prestige scoring and Tier 2 progression.
-- More shot decisions beyond repeatedly clicking Swing.
+- Better course selection and replay controls.
 
 See [ROADMAP.md](ROADMAP.md) for the living backlog.
