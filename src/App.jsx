@@ -82,10 +82,11 @@ function advanceSwingState(s, source = 'manual') {
   const newHoleShots = s.currentHoleShots + 1;
   const newTotalShots = s.totalShots + 1;
   const newTotalYards = s.totalYardsThisRound + yards;
+  const manualFocusGain = FOCUS_GAIN_PER_MANUAL_SWING + (swing.event?.focusGain ?? 0);
   const newFocusMeter = source === 'manual'
     ? focused
       ? 0
-      : Math.min(FOCUS_READY, s.focusMeter + FOCUS_GAIN_PER_MANUAL_SWING)
+      : Math.min(FOCUS_READY, s.focusMeter + manualFocusGain)
     : s.focusMeter;
 
   const holeCleared = newYardsThisHole >= s.targetDistance;

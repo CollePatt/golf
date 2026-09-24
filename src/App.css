@@ -296,6 +296,11 @@ h3 {
   font-size: 0.9rem;
 }
 
+.swing-panel .shot-event-line {
+  color: #f1d58a;
+  font-weight: 700;
+}
+
 .focus-panel {
   margin-top: 0.65rem;
   padding: 0.75rem 0.85rem;
