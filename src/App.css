@@ -217,7 +217,8 @@ h3 {
   color: #ffffff;
 }
 
-.hole-trait-panel {
+.hole-trait-panel,
+.course-perk-card {
   margin-top: 0.65rem;
   padding: 0.75rem 0.85rem;
   border: 1px solid #385045;
@@ -226,11 +227,14 @@ h3 {
 }
 
 .hole-trait-panel span,
-.hole-trait-panel strong {
+.hole-trait-panel strong,
+.course-perk-card span,
+.course-perk-card strong {
   display: block;
 }
 
-.hole-trait-panel span {
+.hole-trait-panel span,
+.course-perk-card span {
   color: #81c784;
   font-size: 0.75rem;
   font-weight: 700;
@@ -238,15 +242,22 @@ h3 {
   letter-spacing: 0.05em;
 }
 
-.hole-trait-panel strong {
+.hole-trait-panel strong,
+.course-perk-card strong {
   margin-top: 0.2rem;
   color: #ffffff;
 }
 
-.hole-trait-panel p {
+.hole-trait-panel p,
+.course-perk-card p {
   margin-top: 0.2rem;
   color: #c8e6c9;
   font-size: 0.9rem;
+}
+
+.course-perk-card.active {
+  border-color: #f1d58a;
+  background: rgba(241, 213, 138, 0.08);
 }
 
 .toggle-btn {
@@ -617,6 +628,88 @@ h3 {
   margin-top: 1rem;
 }
 
+.course-perk-panel {
+  margin-top: 1rem;
+  padding: 1rem;
+  border: 1px solid #f1d58a;
+  border-radius: 8px;
+  background: rgba(241, 213, 138, 0.08);
+}
+
+.course-perk-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: start;
+  gap: 1rem;
+}
+
+.course-perk-heading span,
+.course-perk-heading strong {
+  display: block;
+}
+
+.course-perk-heading span {
+  color: #f1d58a;
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.course-perk-heading h3 {
+  margin-top: 0.25rem;
+}
+
+.course-perk-heading strong {
+  color: #ffffff;
+  font-size: 0.9rem;
+}
+
+.perk-choice-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.65rem;
+}
+
+.perk-choice {
+  min-height: 112px;
+  padding: 0.85rem;
+  border: 1px solid #385045;
+  border-radius: 8px;
+  background: #16231f;
+  color: #c8e6c9;
+  text-align: left;
+  cursor: pointer;
+}
+
+.perk-choice:hover {
+  border-color: #f1d58a;
+}
+
+.perk-choice.selected {
+  border-color: #f1d58a;
+  background: #22342d;
+  box-shadow: inset 0 0 0 1px rgba(241, 213, 138, 0.35);
+}
+
+.perk-choice span,
+.perk-choice strong {
+  display: block;
+}
+
+.perk-choice span {
+  color: #ffffff;
+  font-size: 0.95rem;
+  font-weight: 800;
+}
+
+.perk-choice strong {
+  margin-top: 0.45rem;
+  color: #c8e6c9;
+  font-size: 0.85rem;
+  line-height: 1.35;
+}
+
 .empty-recap {
   color: #81c784;
   font-size: 0.9rem;
@@ -958,8 +1051,13 @@ h3 {
   cursor: pointer;
 }
 
-.next-btn:hover {
+.next-btn:hover:not(:disabled) {
   background: #1976d2;
+}
+
+.next-btn:disabled {
+  opacity: 0.45;
+  cursor: default;
 }
 
 /* Reset button */
@@ -1007,8 +1105,13 @@ h3 {
   .hole-layout,
   .summary-grid,
   .achievement-grid,
+  .perk-choice-grid,
   .guide-grid {
     grid-template-columns: 1fr;
+  }
+
+  .course-perk-heading {
+    flex-direction: column;
   }
 
   .hole-canvas {

@@ -4,12 +4,12 @@ This game is an incremental. The loop below is groundwork; more upgrades will be
 
 ## Core loop
 
-1. Play through 18 holes (each hole = one "run" with a yardage target).
-2. After hole 18, **prestige**: reset progress and earn prestige points.
-3. Spend prestige points on Tier 2 upgrades.
-4. Replay the 18 holes, faster/stronger, and prestige again.
+1. Play through an 18-hole course with a limited number of balls.
+2. Spend earned yards on permanent upgrades after the round ends.
+3. Complete a course to choose a temporary perk for the next course attempt.
+4. Push into additional courses with stronger upgrades and better scores.
 
-Hole-yardage growth across the 18 holes is TBD — we'll design that after the upgrade interactions are settled.
+Course yardage curves now live in `src/data/courses.js`, so each course can tune target growth separately.
 
 ## Tier 1 upgrades (pre-prestige, bought with yards earned during runs)
 
@@ -21,7 +21,7 @@ These are intentionally modest so prestige is the real progression gate.
 
 ## Prestige
 
-- Triggers after completing all 18 holes.
+- Triggers after completing a full course chain.
 - Prestige points are awarded based on **total shots taken** across the 18 holes.
 - **Fewer shots → more prestige points** (mirrors real golf scoring — under par is good).
 - Resets Tier 1 progress; Tier 2 upgrades persist.
@@ -41,8 +41,8 @@ Open questions: exact scoring curve (par per hole? a global shot budget?), wheth
 
 ## Easy Next Additions
 
-1. **Achievements** - Award small one-time yard bonuses for milestones like first birdie, first 1,000-yard round, or finishing 18 holes.
-2. **Prestige scoring** - Convert completed-round score into prestige points, then reset Tier 1 upgrades for Tier 2 progress.
-3. **Course completion perks** - Let players choose a temporary benefit after beating all 18 holes and carry it into the next course.
-4. **Course 2: Moon Links** - Add a low-gravity second course with stranger target distances and visual treatment.
+1. **Course selection** - Let completed courses be replayed intentionally instead of only following the next-course path.
+2. **Prestige scoring** - Convert completed course-chain score into prestige points, then reset Tier 1 upgrades for Tier 2 progress.
+3. **Shot choices** - Add a few swing types such as safe, normal, and aggressive for risk/reward decisions.
+4. **Perk variety** - Add rarer or course-specific perks after the current three prove out.
 5. **Auto upgrade routing** - Let players nominate a favorite upgrade for future automation systems.
