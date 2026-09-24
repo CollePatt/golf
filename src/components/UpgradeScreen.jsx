@@ -1,9 +1,11 @@
 import { UPGRADES } from '../data/upgrades.js';
+import { getCourseById, getNextCourseId } from '../data/courses.js';
+import { getCoursePerkById } from '../data/coursePerks.js';
 import { formatScoreToPar, getCompletedHoles, getScoreToPar } from '../logic/gameState.js';
 import RoundRecap from './RoundRecap.jsx';
 import UpgradeBar from './UpgradeBar.jsx';
 
-export default function UpgradeScreen({ state, onAllocate, onStartNextRound }) {
+export default function UpgradeScreen({ state, onAllocate, onChooseCoursePerk, onStartNextRound }) {
   const {
     roundResult,
     hole,
@@ -13,6 +15,8 @@ export default function UpgradeScreen({ state, onAllocate, onStartNextRound }) {
     upgrades,
     scorecard,
     bestCompletedRound,
+    pendingCoursePerkChoices,
+    nextCoursePerk,
   } = state;
 
   const heading = state.phase === 'run'
@@ -27,6 +31,12 @@ export default function UpgradeScreen({ state, onAllocate, onStartNextRound }) {
     : `Reached hole ${hole} in ${totalShots} shots.`;
   const completedHoles = getCompletedHoles(scorecard);
   const scoreToPar = getScoreToPar(scorecard);
+  const nextCourseId = roundResult === 'complete'
+    ? getNextCourseId(state.courseId) || state.courseId
+    : state.courseId;
+  const nextCourse = getCourseById(nextCourseId);
+  const selectedCoursePerk = getCoursePerkById(nextCoursePerk);
+  const needsCoursePerk = state.phase === 'upgrade' && roundResult === 'complete' && !nextCoursePerk;
 
   return (
     <div className="screen">
@@ -55,6 +65,38 @@ export default function UpgradeScreen({ state, onAllocate, onStartNextRound }) {
 
       {state.phase === 'upgrade' && <RoundRecap scorecard={scorecard} />}
 
+      {state.phase === 'upgrade' && roundResult === 'complete' && (
+        <section className="course-perk-panel" aria-labelledby="course-perk-title">
+          <div className="course-perk-heading">
+            <div>
+              <span>Course Complete</span>
+              <h3 id="course-perk-title">Choose a perk for {nextCourse.name}</h3>
+            </div>
+            {selectedCoursePerk && <strong>{selectedCoursePerk.label} selected</strong>}
+          </div>
+          <p className="hint">
+            Perks are temporary boosts for your next course attempt. Pick one before you tee off.
+          </p>
+          <div className="perk-choice-grid">
+            {pendingCoursePerkChoices.map(perkId => {
+              const perk = getCoursePerkById(perkId);
+              if (!perk) return null;
+              return (
+                <button
+                  key={perk.id}
+                  type="button"
+                  className={`perk-choice ${nextCoursePerk === perk.id ? 'selected' : ''}`}
+                  onClick={() => onChooseCoursePerk(perk.id)}
+                >
+                  <span>{perk.label}</span>
+                  <strong>{perk.description}</strong>
+                </button>
+              );
+            })}
+          </div>
+        </section>
+      )}
+
       <h3>Upgrades</h3>
       <p className="hint">
         {state.phase === 'upgrade'
@@ -74,8 +116,8 @@ export default function UpgradeScreen({ state, onAllocate, onStartNextRound }) {
       ))}
 
       {state.phase === 'upgrade' && (
-        <button className="next-btn" onClick={onStartNextRound}>
-          Start New Round
+        <button className="next-btn" onClick={onStartNextRound} disabled={needsCoursePerk}>
+          {roundResult === 'complete' ? `Start ${nextCourse.name}` : 'Start New Round'}
         </button>
       )}
     </div>

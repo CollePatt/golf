@@ -24,15 +24,20 @@ export function getYardsPerSwing(upgrades) {
   return Math.round(yards * mult);
 }
 
-export function getExpectedYardsPerSwing(upgrades, wind, holeDefinition = null) {
+export function getExpectedYardsPerSwing(upgrades, wind, holeDefinition = null, distanceMultiplier = 1) {
   const holeMultiplier = holeDefinition?.trait?.distanceMultiplier ?? 1;
   return Math.max(1, Math.round(
-    getYardsPerSwing(upgrades) * normalizeWind(wind).multiplier * holeMultiplier
+    getYardsPerSwing(upgrades) * normalizeWind(wind).multiplier * holeMultiplier * distanceMultiplier
   ));
 }
 
 export function rollSwingYards(upgrades, wind, holeDefinition = null, options = {}) {
-  const expectedYards = getExpectedYardsPerSwing(upgrades, wind, holeDefinition);
+  const expectedYards = getExpectedYardsPerSwing(
+    upgrades,
+    wind,
+    holeDefinition,
+    options.distanceMultiplier ?? 1
+  );
   const focused = Boolean(options.focused);
   const perfect = !focused && Math.random() < 0.06;
   const event = rollShotEvent();

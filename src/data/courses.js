@@ -3,6 +3,8 @@ export const COURSES = [
     id: 'meadowMunicipal',
     name: 'Meadow Municipal',
     description: 'A forgiving local course that gets longer and moodier as the round goes on.',
+    targetBase: 300,
+    targetStep: 50,
     holes: [
       ['Starter Strip', 'morning', 'Fresh Fairway', '+5% swing distance', 1.05],
       ['Willow Bend', 'morning', 'Soft Turf', '-4% swing distance', 0.96],
@@ -22,6 +24,41 @@ export const COURSES = [
       ['Gallery Rise', 'sunset', 'Adrenaline', '+8% swing distance', 1.08],
       ['Last Light', 'sunset', 'Long Shadows', '-4% swing distance', 0.96],
       ['Home Green', 'sunset', 'Championship Nerves', '+12% swing distance', 1.12],
+    ].map(([name, theme, label, description, distanceMultiplier]) => ({
+      name,
+      theme,
+      trait: {
+        label,
+        description,
+        distanceMultiplier,
+      },
+    })),
+  },
+  {
+    id: 'moonLinks',
+    name: 'Moon Links',
+    description: 'A low-gravity course with long carries, crater lips, and a very quiet gallery.',
+    targetBase: 380,
+    targetStep: 65,
+    holes: [
+      ['Tranquility Tee', 'moon', 'Low Gravity', '+30% swing distance', 1.3],
+      ['Crater Cup', 'moon', 'Crater Lip', '-8% swing distance', 0.92],
+      ['Dust Sea', 'moon', 'Vacuum Carry', '+22% swing distance', 1.22],
+      ['Surveyor Slope', 'moon', 'Powder Lie', '-10% swing distance', 0.9],
+      ['Orbiter Arc', 'moonrise', 'Launch Window', '+28% swing distance', 1.28],
+      ['Shadow Basin', 'moonrise', 'Cold Roll', '-6% swing distance', 0.94],
+      ['Apollo Alley', 'moonrise', 'Clean Trajectory', '+18% swing distance', 1.18],
+      ['Module Bend', 'moonrise', 'Tight Angle', '-7% swing distance', 0.93],
+      ['Mare Ridge', 'moonrise', 'Long Bounce', '+20% swing distance', 1.2],
+      ['Eclipse Turn', 'eclipse', 'Dim Read', '-9% swing distance', 0.91],
+      ['Black Sky Drive', 'eclipse', 'No Air Drag', '+32% swing distance', 1.32],
+      ['Static Green', 'eclipse', 'Charged Turf', '+12% swing distance', 1.12],
+      ['Comet Cut', 'eclipse', 'Sharp Dogleg', '-8% swing distance', 0.92],
+      ['Earthrise Carry', 'moon', 'Big View', '+24% swing distance', 1.24],
+      ['Solar Flare', 'moon', 'Bright Line', '+16% swing distance', 1.16],
+      ['Silent Gallery', 'eclipse', 'Heavy Nerves', '-6% swing distance', 0.94],
+      ['Lunar Ladder', 'eclipse', 'Climb Out', '-10% swing distance', 0.9],
+      ['Home Module', 'eclipse', 'Return Burn', '+35% swing distance', 1.35],
     ].map(([name, theme, label, description, distanceMultiplier]) => ({
       name,
       theme,
@@ -56,6 +93,27 @@ export const COURSE_THEMES = {
     fairway: '#76934a',
     flag: '#ef476f',
   },
+  moon: {
+    skyTop: '#111827',
+    skyBottom: '#29365f',
+    ground: '#59616f',
+    fairway: '#9aa2b2',
+    flag: '#7dd3fc',
+  },
+  moonrise: {
+    skyTop: '#172033',
+    skyBottom: '#56627f',
+    ground: '#4b5563',
+    fairway: '#aeb7c6',
+    flag: '#facc15',
+  },
+  eclipse: {
+    skyTop: '#0b1020',
+    skyBottom: '#4c3f6f',
+    ground: '#3f3f46',
+    fairway: '#a3a3a3',
+    flag: '#f0abfc',
+  },
 };
 
 export function getCourseById(courseId) {
@@ -65,6 +123,12 @@ export function getCourseById(courseId) {
 export function getHoleDefinition(courseId, hole) {
   const course = getCourseById(courseId);
   return course.holes[hole - 1] || course.holes[0];
+}
+
+export function getNextCourseId(courseId) {
+  const courseIndex = COURSES.findIndex(course => course.id === courseId);
+  if (courseIndex < 0 || courseIndex >= COURSES.length - 1) return null;
+  return COURSES[courseIndex + 1].id;
 }
 
 export function getCourseTheme(themeId) {

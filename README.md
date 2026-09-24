@@ -19,7 +19,8 @@ After adding a screenshot, uncomment this line:
 1. Swing through an 18-hole round with a limited number of balls.
 2. Earn yardage from every swing.
 3. Spend earned yards on permanent upgrades.
-4. Start the next round with better stats.
+4. Complete a course, choose a temporary perk, and bring it into the next course.
+5. Start the next round with better stats.
 
 ## Current Features
 
@@ -29,6 +30,8 @@ After adding a screenshot, uncomment this line:
 - Simplified play stats with expandable detailed stats.
 - On-screen rules and a clear goal for new players.
 - Named holes with light gameplay traits and changing course palettes.
+- Moon Links second course with its own yardage curve, hole names, and lunar palettes.
+- Course-completion perk choices that carry into the next course attempt.
 - Round wind modifiers and per-swing distance variance.
 - Rare shot events such as bounces, cart paths, crowd boosts, and rough lies.
 - Manual Focus meter that rewards active play with stronger shots.
@@ -64,14 +67,16 @@ The Pages build uses `/golf/` as the asset base path. Local development continue
 - `src/App.jsx` owns the main game state transitions.
 - `src/logic/` contains save, swing, upgrade, and round helpers.
 - `src/data/upgrades.js` defines upgrade costs and effects.
+- `src/data/courses.js` defines course progression, hole themes, and yardage curves.
+- `src/data/coursePerks.js` defines temporary course-completion rewards.
 - `src/components/` contains the game and upgrade screens.
 
 ## Roadmap
 
 The next wave is focused on making the game feel more like golf and more replayable:
 
-- Scorecards, par, and best-round tracking.
-- Achievements and one-time milestone rewards.
+- Course selection and richer course unlocks.
 - Prestige scoring and Tier 2 progression.
+- More shot decisions beyond repeatedly clicking Swing.
 
 See [ROADMAP.md](ROADMAP.md) for the living backlog.

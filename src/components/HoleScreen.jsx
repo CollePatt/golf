@@ -8,6 +8,7 @@ import {
   parForHole,
 } from '../logic/gameState.js';
 import { formatAutoSwingInterval } from '../logic/swingLogic.js';
+import { getCoursePerkById } from '../data/coursePerks.js';
 
 export default function HoleScreen({
   state,
@@ -33,6 +34,7 @@ export default function HoleScreen({
   } = state;
   const course = getCourseById(state.courseId);
   const holeDefinition = getHoleDefinition(state.courseId, hole);
+  const activeCoursePerk = getCoursePerkById(state.activeCoursePerk);
   const theme = getCourseTheme(holeDefinition.theme);
   const remaining = Math.max(0, targetDistance - yardsThisHole);
   const completedHoles = getCompletedHoles(scorecard);
@@ -155,11 +157,20 @@ export default function HoleScreen({
             <strong>{holeDefinition.trait.label}</strong>
             <p>{holeDefinition.trait.description}</p>
           </div>
+          {activeCoursePerk && (
+            <div className="course-perk-card active">
+              <span>Course Perk</span>
+              <strong>{activeCoursePerk.label}</strong>
+              <p>{activeCoursePerk.description}</p>
+            </div>
+          )}
           <details className="all-stats">
             <summary>All Stats</summary>
             <div className="stats">
+              <p className="stat">Course: <strong>{course.name}</strong></p>
+              <p className="stat">Course perk: <strong>{activeCoursePerk?.label || 'None'}</strong></p>
               <p className="stat">Target: <strong>{targetDistance} yds</strong></p>
-              <p className="stat">Par: <strong>{parForHole(hole)}</strong></p>
+              <p className="stat">Par: <strong>{parForHole(hole, state.courseId)}</strong></p>
               <p className="stat">Yards this hole: <strong>{yardsThisHole}</strong></p>
               <p className="stat">Remaining: <strong>{remaining} yds</strong></p>
               <p className="stat">Balls left: <strong>{ballsLeft}</strong></p>

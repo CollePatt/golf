@@ -18,6 +18,7 @@ export default function GuidePanel() {
             <li>The round ends after hole 18 or when you run out of balls.</li>
             <li>Every yard hit becomes upgrade currency after the round.</li>
             <li>Achievements pay bonus yards when you hit lifetime milestones.</li>
+            <li>Completing a course lets you choose a temporary perk for the next course attempt.</li>
           </ul>
         </section>
 
@@ -38,7 +39,8 @@ export default function GuidePanel() {
             <li>Spend yards on clubs, extra balls, and multipliers.</li>
             <li>Unlock Auto Caddie to keep swinging while you look away.</li>
             <li>Use the upgrade tab after each run to invest your earnings.</li>
-            <li>The long-term target is a prestige layer after completed rounds.</li>
+            <li>Clear Meadow Municipal to unlock Moon Links.</li>
+            <li>The long-term target is a prestige layer after completed courses.</li>
           </ul>
         </section>
       </div>
