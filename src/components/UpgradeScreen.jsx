@@ -32,6 +32,12 @@ export default function UpgradeScreen({ state, onAllocate, onStartNextRound }) {
     <div className="screen">
       <h2>{heading}</h2>
       <p className="hint">{subheading}</p>
+      {state.recentAchievements.length > 0 && (
+        <div className="achievement-callout">
+          <span>New Milestones</span>
+          <strong>{state.recentAchievements.length} achievement reward{state.recentAchievements.length > 1 ? 's' : ''} added.</strong>
+        </div>
+      )}
       <div className="stats">
         <p className="stat">Holes scored: <strong>{completedHoles.length}</strong></p>
         <p className="stat">Score to par: <strong>{formatScoreToPar(scoreToPar)}</strong></p>

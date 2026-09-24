@@ -31,6 +31,7 @@ After adding a screenshot, uncomment this line:
 - Named holes with light gameplay traits and changing course palettes.
 - Round wind modifiers and per-swing distance variance.
 - Manual Focus meter that rewards active play with stronger shots.
+- Achievements and lifetime stats with bonus yard rewards.
 - Permanent upgrades for yards per swing, starting balls, and yard multipliers.
 - Partial upgrade investments with next-level stat previews.
 - Unlockable Auto Caddie for idle swings with upgradeable speed.
