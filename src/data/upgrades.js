@@ -5,6 +5,10 @@
 //   multYards: multiplies yards per swing by value^level
 //   addBalls : adds value × level to starting balls
 //   autoSwing: unlocks automatic swings and speeds them up with each level
+//   approachWindow: adds value × level yards to the approach finish window
+//   approachErrorMult: multiplies approach miss spread by value^level
+//   approachLongPenaltyMult: multiplies long approach misses by value^level
+//   autoApproachErrorMult: multiplies auto approach miss spread by value^level
 //
 // Cost to buy the next level (level → level+1) is:
 //   baseCost × costGrowth ^ level
@@ -46,6 +50,30 @@ export const UPGRADES = [
     costGrowth: 1.55,
     maxLevel: 10,
     effects: [{ type: 'autoSwing', value: 1 }],
+  },
+  {
+    id: 'softLanding',
+    label: 'Soft Landing',
+    description: 'Tighter approach misses and gentler long rolls',
+    baseCost: 450,
+    costGrowth: 1.45,
+    maxLevel: 8,
+    effects: [
+      { type: 'approachErrorMult', value: 0.94 },
+      { type: 'approachLongPenaltyMult', value: 0.92 },
+    ],
+  },
+  {
+    id: 'caddieRead',
+    label: 'Caddie Read',
+    description: 'Better approach finish windows, especially for Auto Caddie',
+    baseCost: 700,
+    costGrowth: 1.5,
+    maxLevel: 8,
+    effects: [
+      { type: 'approachWindow', value: 1 },
+      { type: 'autoApproachErrorMult', value: 0.9 },
+    ],
   },
 ];
 

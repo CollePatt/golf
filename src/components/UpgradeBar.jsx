@@ -1,10 +1,12 @@
 import { getUpgradeCost } from '../data/upgrades.js';
 import {
+  getApproachControlStats,
   formatAutoSwingInterval,
   getAutoSwingIntervalMs,
   getStartingBalls,
   getYardsPerSwing,
 } from '../logic/swingLogic.js';
+import { getApproachFinishWindow } from '../logic/approachLogic.js';
 
 function buildPreview(upgrade, upgradeState, upgrades) {
   if (upgradeState.level >= upgrade.maxLevel) return 'Max level reached';
@@ -24,6 +26,16 @@ function buildPreview(upgrade, upgradeState, upgrades) {
   const nextBalls = getStartingBalls(nextUpgrades);
   const currentAutoSwing = getAutoSwingIntervalMs(upgrades);
   const nextAutoSwing = getAutoSwingIntervalMs(nextUpgrades);
+  const currentApproach = getApproachControlStats(upgrades, 'manual');
+  const nextApproach = getApproachControlStats(nextUpgrades, 'manual');
+  const currentAutoApproach = getApproachControlStats(upgrades, 'auto');
+  const nextAutoApproach = getApproachControlStats(nextUpgrades, 'auto');
+  const currentWindow = getApproachFinishWindow('normal', false, currentApproach);
+  const nextWindow = getApproachFinishWindow('normal', false, nextApproach);
+  const currentTightening = Math.round((1 - currentApproach.errorMultiplier) * 100);
+  const nextTightening = Math.round((1 - nextApproach.errorMultiplier) * 100);
+  const currentAutoTightening = Math.round((1 - currentAutoApproach.errorMultiplier) * 100);
+  const nextAutoTightening = Math.round((1 - nextAutoApproach.errorMultiplier) * 100);
   const changes = [];
 
   if (nextYards !== currentYards) {
@@ -34,6 +46,18 @@ function buildPreview(upgrade, upgradeState, upgrades) {
   }
   if (nextAutoSwing !== currentAutoSwing) {
     changes.push(`${formatAutoSwingInterval(currentAutoSwing)} -> ${formatAutoSwingInterval(nextAutoSwing)} auto`);
+  }
+  if (nextWindow !== currentWindow) {
+    changes.push(`${currentWindow} -> ${nextWindow} yd approach window`);
+  }
+  if (nextTightening !== currentTightening) {
+    changes.push(`${currentTightening}% -> ${nextTightening}% tighter approach misses`);
+  }
+  if (
+    nextAutoTightening !== currentAutoTightening
+    && (nextAutoTightening !== nextTightening || currentAutoTightening !== currentTightening)
+  ) {
+    changes.push(`${currentAutoTightening}% -> ${nextAutoTightening}% tighter auto approach`);
   }
 
   return changes.length ? `Next: ${changes.join(', ')}` : 'Next level improves this upgrade';

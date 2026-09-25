@@ -41,6 +41,8 @@ export default function GuidePanel() {
           <h3>Progression</h3>
           <ul>
             <li>Spend yards on clubs, extra balls, and multipliers.</li>
+            <li>Soft Landing improves approach control and reduces punishing long misses.</li>
+            <li>Caddie Read improves approach finish windows and makes Auto Caddie better near the green.</li>
             <li>Unlock Auto Caddie to keep swinging while you look away.</li>
             <li>Use the upgrade tab after each run to invest your earnings.</li>
             <li>Clear Meadow Municipal to unlock Moon Links.</li>

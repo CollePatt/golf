@@ -37,6 +37,7 @@ After adding a screenshot, uncomment this line:
 - Rare shot events such as bounces, cart paths, crowd boosts, and rough lies.
 - Safe, normal, and aggressive swing modes for light risk/reward shot choice.
 - Manual Focus meter that rewards active play with stronger shots.
+- Approach upgrades for softer landings, wider finish windows, and better Auto Caddie accuracy.
 - Achievements and lifetime stats with bonus yard rewards.
 - Permanent upgrades for yards per swing, starting balls, and yard multipliers.
 - Partial upgrade investments with next-level stat previews.

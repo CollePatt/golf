@@ -7,7 +7,7 @@ import {
   getScoreToPar,
   parForHole,
 } from '../logic/gameState.js';
-import { formatAutoSwingInterval } from '../logic/swingLogic.js';
+import { formatAutoSwingInterval, getApproachControlStats } from '../logic/swingLogic.js';
 import {
   APPROACH_DISTANCE,
   getApproachFinishWindow,
@@ -50,8 +50,12 @@ export default function HoleScreen({
   const scoreToPar = getScoreToPar(scorecard);
   const approachActive = isApproachDistance(remaining);
   const focusedReady = focusMeter >= focusReady;
-  const approachWindow = getApproachFinishWindow(selectedSwingMode.id, focusedReady);
+  const manualApproachStats = getApproachControlStats(state.upgrades, 'manual');
+  const autoApproachStats = getApproachControlStats(state.upgrades, 'auto');
+  const approachWindow = getApproachFinishWindow(selectedSwingMode.id, focusedReady, manualApproachStats);
   const displayedExpectedYards = approachActive ? Math.min(yardsPerSwing, remaining) : yardsPerSwing;
+  const approachTightening = Math.round((1 - manualApproachStats.errorMultiplier) * 100);
+  const autoApproachTightening = Math.round((1 - autoApproachStats.errorMultiplier) * 100);
 
   return (
     <div className="screen">
@@ -100,11 +104,14 @@ export default function HoleScreen({
           />
           {approachActive && (
             <div className="approach-panel">
-              <div>
-                <span>Approach Mode</span>
-                <strong>{remaining} yds to the pin</strong>
-              </div>
-              <p>Land within {approachWindow} yds to finish the hole. Focus widens the finish window.</p>
+            <div>
+              <span>Approach Mode</span>
+              <strong>{remaining} yds to the pin</strong>
+            </div>
+              <p>
+                Land within {approachWindow} yds to finish.
+                {approachTightening > 0 ? ` Misses are ${approachTightening}% tighter.` : ' Focus widens the finish window.'}
+              </p>
             </div>
           )}
           <div className="swing-mode-panel">
@@ -224,6 +231,8 @@ export default function HoleScreen({
               <p className="stat">Swing mode: <strong>{selectedSwingMode.label}</strong></p>
               <p className="stat">Shot phase: <strong>{approachActive ? 'Approach' : 'Fairway'}</strong></p>
               <p className="stat">Approach zone: <strong>{APPROACH_DISTANCE} yds</strong></p>
+              <p className="stat">Approach control: <strong>{approachTightening}% tighter</strong></p>
+              <p className="stat">Auto approach: <strong>{autoApproachTightening}% tighter</strong></p>
               <p className="stat">Target: <strong>{targetDistance} yds</strong></p>
               <p className="stat">Par: <strong>{parForHole(hole, state.courseId)}</strong></p>
               <p className="stat">Yards this hole: <strong>{yardsThisHole}</strong></p>
