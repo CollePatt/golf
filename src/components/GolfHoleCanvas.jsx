@@ -12,7 +12,7 @@ function easeOut(t) {
   return 1 - (1 - t) * (1 - t)
 }
 
-export default function GolfHoleCanvas({ yardsThisRun, targetDistance, theme }) {
+export default function GolfHoleCanvas({ yardsThisRun, targetDistance, approachDistance = 120, theme }) {
   const canvasRef = useRef(null)
   const rafRef = useRef(null)
   const prevYardsRef = useRef(0)
@@ -78,6 +78,19 @@ export default function GolfHoleCanvas({ yardsThisRun, targetDistance, theme }) 
       // Fairway top stripe
       ctx.fillStyle = theme.fairway
       ctx.fillRect(0, GROUND_Y, W, 10)
+
+      // Approach zone near the pin
+      const approachStartX = Math.max(0, (targetDistance - approachDistance) * SCALE - cam)
+      const approachEndX = targetDistance * SCALE - cam
+      if (approachEndX > 0 && approachStartX < W) {
+        ctx.fillStyle = 'rgba(241, 213, 138, 0.18)'
+        ctx.fillRect(approachStartX, GROUND_Y - 4, approachEndX - approachStartX, 18)
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.68)'
+        ctx.font = 'bold 11px system-ui'
+        ctx.textAlign = 'center'
+        const labelX = Math.max(44, Math.min(W - 44, approachStartX + 64))
+        ctx.fillText('APPROACH', labelX, GROUND_Y - 12)
+      }
 
       // Yardage tick marks
       ctx.textAlign = 'center'
@@ -157,7 +170,15 @@ export default function GolfHoleCanvas({ yardsThisRun, targetDistance, theme }) 
 
     rafRef.current = requestAnimationFrame(draw)
     return () => cancelAnimationFrame(rafRef.current)
-  }, [targetDistance, theme])
+  }, [targetDistance, approachDistance, theme])
+
+  useEffect(() => {
+    prevYardsRef.current = yardsThisRun
+    r.current.ballVX = yardsThisRun * SCALE
+    r.current.cameraX = 0
+    r.current.isAnim = false
+    r.current.animStart = null
+  }, [targetDistance])
 
   // Trigger arc animation on each swing
   useEffect(() => {

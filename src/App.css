@@ -245,6 +245,43 @@ h3 {
   line-height: 1.3;
 }
 
+.approach-panel {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 0.85rem;
+  padding: 0.85rem;
+  border: 1px solid #f1d58a;
+  border-radius: 8px;
+  background: rgba(241, 213, 138, 0.09);
+}
+
+.approach-panel span,
+.approach-panel strong {
+  display: block;
+}
+
+.approach-panel span {
+  color: #f1d58a;
+  font-size: 0.75rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.approach-panel strong {
+  margin-top: 0.2rem;
+  color: #ffffff;
+}
+
+.approach-panel p {
+  max-width: 320px;
+  color: #e8f5e9;
+  font-size: 0.88rem;
+  text-align: right;
+}
+
 .swing-panel {
   display: flex;
   justify-content: space-between;
@@ -385,6 +422,20 @@ h3 {
 .swing-panel .shot-event-line {
   color: #f1d58a;
   font-weight: 700;
+}
+
+.swing-panel .approach-result {
+  color: #f1d58a;
+  font-weight: 700;
+}
+
+.swing-panel .approach-result.great,
+.swing-panel .approach-result.good {
+  color: #9be7a8;
+}
+
+.swing-panel .approach-result.bad {
+  color: #ffb4a8;
 }
 
 .focus-panel {
@@ -1163,6 +1214,7 @@ h3 {
   .screen-heading,
   .swing-panel,
   .swing-mode-heading,
+  .approach-panel,
   .auto-swing-panel,
   .round-modifier {
     align-items: stretch;
@@ -1200,6 +1252,11 @@ h3 {
   }
 
   .round-modifier p {
+    text-align: left;
+  }
+
+  .approach-panel p {
+    max-width: none;
     text-align: left;
   }
 

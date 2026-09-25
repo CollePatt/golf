@@ -29,6 +29,7 @@ After adding a screenshot, uncomment this line:
 - Wider tabbed layout for play, upgrades, scorecard, and guide screens.
 - Simplified play stats with expandable detailed stats.
 - On-screen rules and a clear goal for new players.
+- Approach Mode inside 120 yards, where landing accuracy matters more than raw overflow.
 - Named holes with light gameplay traits and changing course palettes.
 - Moon Links second course with its own yardage curve, hole names, and lunar palettes.
 - Course-completion perk choices that carry into the next course attempt.
