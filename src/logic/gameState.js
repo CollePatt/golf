@@ -4,7 +4,7 @@ import { createCoursePerkChoices, getCoursePerkById } from '../data/coursePerks.
 import { getSwingMode } from '../data/swingModes.js';
 import { normalizeWind, rollWind } from './runModifiers.js';
 
-export const SAVE_VERSION = 10;
+export const SAVE_VERSION = 11;
 
 export const BASE_YARDS_PER_SWING = 25;
 export const BASE_STARTING_BALLS = 10;

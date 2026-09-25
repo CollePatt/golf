@@ -25,11 +25,12 @@ export function getApproachEntryRemaining(remainingBefore, carryYards) {
   return Math.round(clamp(nextRemaining, MIN_APPROACH_REMAINING, APPROACH_DISTANCE));
 }
 
-export function getApproachFinishWindow(swingModeId, focused = false) {
+export function getApproachFinishWindow(swingModeId, focused = false, approachStats = {}) {
   const swingMode = getSwingMode(swingModeId);
   return Math.max(
     STUFFED_WINDOW,
-    Math.round(swingMode.approachFinishWindow * (focused ? 1.35 : 1))
+    Math.round((swingMode.approachFinishWindow + (approachStats.finishWindowBonus ?? 0))
+      * (focused ? 1.35 : 1))
   );
 }
 
@@ -37,18 +38,20 @@ export function resolveApproachShot({
   remaining,
   swing,
   swingModeId,
+  approachStats = {},
   focused = false,
   rng = Math.random,
 }) {
   const swingMode = getSwingMode(swingModeId);
-  const finishWindow = getApproachFinishWindow(swingMode.id, focused);
+  const finishWindow = getApproachFinishWindow(swingMode.id, focused, approachStats);
   const errorScale = focused ? 0.55 : 1;
+  const errorMultiplier = approachStats.errorMultiplier ?? 1;
   const powerShortfall = Math.max(0, remaining - swing.expectedYards);
   const errorRange = Math.max(
     STUFFED_WINDOW,
     (swingMode.approachErrorYards
       + remaining * swingMode.approachErrorRatio
-      + powerShortfall * 0.25) * errorScale
+      + powerShortfall * 0.25) * errorScale * errorMultiplier
   );
   const aimedCarry = remaining * swingMode.approachAim;
   const rawError = (rng() * 2 - 1) * errorRange;
@@ -82,7 +85,7 @@ export function resolveApproachShot({
 
   const longMiss = miss > 0;
   const comeback = longMiss
-    ? Math.round(absMiss * swingMode.approachLongPenalty)
+    ? Math.round(absMiss * swingMode.approachLongPenalty * (approachStats.longPenaltyMultiplier ?? 1))
     : absMiss;
   const badLie = longMiss && absMiss >= 30;
   const nextRemaining = Math.round(clamp(

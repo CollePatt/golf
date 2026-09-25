@@ -43,6 +43,6 @@ Open questions: exact scoring curve (par per hole? a global shot budget?), wheth
 
 1. **Course selection** - Let completed courses be replayed intentionally instead of only following the next-course path.
 2. **Prestige scoring** - Convert completed course-chain score into prestige points, then reset Tier 1 upgrades for Tier 2 progress.
-3. **Shot-mode upgrades** - Let upgrades or perks specialize safe, normal, and aggressive swings.
+3. **Shot-mode upgrades** - Let upgrades or perks specialize safe, normal, and aggressive swings even further.
 4. **Perk variety** - Add rarer or course-specific perks after the current three prove out.
 5. **Auto upgrade routing** - Let players nominate a favorite upgrade for future automation systems.

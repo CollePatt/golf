@@ -100,6 +100,27 @@ export function getAutoSwingIntervalMs(upgrades) {
   return Math.max(900, Math.round(5000 * Math.pow(0.78, autoLevel - 1)));
 }
 
+export function getApproachControlStats(upgrades, source = 'manual') {
+  let finishWindowBonus = 0;
+  let errorMultiplier = 1;
+  let longPenaltyMultiplier = 1;
+
+  forEachActiveEffect(upgrades, (e, level) => {
+    if (e.type === 'approachWindow') finishWindowBonus += e.value * level;
+    else if (e.type === 'approachErrorMult') errorMultiplier *= Math.pow(e.value, level);
+    else if (e.type === 'approachLongPenaltyMult') longPenaltyMultiplier *= Math.pow(e.value, level);
+    else if (e.type === 'autoApproachErrorMult' && source === 'auto') {
+      errorMultiplier *= Math.pow(e.value, level);
+    }
+  });
+
+  return {
+    finishWindowBonus,
+    errorMultiplier,
+    longPenaltyMultiplier,
+  };
+}
+
 export function formatAutoSwingInterval(intervalMs) {
   if (!intervalMs) return 'Locked';
   return `${(intervalMs / 1000).toFixed(1)}s`;

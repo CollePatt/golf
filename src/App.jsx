@@ -10,6 +10,7 @@ import {
 } from './logic/gameState.js';
 import { rollWind } from './logic/runModifiers.js';
 import {
+  getApproachControlStats,
   getAutoSwingIntervalMs,
   getExpectedYardsPerSwing,
   getStartingBalls,
@@ -97,6 +98,7 @@ function advanceSwingState(s, source = 'manual') {
   const focused = source === 'manual' && s.focusMeter >= FOCUS_READY;
   const coursePerkDistanceMultiplier = getCoursePerkDistanceMultiplier(s.activeCoursePerk);
   const swingMode = getSwingMode(s.selectedSwingMode);
+  const approachStats = getApproachControlStats(s.upgrades, source);
   const swing = rollSwingYards(s.upgrades, s.wind, holeDefinition, {
     focused,
     source,
@@ -114,6 +116,7 @@ function advanceSwingState(s, source = 'manual') {
       remaining: remainingBefore,
       swing,
       swingModeId: swingMode.id,
+      approachStats,
       focused,
     });
     yards = approach.carry;
