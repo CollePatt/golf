@@ -8,6 +8,11 @@ import {
   parForHole,
 } from '../logic/gameState.js';
 import { formatAutoSwingInterval } from '../logic/swingLogic.js';
+import {
+  APPROACH_DISTANCE,
+  getApproachFinishWindow,
+  isApproachDistance,
+} from '../logic/approachLogic.js';
 import { getCoursePerkById } from '../data/coursePerks.js';
 import { SWING_MODES, getSwingMode } from '../data/swingModes.js';
 
@@ -43,6 +48,10 @@ export default function HoleScreen({
   const remaining = Math.max(0, targetDistance - yardsThisHole);
   const completedHoles = getCompletedHoles(scorecard);
   const scoreToPar = getScoreToPar(scorecard);
+  const approachActive = isApproachDistance(remaining);
+  const focusedReady = focusMeter >= focusReady;
+  const approachWindow = getApproachFinishWindow(selectedSwingMode.id, focusedReady);
+  const displayedExpectedYards = approachActive ? Math.min(yardsPerSwing, remaining) : yardsPerSwing;
 
   return (
     <div className="screen">
@@ -50,7 +59,11 @@ export default function HoleScreen({
         <div>
           <h2>Hole {hole} / {HOLES_PER_ROUND}</h2>
           <p className="hole-name">{holeDefinition.name}</p>
-          <p className="hint">{course.name} | Clear {remaining} more yards to reach the next tee.</p>
+          <p className="hint">
+            {course.name} | {approachActive
+              ? `Land close from ${remaining} yds to finish the hole.`
+              : `Clear ${remaining} more yards to reach approach range.`}
+          </p>
         </div>
         <div className="score-popover-anchor" tabIndex={0}>
           <div className="summary-pill">
@@ -82,8 +95,18 @@ export default function HoleScreen({
           <GolfHoleCanvas
             yardsThisRun={yardsThisHole}
             targetDistance={targetDistance}
+            approachDistance={APPROACH_DISTANCE}
             theme={theme}
           />
+          {approachActive && (
+            <div className="approach-panel">
+              <div>
+                <span>Approach Mode</span>
+                <strong>{remaining} yds to the pin</strong>
+              </div>
+              <p>Land within {approachWindow} yds to finish the hole. Focus widens the finish window.</p>
+            </div>
+          )}
           <div className="swing-mode-panel">
             <div className="swing-mode-heading">
               <span>Swing Mode</span>
@@ -106,12 +129,17 @@ export default function HoleScreen({
           </div>
           <div className="swing-panel">
             <div>
-              <span>Expected Swing</span>
-              <strong>{yardsPerSwing} yds</strong>
+              <span>{approachActive ? 'Expected Carry' : 'Expected Swing'}</span>
+              <strong>{displayedExpectedYards} yds</strong>
               {lastSwing && (
                 <p>
                   Last: {lastSwing.yards} yds ({lastSwing.quality}, {lastSwingMode.label}
                   {lastSwing.source === 'auto' ? ', auto' : ''})
+                </p>
+              )}
+              {lastSwing?.approach && (
+                <p className={`approach-result ${lastSwing.approach.grade}`}>
+                  {lastSwing.approach.label}: {lastSwing.approach.description}
                 </p>
               )}
               {lastSwing?.event && (
@@ -194,6 +222,8 @@ export default function HoleScreen({
               <p className="stat">Course: <strong>{course.name}</strong></p>
               <p className="stat">Course perk: <strong>{activeCoursePerk?.label || 'None'}</strong></p>
               <p className="stat">Swing mode: <strong>{selectedSwingMode.label}</strong></p>
+              <p className="stat">Shot phase: <strong>{approachActive ? 'Approach' : 'Fairway'}</strong></p>
+              <p className="stat">Approach zone: <strong>{APPROACH_DISTANCE} yds</strong></p>
               <p className="stat">Target: <strong>{targetDistance} yds</strong></p>
               <p className="stat">Par: <strong>{parForHole(hole, state.courseId)}</strong></p>
               <p className="stat">Yards this hole: <strong>{yardsThisHole}</strong></p>

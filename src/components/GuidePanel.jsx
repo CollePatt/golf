@@ -14,6 +14,7 @@ export default function GuidePanel() {
           <ul>
             <li>Each swing spends one ball.</li>
             <li>Clear the target distance to advance to the next hole.</li>
+            <li>Inside 120 yards, the hole shifts into Approach Mode.</li>
             <li>Manual swings build Focus; a full meter powers up your next manual shot.</li>
             <li>Swing modes trade consistency, Focus gain, and distance.</li>
             <li>The round ends after hole 18 or when you run out of balls.</li>
@@ -28,6 +29,7 @@ export default function GuidePanel() {
           <ul>
             <li>Each hole has a par based on its target distance.</li>
             <li>Fewer shots improves your score to par.</li>
+            <li>Approach shots must land close enough to finish; misses leave a follow-up distance.</li>
             <li>Your best completed round is saved automatically.</li>
             <li>Wind and swing quality can change each shot's distance.</li>
             <li>Safe shots are steadier, while aggressive shots can carry farther or miss harder.</li>

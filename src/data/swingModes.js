@@ -9,6 +9,11 @@ export const SWING_MODES = [
     perfectChance: 0.03,
     perfectMultiplier: 1.18,
     focusGainBonus: 8,
+    approachAim: 0.96,
+    approachErrorYards: 9,
+    approachErrorRatio: 0.08,
+    approachFinishWindow: 18,
+    approachLongPenalty: 0.85,
   },
   {
     id: 'normal',
@@ -20,6 +25,11 @@ export const SWING_MODES = [
     perfectChance: 0.06,
     perfectMultiplier: 1.35,
     focusGainBonus: 0,
+    approachAim: 1,
+    approachErrorYards: 16,
+    approachErrorRatio: 0.12,
+    approachFinishWindow: 15,
+    approachLongPenalty: 1,
   },
   {
     id: 'aggressive',
@@ -31,6 +41,11 @@ export const SWING_MODES = [
     perfectChance: 0.09,
     perfectMultiplier: 1.55,
     focusGainBonus: -4,
+    approachAim: 1.08,
+    approachErrorYards: 30,
+    approachErrorRatio: 0.18,
+    approachFinishWindow: 12,
+    approachLongPenalty: 1.3,
   },
 ];
 

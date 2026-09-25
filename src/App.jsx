@@ -15,6 +15,13 @@ import {
   getStartingBalls,
   rollSwingYards,
 } from './logic/swingLogic.js';
+import {
+  APPROACH_DISTANCE,
+  getApproachEntryRemaining,
+  getRemainingDistance,
+  isApproachDistance,
+  resolveApproachShot,
+} from './logic/approachLogic.js';
 import { getHoleDefinition, getNextCourseId } from './data/courses.js';
 import { ACHIEVEMENTS } from './data/achievements.js';
 import {
@@ -96,8 +103,47 @@ function advanceSwingState(s, source = 'manual') {
     distanceMultiplier: coursePerkDistanceMultiplier,
     swingMode: swingMode.id,
   });
-  const yards = swing.yards;
-  const newYardsThisHole = s.yardsThisHole + yards;
+  const remainingBefore = getRemainingDistance(s.targetDistance, s.yardsThisHole);
+  const approachActive = isApproachDistance(remainingBefore);
+  let resolvedSwing = { ...swing, shotPhase: 'fairway' };
+  let yards = swing.yards;
+  let newYardsThisHole = s.yardsThisHole + yards;
+
+  if (approachActive) {
+    const approach = resolveApproachShot({
+      remaining: remainingBefore,
+      swing,
+      swingModeId: swingMode.id,
+      focused,
+    });
+    yards = approach.carry;
+    newYardsThisHole = approach.cleared
+      ? s.targetDistance
+      : s.targetDistance - approach.nextRemaining;
+    resolvedSwing = {
+      ...swing,
+      yards,
+      shotPhase: 'approach',
+      approach,
+    };
+  } else if (newYardsThisHole >= s.targetDistance - APPROACH_DISTANCE) {
+    const nextRemaining = getApproachEntryRemaining(remainingBefore, yards);
+    newYardsThisHole = s.targetDistance - nextRemaining;
+    resolvedSwing = {
+      ...swing,
+      shotPhase: 'fairway',
+      approach: {
+        label: 'Approach Range',
+        description: `Set up a ${nextRemaining} yd approach.`,
+        carry: yards,
+        miss: null,
+        nextRemaining,
+        cleared: false,
+        grade: 'setup',
+      },
+    };
+  }
+
   const newBalls = s.ballsLeft - 1;
   const newHoleShots = s.currentHoleShots + 1;
   const newTotalShots = s.totalShots + 1;
@@ -112,10 +158,10 @@ function advanceSwingState(s, source = 'manual') {
       : Math.min(FOCUS_READY, s.focusMeter + manualFocusGain)
     : s.focusMeter;
 
-  const holeCleared = newYardsThisHole >= s.targetDistance;
+  const holeCleared = Boolean(resolvedSwing.approach?.cleared);
   const lastHole = s.hole >= HOLES_PER_ROUND;
   const courseCompleted = holeCleared && lastHole;
-  const lifetimeStats = updateLifetimeStats(s, swing, holeCleared, courseCompleted);
+  const lifetimeStats = updateLifetimeStats(s, resolvedSwing, holeCleared, courseCompleted);
   const nextScorecard = holeCleared
     ? recordHoleScore(s.scorecard, s.hole, newHoleShots, s.courseId)
     : s.scorecard;
@@ -130,7 +176,7 @@ function advanceSwingState(s, source = 'manual') {
       ballsLeft: newBalls,
       totalShots: newTotalShots,
       totalYardsThisRound: newTotalYards,
-      lastSwing: swing,
+      lastSwing: resolvedSwing,
       focusMeter: newFocusMeter,
       lifetimeStats,
       scorecard: nextScorecard,
@@ -158,7 +204,7 @@ function advanceSwingState(s, source = 'manual') {
       ballsLeft: 0,
       totalShots: newTotalShots,
       totalYardsThisRound: newTotalYards,
-      lastSwing: swing,
+      lastSwing: resolvedSwing,
       focusMeter: newFocusMeter,
       lifetimeStats,
       scorecard: nextScorecard,
@@ -180,7 +226,7 @@ function advanceSwingState(s, source = 'manual') {
       ballsLeft: newBalls,
       totalShots: newTotalShots,
       totalYardsThisRound: newTotalYards,
-      lastSwing: swing,
+      lastSwing: resolvedSwing,
       focusMeter: newFocusMeter,
       lifetimeStats,
       scorecard: nextScorecard,
@@ -195,7 +241,7 @@ function advanceSwingState(s, source = 'manual') {
     ballsLeft: newBalls,
     totalShots: newTotalShots,
     totalYardsThisRound: newTotalYards,
-    lastSwing: swing,
+    lastSwing: resolvedSwing,
     focusMeter: newFocusMeter,
     lifetimeStats,
   });
