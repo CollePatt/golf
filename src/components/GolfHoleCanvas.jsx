@@ -12,6 +12,7 @@ import {
   SWING_IMPACT_MS,
   SWING_FINISH_MS,
 } from '../sprites/golferSprites.js'
+import { SHEETS, requestSheets } from '../sprites/sheets.js'
 
 const SCALE = 4
 const H = 240
@@ -22,6 +23,7 @@ const ANIM_MS = 680
 const CAM_LERP = 0.09
 // Sprite mode leaves room left of the tee so the golfer is on screen.
 const TEE_PAD = 96
+const BALL_SHEET_SCALE = 2
 
 function loadSprites(themeId, theme) {
   if (!spritesSupported()) return null
@@ -48,6 +50,7 @@ export default function GolfHoleCanvas({
   approachDistance = 120,
   theme,
   themeId,
+  ballStyle = 'classic',
   useSprites = true,
 }) {
   const canvasRef = useRef(null)
@@ -55,6 +58,9 @@ export default function GolfHoleCanvas({
     () => (useSprites ? loadSprites(themeId, theme) : null),
     [useSprites, themeId, theme],
   )
+  useEffect(() => {
+    if (useSprites) requestSheets()
+  }, [useSprites])
   const rafRef = useRef(null)
   const prevYardsRef = useRef(0)
 
@@ -79,15 +85,25 @@ export default function GolfHoleCanvas({
     canvas.width = canvas.offsetWidth
     canvas.height = H
 
+    // Swing timing comes from the Aseprite sheet when it has loaded: the
+    // 'swing' tag ends at impact and the 'follow' tag runs to the finish.
+    function golferTiming() {
+      const sheet = sprites && SHEETS[sprites.recipe.golfer]
+      if (!sheet) return { sheet: null, impactMs: SWING_IMPACT_MS, finishMs: SWING_FINISH_MS }
+      const impactMs = sheet.tagDuration('swing')
+      return { sheet, impactMs, finishMs: impactMs + sheet.tagDuration('follow') }
+    }
+
     // Golfer stands at the ball's last lie, swings, holds the finish while the
     // ball flies, then walks up to where it landed.
     function drawGolfer(ctx, st, ts, cam) {
-      let pose
+      const { sheet, impactMs, finishMs } = golferTiming()
+      let mode = 'idle'
       const swingElapsed = st.swingStart == null ? null : ts - st.swingStart
       const holding = st.isAnim || (st.landedAt != null && ts - st.landedAt < 220)
-      if (swingElapsed != null && (holding || swingElapsed < SWING_FINISH_MS)) {
+      if (swingElapsed != null && (holding || swingElapsed < finishMs)) {
         st.walkStart = null
-        pose = swingPose(swingElapsed)
+        mode = 'swing'
       } else if (Math.abs(st.golferX - st.ballVX) > 1) {
         st.swingStart = null
         if (st.walkStart == null) {
@@ -101,21 +117,35 @@ export default function GolfHoleCanvas({
           st.golferX = st.ballVX
           st.walkStart = null
         }
-        pose = walkPose(ts)
+        mode = 'walk'
       } else {
         st.swingStart = null
-        pose = swingPose(null)
       }
 
-      const frame = sprites.renderGolfer(pose)
-      const x = Math.round(st.golferX - cam - (sprites.clubHead.x + 2) * PX)
-      const y = GROUND_Y - GOLFER_H * PX + PX * 2
-      if (x < -GOLFER_W * PX || x > canvas.width) return
+      const anchor = sheet?.slices.ball || { x: sprites.clubHead.x + 2, y: GOLFER_H - 2 }
+      const cell = sheet?.cell || { w: GOLFER_W, h: GOLFER_H }
+      const x = Math.round(st.golferX - cam - anchor.x * PX)
+      const y = GROUND_Y - anchor.y * PX
+      if (x < -cell.w * PX || x > canvas.width) return
       ctx.fillStyle = 'rgba(0,0,0,0.2)'
       ctx.beginPath()
-      ctx.ellipse(x + 12 * PX, GROUND_Y + 3, 7 * PX, PX, 0, 0, Math.PI * 2)
+      ctx.ellipse(x + (anchor.x - 13) * PX, GROUND_Y + 3, 7 * PX, PX, 0, 0, Math.PI * 2)
       ctx.fill()
-      ctx.drawImage(frame, x, y, GOLFER_W * PX, GOLFER_H * PX)
+
+      if (sheet) {
+        let frame
+        if (mode === 'swing') {
+          frame = swingElapsed < impactMs
+            ? sheet.frameAt('swing', swingElapsed, false)
+            : sheet.frameAt('follow', swingElapsed - impactMs, false)
+        } else {
+          frame = sheet.frameAt(mode, ts)
+        }
+        sheet.draw(ctx, frame, x, y, PX)
+        return
+      }
+      const pose = mode === 'swing' ? swingPose(swingElapsed) : mode === 'walk' ? walkPose(ts) : swingPose(null)
+      ctx.drawImage(sprites.renderGolfer(pose), x, y, GOLFER_W * PX, GOLFER_H * PX)
     }
 
     function draw(ts) {
@@ -133,7 +163,7 @@ export default function GolfHoleCanvas({
         if (!st.animStart) {
           if (sprites) {
             if (st.swingStart == null) st.swingStart = ts
-            st.animStart = st.swingStart + SWING_IMPACT_MS
+            st.animStart = st.swingStart + golferTiming().impactMs
           } else {
             st.animStart = ts
           }
@@ -267,7 +297,13 @@ export default function GolfHoleCanvas({
       ctx.fill()
 
       // Ball
-      if (sprites) {
+      const ballSheet = sprites && SHEETS.balls
+      if (ballSheet) {
+        const frame = ballSheet.frameAt(ballStyle, st.isAnim ? ts : 0)
+        const c = ballSheet.slices.center || { x: 8, y: 4 }
+        const s = BALL_SHEET_SCALE
+        ballSheet.draw(ctx, frame, st.ballVX - cam - c.x * s, ballY + 3 - (c.y + 4) * s, s)
+      } else if (sprites) {
         const b = sprites.ball
         ctx.drawImage(b, Math.round(st.ballVX - cam - b.width / 2), Math.round(ballY - b.height + 3))
       } else {
@@ -285,7 +321,7 @@ export default function GolfHoleCanvas({
 
     rafRef.current = requestAnimationFrame(draw)
     return () => cancelAnimationFrame(rafRef.current)
-  }, [targetDistance, approachDistance, theme, sprites])
+  }, [targetDistance, approachDistance, theme, sprites, ballStyle])
 
   useEffect(() => {
     prevYardsRef.current = yardsThisRun

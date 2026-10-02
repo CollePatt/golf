@@ -2,6 +2,14 @@
 // and rasterized once into offscreen canvases. '.' (or any unmapped character)
 // is transparent.
 
+// Canvas creation is swappable so the sheet generator script can run the same
+// sprite code in Node against a plain RGBA buffer.
+let canvasFactory = () => document.createElement('canvas')
+
+export function setCanvasFactory(factory) {
+  canvasFactory = factory
+}
+
 export function spritesSupported() {
   if (typeof document === 'undefined') return false
   try {
@@ -32,7 +40,7 @@ export function paintRows(ctx, rows, palette, ox = 0, oy = 0, scale = 1) {
 
 export function buildSprite(rows, palette, scale = 1) {
   const { w, h } = spriteSize(rows)
-  const canvas = document.createElement('canvas')
+  const canvas = canvasFactory()
   canvas.width = w * scale
   canvas.height = h * scale
   const ctx = canvas.getContext('2d')
@@ -42,7 +50,7 @@ export function buildSprite(rows, palette, scale = 1) {
 }
 
 export function makeCanvas(w, h) {
-  const canvas = document.createElement('canvas')
+  const canvas = canvasFactory()
   canvas.width = w
   canvas.height = h
   const ctx = canvas.getContext('2d')
