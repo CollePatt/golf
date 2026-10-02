@@ -154,7 +154,8 @@ function advanceSwingState(prev, source = 'manual') {
   const newBalls = Math.max(0, s.ballsLeft - shot.ballsUsed);
   const newHoleShots = s.currentHoleShots + shot.strokes;
   const newTotalShots = s.totalShots + shot.strokes;
-  const newTotalYards = s.totalYardsThisRound + yards;
+  // Yards hit become upgrade currency; Safe swings pay a premium for the shorter carry.
+  const newTotalYards = s.totalYardsThisRound + Math.round(yards * (swingMode.yardsEarnedMult ?? 1));
   const manualFocusGain = FOCUS_GAIN_PER_MANUAL_SWING
     + swingMode.focusGainBonus
     + getCoursePerkFocusGain(s.activeCoursePerk)
