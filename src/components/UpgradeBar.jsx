@@ -77,6 +77,8 @@ export default function UpgradeBar({ upgrade, upgradeState, upgrades, yardsToAll
   const canInvest = !maxed && yardsToAllocate > 0;
   const tenPercent = Math.max(1, Math.floor(yardsToAllocate * 0.1));
   const half = Math.max(1, Math.floor(yardsToAllocate * 0.5));
+  const toNextLevel = nextCost - progress;
+  const canBuyLevel = !maxed && yardsToAllocate >= toNextLevel;
   const preview = buildPreview(upgrade, upgradeState, upgrades);
 
   return (
@@ -95,6 +97,14 @@ export default function UpgradeBar({ upgrade, upgradeState, upgrades, yardsToAll
         <div className="progress-fill" style={{ width: `${pct}%` }} />
       </div>
       <div className="allocate-actions">
+        <button
+          className="allocate-btn"
+          onClick={() => onAllocate(upgrade.id, toNextLevel)}
+          disabled={!canBuyLevel}
+          title={maxed ? undefined : `Buy level ${level + 1} for ${toNextLevel.toLocaleString()} yds`}
+        >
+          +1 Lv
+        </button>
         <button
           className="allocate-btn"
           onClick={() => onAllocate(upgrade.id, tenPercent)}

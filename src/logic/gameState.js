@@ -10,7 +10,7 @@ import { PRO_UPGRADES } from '../data/proUpgrades.js';
 import { createCoursePerkChoices, getCoursePerkById } from '../data/coursePerks.js';
 import { getSwingMode } from '../data/swingModes.js';
 import { normalizeWind, rollWind } from './runModifiers.js';
-import { DEFAULT_BALL_ID, isBallUnlocked } from '../data/balls.js';
+import { BALLS, DEFAULT_BALL_ID, isBallUnlocked } from '../data/balls.js';
 import { createBuffs, normalizeBuffs, normalizeHolePickups } from './pickupLogic.js';
 
 export const SAVE_VERSION = 14;
@@ -122,6 +122,8 @@ export function createInitialState() {
     prestige: createPrestigeState(),
     lastProResult: null,           // { earned, count } after the most recent prestige
     equippedBall: DEFAULT_BALL_ID, // see data/balls.js; kept when turning pro
+    seenBallIds: [DEFAULT_BALL_ID], // unlocked balls the player has seen in the Locker
+    saveFocusForApproach: false,   // hold a full Focus meter until an approach shot
     holePickups: null,             // { key, items } for the current hole, rolled lazily
     buffs: createBuffs(),          // pickup effects waiting on the next swings
     lifetimeStats: createLifetimeStats(),
@@ -313,6 +315,11 @@ export function normalizeState(savedState) {
   return {
     ...normalized,
     equippedBall: isBallUnlocked(state?.equippedBall, normalized) ? state.equippedBall : DEFAULT_BALL_ID,
+    // Older saves have no record, so treat balls already unlocked as seen.
+    seenBallIds: Array.isArray(state?.seenBallIds)
+      ? state.seenBallIds.filter(id => BALLS.some(ball => ball.id === id))
+      : BALLS.filter(ball => isBallUnlocked(ball.id, normalized)).map(ball => ball.id),
+    saveFocusForApproach: Boolean(state?.saveFocusForApproach),
   };
 }
 

@@ -98,6 +98,8 @@ export function applyTurnPro(state) {
     yardsToAllocate: signingBonus,
     lastProResult: { earned, count: prestige.count, signingBonus },
     equippedBall: state.equippedBall,
+    seenBallIds: state.seenBallIds,
+    saveFocusForApproach: state.saveFocusForApproach,
   };
 }
 

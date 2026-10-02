@@ -318,7 +318,8 @@ export default function GolfHoleCanvas({
         ctx.font = 'bold 11px system-ui'
         ctx.textAlign = 'center'
         const labelX = Math.max(44, Math.min(W - 44, approachStartX + 64))
-        ctx.fillText('APPROACH', labelX, GROUND_Y - 12)
+        // Sits above the yardage markers so the two never overlap.
+        ctx.fillText('APPROACH', labelX, GROUND_Y - 26)
       }
 
       // Fairway hazards

@@ -18,10 +18,11 @@ import {
   getYardsEarnedMultiplier,
 } from './logic/swingLogic.js';
 import { applyTurnPro, buyProUpgrade, canTurnPro } from './logic/prestigeLogic.js';
-import { getShotExpectedYards, playShot } from './logic/holeLogic.js';
+import { getCurrentApproachRange, getShotExpectedYards, playShot } from './logic/holeLogic.js';
+import { getRemainingDistance, isApproachDistance } from './logic/approachLogic.js';
 import { COURSES, PRO_CHAIN_COURSE_IDS, getNextCourseId, isCourseUnlocked } from './data/courses.js';
 import { ACHIEVEMENTS } from './data/achievements.js';
-import { getBallEffects, isBallUnlocked } from './data/balls.js';
+import { BALLS, getBallEffects, isBallUnlocked } from './data/balls.js';
 import {
   collectPickups,
   consumeSwingBuffs,
@@ -124,10 +125,17 @@ function getEarnedUpgradeYards(s, totalYards) {
   );
 }
 
+// True when the next swing plays as an approach at the pin.
+function isApproachShot(s) {
+  return isApproachDistance(getRemainingDistance(s.targetDistance, s.yardsThisHole), getCurrentApproachRange(s));
+}
+
 function advanceSwingState(prev, source = 'manual') {
   if (prev.phase !== 'run' || prev.ballsLeft <= 0) return prev;
 
-  const focused = source === 'manual' && prev.focusMeter >= FOCUS_READY;
+  const focused = source === 'manual'
+    && prev.focusMeter >= FOCUS_READY
+    && (!prev.saveFocusForApproach || isApproachShot(prev));
   const swingMode = getSwingMode(prev.selectedSwingMode);
   const ready = withHolePickups(prev);
   const shot = playShot(ready, { source, focused });
@@ -414,6 +422,20 @@ export default function App() {
     setState(s => advanceSwingState(s, 'manual'));
   }
 
+  function handleToggleSaveFocus() {
+    setState(s => ({ ...s, saveFocusForApproach: !s.saveFocusForApproach }));
+  }
+
+  // Opening the Locker (or the Ball Bag overlay) clears its New badge.
+  const viewingBalls = overlay === 'bag' || (view === 'clubhouse' && door === 'locker');
+  useEffect(() => {
+    if (!viewingBalls) return;
+    setState(s => {
+      const unseen = BALLS.filter(ball => isBallUnlocked(ball.id, s) && !s.seenBallIds.includes(ball.id));
+      return unseen.length ? { ...s, seenBallIds: [...s.seenBallIds, ...unseen.map(ball => ball.id)] } : s;
+    });
+  }, [viewingBalls, state.lifetimeStats, state.courseRecords]);
+
   function handleToggleAutoSwing() {
     setState(s => ({
       ...s,
@@ -520,6 +542,7 @@ export default function App() {
             onSwing={handleSwing}
             onSelectSwingMode={handleSelectSwingMode}
             onToggleAutoSwing={handleToggleAutoSwing}
+            onToggleSaveFocus={handleToggleSaveFocus}
             onOpenOverlay={setOverlay}
             onOpenClubhouse={() => setView('clubhouse')}
             yardsPerSwing={getShotExpectedYards(state)}

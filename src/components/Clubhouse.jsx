@@ -1,5 +1,5 @@
 import { ACHIEVEMENTS, getUnlockedAchievementCount } from '../data/achievements.js';
-import { getBallById } from '../data/balls.js';
+import { BALLS, getBallById, isBallUnlocked } from '../data/balls.js';
 import { canTurnPro } from '../logic/prestigeLogic.js';
 import AchievementsPanel from './AchievementsPanel.jsx';
 import BallBagPanel from './BallBagPanel.jsx';
@@ -25,6 +25,7 @@ export default function Clubhouse({
 }) {
   const canSpend = state.phase === 'upgrade' && state.yardsToAllocate > 0;
   const equippedBall = getBallById(state.equippedBall);
+  const hasNewBall = BALLS.some(ball => isBallUnlocked(ball.id, state) && !state.seenBallIds.includes(ball.id));
   const doors = [
     {
       id: 'shop',
@@ -36,6 +37,7 @@ export default function Clubhouse({
       id: 'locker',
       label: 'Locker',
       blurb: `Ball bag · ${equippedBall.label}`,
+      badge: hasNewBall ? 'New' : null,
       icon: <SpriteIcon sheet="balls" tag={equippedBall.id} scale={3} />,
     },
     {
