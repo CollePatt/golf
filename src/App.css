@@ -1573,3 +1573,194 @@ h3 {
     width: 100%;
   }
 }
+
+/* Ball Bag and pickups */
+.sprite-icon {
+  display: inline-block;
+  flex: none;
+  background-repeat: no-repeat;
+  image-rendering: pixelated;
+}
+
+.ball-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.75rem;
+}
+
+.ball-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  padding: 0.9rem;
+  border: 1px solid #385045;
+  border-radius: 8px;
+  background: #16231f;
+}
+
+.ball-card.equipped {
+  border-color: #f1d58a;
+  background: #1f3028;
+}
+
+.ball-card.locked .sprite-icon {
+  filter: grayscale(1) brightness(0.6);
+}
+
+.ball-card-heading {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.ball-card-heading span {
+  display: block;
+  color: #81c784;
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.ball-card.equipped .ball-card-heading span {
+  color: #f1d58a;
+}
+
+.ball-card p {
+  flex: 1;
+  color: #c8e6c9;
+  font-size: 0.9rem;
+}
+
+.equip-btn {
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #81c784;
+  border-radius: 6px;
+  background: #2e7d32;
+  color: #fff;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.equip-btn:disabled {
+  border-color: #f1d58a;
+  background: transparent;
+  color: #f1d58a;
+  cursor: default;
+}
+
+.ball-unlock small {
+  display: block;
+  margin-bottom: 0.35rem;
+  color: #a5c9a8;
+}
+
+.ball-unlock-bar {
+  height: 6px;
+  border-radius: 3px;
+  background: #0d1512;
+  overflow: hidden;
+}
+
+.ball-unlock-bar div {
+  height: 100%;
+  background: #81c784;
+}
+
+.pickup-heading {
+  margin-top: 1.5rem;
+}
+
+.pickup-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.75rem;
+}
+
+.pickup-card {
+  display: flex;
+  gap: 0.75rem;
+  align-items: flex-start;
+  padding: 0.75rem;
+  border: 1px solid #385045;
+  border-radius: 8px;
+  background: #16231f;
+}
+
+.pickup-card h3 {
+  font-size: 1rem;
+}
+
+.pickup-card p {
+  color: #c8e6c9;
+  font-size: 0.85rem;
+}
+
+.pickup-card small {
+  color: #81c784;
+  font-size: 0.75rem;
+}
+
+.swing-panel .pickup-line {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: #a5d6a7;
+  font-weight: 700;
+}
+
+.swing-panel .hazard-line.skip {
+  color: #b39ddb;
+}
+
+.buff-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-top: 0.85rem;
+}
+
+.buff-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.25rem 0.55rem;
+  border: 1px solid #81c784;
+  border-radius: 999px;
+  background: #1f3028;
+  color: #c8e6c9;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.equipped-ball-card {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-top: 0.85rem;
+  padding: 0.75rem;
+  border: 1px solid #385045;
+  border-radius: 8px;
+  background: #16231f;
+}
+
+.equipped-ball-card span {
+  display: block;
+  color: #81c784;
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.equipped-ball-card p {
+  color: #c8e6c9;
+  font-size: 0.8rem;
+}
+
+@media (max-width: 820px) {
+  .ball-grid,
+  .pickup-grid {
+    grid-template-columns: 1fr;
+  }
+}

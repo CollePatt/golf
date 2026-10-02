@@ -1,6 +1,7 @@
 import { getHoleDefinition, getHoleHazards } from '../data/courses.js';
 import { getCoursePerkDistanceMultiplier } from '../data/coursePerks.js';
 import { getSwingMode } from '../data/swingModes.js';
+import { getBallDistanceMultiplier, getBallEffects } from '../data/balls.js';
 import {
   getApproachEntryRemaining,
   getApproachRange,
@@ -15,6 +16,7 @@ import {
   getPuttingBonus,
   rollSwingYards,
 } from './swingLogic.js';
+import { getBuffDistanceMultiplier } from './pickupLogic.js';
 
 export const SAND_DISTANCE_MULTIPLIER = 0.7;
 const LAY_UP_GAP = 8;
@@ -24,8 +26,22 @@ function clamp(value, min, max) {
   return Math.max(min, Math.min(max, value));
 }
 
-export function getLieMultiplier(lie) {
-  return lie === 'sand' ? SAND_DISTANCE_MULTIPLIER : 1;
+export function getSandMultiplier(s) {
+  return getBallEffects(s).sandMultiplier ?? SAND_DISTANCE_MULTIPLIER;
+}
+
+export function getLieMultiplier(lie, s = null) {
+  return lie === 'sand' ? getSandMultiplier(s) : 1;
+}
+
+// Every distance multiplier that is not an upgrade, wind, hole trait or swing
+// mode: course perk, lie, equipped ball, and pickup buffs.
+export function getShotDistanceMultiplier(s) {
+  const holeDefinition = getHoleDefinition(s.courseId, s.hole);
+  return getCoursePerkDistanceMultiplier(s.activeCoursePerk)
+    * getLieMultiplier(s.lie, s)
+    * getBallDistanceMultiplier(s, holeDefinition.theme)
+    * getBuffDistanceMultiplier(s);
 }
 
 // Expected full-swing distance for the ball's current spot, before variance.
@@ -34,9 +50,22 @@ export function getShotExpectedYards(s, swingModeId = s.selectedSwingMode) {
     getEffectLevels(s),
     s.wind,
     getHoleDefinition(s.courseId, s.hole),
-    getCoursePerkDistanceMultiplier(s.activeCoursePerk) * getLieMultiplier(s.lie),
+    getShotDistanceMultiplier(s),
     swingModeId
   );
+}
+
+// Approach control from upgrades, adjusted by the equipped ball.
+export function getShotApproachStats(s, source = 'manual') {
+  const stats = getApproachControlStats(getEffectLevels(s), source);
+  return {
+    ...stats,
+    errorMultiplier: stats.errorMultiplier * (getBallEffects(s).approachErrorMult ?? 1),
+  };
+}
+
+export function getShotPuttingBonus(s) {
+  return getPuttingBonus(getEffectLevels(s)) + (getBallEffects(s).puttBonus ?? 0);
 }
 
 export function getCurrentApproachRange(s) {
@@ -80,17 +109,18 @@ export function rollPutts(proximity, options = {}, rng = Math.random) {
  *
  *   strokes   : swing + putts + penalty strokes added to the score
  *   ballsUsed : balls spent (the swing, plus one lost to water)
+ *   restAt    : yards from the tee where the ball stopped, or null if it was lost
  */
 export function playShot(s, { source = 'manual', focused = false, rng = Math.random } = {}) {
   const holeDefinition = getHoleDefinition(s.courseId, s.hole);
   const swingMode = getSwingMode(s.selectedSwingMode);
   const effectLevels = getEffectLevels(s);
-  const lieMultiplier = getLieMultiplier(s.lie);
   const swing = rollSwingYards(effectLevels, s.wind, holeDefinition, {
     focused,
     source,
-    distanceMultiplier: getCoursePerkDistanceMultiplier(s.activeCoursePerk) * lieMultiplier,
+    distanceMultiplier: getShotDistanceMultiplier(s),
     swingMode: swingMode.id,
+    forcePerfect: Boolean(s.buffs?.clover),
   });
   const remainingBefore = getRemainingDistance(s.targetDistance, s.yardsThisHole);
   const approachRange = getApproachRange(swing.expectedYards);
@@ -101,7 +131,7 @@ export function playShot(s, { source = 'manual', focused = false, rng = Math.ran
       remaining: remainingBefore,
       swing,
       swingModeId: swingMode.id,
-      approachStats: getApproachControlStats(effectLevels, source),
+      approachStats: getShotApproachStats(s, source),
       focused,
       rng,
     });
@@ -109,7 +139,7 @@ export function playShot(s, { source = 'manual', focused = false, rng = Math.ran
     if (approach.cleared) {
       putts = rollPutts(approach.proximity, {
         swingModeId: swingMode.id,
-        bonus: getPuttingBonus(effectLevels) + (focused ? 0.1 : 0),
+        bonus: getShotPuttingBonus(s) + (focused ? 0.1 : 0),
       }, rng);
     }
     return {
@@ -122,6 +152,9 @@ export function playShot(s, { source = 'manual', focused = false, rng = Math.ran
         lieNote,
       },
       yardsThisHole: approach.cleared ? s.targetDistance : s.targetDistance - approach.nextRemaining,
+      restAt: approach.cleared
+        ? s.targetDistance - (approach.proximity ?? 0)
+        : s.targetDistance - approach.nextRemaining,
       strokes: 1 + putts,
       ballsUsed: 1,
       holeCleared: approach.cleared,
@@ -151,7 +184,15 @@ export function playShot(s, { source = 'manual', focused = false, rng = Math.ran
   };
 
   const hitHazard = hazards.find(hazard => landing >= hazard.start && landing <= hazard.end);
-  if (hitHazard?.type === 'water') {
+  const skipChance = getBallEffects(s).waterSkipChance ?? 0;
+  if (hitHazard?.type === 'water' && skipChance > 0 && rng() < skipChance) {
+    landing = hitHazard.end + WATER_DROP_GAP;
+    result.swing.hazard = {
+      ...hitHazard,
+      type: 'skip',
+      description: `Skipped across the ${hitHazard.name}! No penalty.`,
+    };
+  } else if (hitHazard?.type === 'water') {
     const drop = Math.max(s.yardsThisHole, hitHazard.start - WATER_DROP_GAP);
     result.swing.hazard = {
       ...hitHazard,
@@ -160,13 +201,14 @@ export function playShot(s, { source = 'manual', focused = false, rng = Math.ran
     result.strokes += 1;
     result.ballsUsed += 1;
     result.yardsThisHole = drop;
+    result.restAt = null;
     return result;
   }
   if (hitHazard?.type === 'bunker') {
     result.lie = 'sand';
     result.swing.hazard = {
       ...hitHazard,
-      description: `In the ${hitHazard.name}. Next shot plays ${Math.round((1 - SAND_DISTANCE_MULTIPLIER) * 100)}% shorter.`,
+      description: `In the ${hitHazard.name}. Next shot plays ${Math.round((1 - getSandMultiplier(s)) * 100)}% shorter.`,
     };
   }
 
@@ -185,5 +227,6 @@ export function playShot(s, { source = 'manual', focused = false, rng = Math.ran
   }
 
   result.yardsThisHole = landing;
+  result.restAt = landing;
   return result;
 }
