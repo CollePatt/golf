@@ -203,6 +203,7 @@ function advanceSwingState(prev, source = 'manual') {
       phase: 'upgrade',
       roundResult: 'complete',
       yardsToAllocate: s.yardsToAllocate + getEarnedUpgradeYards(s, newTotalYards),
+      cycleYardsEarned: s.cycleYardsEarned + getEarnedUpgradeYards(s, newTotalYards),
     });
   }
 
@@ -225,6 +226,7 @@ function advanceSwingState(prev, source = 'manual') {
       phase: 'upgrade',
       roundResult: 'outOfBalls',
       yardsToAllocate: s.yardsToAllocate + getEarnedUpgradeYards(s, newTotalYards),
+      cycleYardsEarned: s.cycleYardsEarned + getEarnedUpgradeYards(s, newTotalYards),
     });
   }
 

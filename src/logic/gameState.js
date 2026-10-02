@@ -13,7 +13,7 @@ import { normalizeWind, rollWind } from './runModifiers.js';
 import { DEFAULT_BALL_ID, isBallUnlocked } from '../data/balls.js';
 import { createBuffs, normalizeBuffs, normalizeHolePickups } from './pickupLogic.js';
 
-export const SAVE_VERSION = 13;
+export const SAVE_VERSION = 14;
 
 export const BASE_YARDS_PER_SWING = 25;
 export const BASE_STARTING_BALLS = 10;
@@ -117,6 +117,7 @@ export function createInitialState() {
     completedCourseIds: [],        // completed in the current pro cycle
     selectedCourseId: COURSES[0].id, // course the next round starts on
     cycleBestRounds: {},           // courseId -> best round this pro cycle (prestige scoring)
+    cycleYardsEarned: 0,           // upgrade yards earned this pro cycle (sets the signing bonus)
     courseRecords: {},             // courseId -> all-time best round
     prestige: createPrestigeState(),
     lastProResult: null,           // { earned, count } after the most recent prestige
@@ -306,6 +307,7 @@ export function normalizeState(savedState) {
     recentAchievements: Array.isArray(state?.recentAchievements) ? state.recentAchievements : [],
     scorecard: normalizeScorecard(state?.scorecard, normalizedCourseId),
     roundsCompleted: Number.isFinite(state?.roundsCompleted) ? state.roundsCompleted : 0,
+    cycleYardsEarned: Number.isFinite(state?.cycleYardsEarned) ? Math.max(0, state.cycleYardsEarned) : 0,
     bestCompletedRound: state?.bestCompletedRound || null,
   };
   return {

@@ -44,7 +44,11 @@ export default function ProPanel({ state, onTurnPro, onBuyProUpgrade }) {
       {state.lastProResult && (
         <div className="achievement-callout pro-callout">
           <span>Turned Pro #{state.lastProResult.count}</span>
-          <strong>Banked {state.lastProResult.earned} Pro Points. Spend them below, then tee off.</strong>
+          <strong>
+            Banked {state.lastProResult.earned} Pro Points
+            {state.lastProResult.signingBonus > 0 && ` and a ${state.lastProResult.signingBonus.toLocaleString()} yd signing bonus`}.
+            Spend them, then tee off.
+          </strong>
         </div>
       )}
 
