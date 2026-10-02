@@ -204,7 +204,7 @@ h3 {
 
 .swing-mode-selector {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   gap: 0.5rem;
 }
 
@@ -1202,6 +1202,61 @@ h3 {
 .reset-btn:hover {
   color: #81c784;
   border-color: #4a6a4a;
+}
+
+/* Putting and hazards */
+.swing-panel .putting-line {
+  color: #a5d6a7;
+  font-weight: 700;
+}
+
+.swing-panel .hazard-line.water {
+  color: #90caf9;
+}
+
+.swing-panel .hazard-line.bunker,
+.swing-panel .hazard-line.layup {
+  color: #f1d58a;
+}
+
+.hazard-panel {
+  padding: 0.75rem;
+  border: 1px solid #f1d58a;
+  border-radius: 8px;
+  background: rgba(241, 213, 138, 0.08);
+}
+
+.hazard-panel.water {
+  border-color: #64b5f6;
+  background: rgba(100, 181, 246, 0.1);
+}
+
+.hazard-panel span,
+.hazard-panel strong {
+  display: block;
+}
+
+.hazard-panel span {
+  color: #f1d58a;
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.hazard-panel.water span {
+  color: #90caf9;
+}
+
+.hazard-panel strong {
+  margin-top: 0.2rem;
+  color: #ffffff;
+}
+
+.hazard-panel p {
+  margin-top: 0.3rem;
+  color: #c8e6c9;
+  font-size: 0.82rem;
 }
 
 /* Round start actions */

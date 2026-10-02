@@ -14,7 +14,10 @@ export default function GuidePanel() {
           <ul>
             <li>Each swing spends one ball.</li>
             <li>Clear the target distance to advance to the next hole.</li>
-            <li>Inside 120 yards, the hole shifts into Approach Mode.</li>
+            <li>Once a full swing can reach the pin, the hole shifts into Approach Mode (at least 120 yards out).</li>
+            <li>Approaches that find the green are putted out automatically; closer approaches mean fewer putts.</li>
+            <li>Putts add strokes but never cost a ball.</li>
+            <li>Water costs a stroke and a ball. Bunkers shorten your next shot. Lay Up stops short of both.</li>
             <li>Manual swings build Focus; a full meter powers up your next manual shot.</li>
             <li>Swing modes trade consistency, Focus gain, and distance.</li>
             <li>The round ends after hole 18 or when you run out of balls.</li>
@@ -27,7 +30,7 @@ export default function GuidePanel() {
         <section className="guide-card">
           <h3>Scoring</h3>
           <ul>
-            <li>Each hole has a par based on its target distance.</li>
+            <li>Par is full swings to reach the green at the course's design power, plus two putts.</li>
             <li>Fewer shots improves your score to par.</li>
             <li>Approach shots must land close enough to finish; misses leave a follow-up distance.</li>
             <li>Your best completed round is saved automatically.</li>
@@ -42,6 +45,7 @@ export default function GuidePanel() {
           <ul>
             <li>Spend yards on clubs, extra balls, and multipliers.</li>
             <li>Soft Landing improves approach control and reduces punishing long misses.</li>
+            <li>Flat Stick raises one-putt odds and cuts three-putts.</li>
             <li>Caddie Read improves approach finish windows and makes Auto Caddie better near the green.</li>
             <li>Unlock Auto Caddie to keep swinging while you look away.</li>
             <li>Use the upgrade tab after each run to invest your earnings.</li>
@@ -55,7 +59,7 @@ export default function GuidePanel() {
           <ul>
             <li>Clear Meadow Municipal and Moon Links in one cycle to unlock Turn Pro.</li>
             <li>Each cleared course pays Pro Points from its best round this cycle.</li>
-            <li>Even par pays the course value; fewer shots pay more, extra shots pay less.</li>
+            <li>Even par pays the course value, and each stroke under par adds 5% (each stroke over takes 5%).</li>
             <li>Turning pro resets yard upgrades, perks, and course progress.</li>
             <li>Pro upgrades, achievements, lifetime stats, and course records are kept.</li>
             <li>Course Pass opens Sahara Sands, Glacier Greens, and Caldera Classic.</li>

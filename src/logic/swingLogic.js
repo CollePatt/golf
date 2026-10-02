@@ -133,6 +133,14 @@ export function getApproachControlStats(upgrades, source = 'manual') {
   };
 }
 
+export function getPuttingBonus(upgrades) {
+  let bonus = 0;
+  forEachActiveEffect(upgrades, (e, level) => {
+    if (e.type === 'puttBonus') bonus += e.value * level;
+  });
+  return bonus;
+}
+
 export function getYardsEarnedMultiplier(upgrades) {
   let mult = 1;
   forEachActiveEffect(upgrades, (e, level) => {

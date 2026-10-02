@@ -16,14 +16,18 @@ function toHoleDefinition([name, theme, label, description, distanceMultiplier])
 //   coursePass: available once the Course Pass Tier 2 upgrade reaches `level`
 //
 // prestigeValue: Pro Points for an even-par finish (see prestigeLogic.js).
-// parYardScale: divides hole yardage before par lookup so long courses keep sensible pars.
+// designYards: the swing distance the course is built for. Par assumes that many
+//   yards per swing to reach the green, plus two putts (see parForHole).
+// hazardNames: what water and bunker hazards are called on this course.
 export const COURSES = [
   {
     id: 'meadowMunicipal',
     name: 'Meadow Municipal',
     description: 'A forgiving local course that gets longer and moodier as the round goes on.',
-    targetBase: 300,
-    targetStep: 50,
+    targetBase: 200,
+    targetStep: 30,
+    designYards: 260,
+    hazardNames: { water: 'Creek', bunker: 'Fairway Bunker' },
     unlock: { type: 'start' },
     prestigeValue: 4,
     holes: [
@@ -51,8 +55,10 @@ export const COURSES = [
     id: 'moonLinks',
     name: 'Moon Links',
     description: 'A low-gravity course with long carries, crater lips, and a very quiet gallery.',
-    targetBase: 380,
-    targetStep: 65,
+    targetBase: 260,
+    targetStep: 40,
+    designYards: 330,
+    hazardNames: { water: 'Coolant Pool', bunker: 'Crater' },
     unlock: { type: 'chain', after: 'meadowMunicipal' },
     prestigeValue: 6,
     holes: [
@@ -82,7 +88,8 @@ export const COURSES = [
     description: 'Endless dunes, baked fairways that roll forever, and bunkers the size of towns.',
     targetBase: 520,
     targetStep: 80,
-    parYardScale: 1.7,
+    designYards: 700,
+    hazardNames: { water: 'Oasis', bunker: 'Dune Trap' },
     unlock: { type: 'coursePass', level: 1 },
     prestigeValue: 10,
     holes: [
@@ -112,7 +119,8 @@ export const COURSES = [
     description: 'Ice-slick fairways and thin alpine air. Long carries, but snowbanks swallow mistakes.',
     targetBase: 700,
     targetStep: 100,
-    parYardScale: 2.3,
+    designYards: 950,
+    hazardNames: { water: 'Meltwater', bunker: 'Snowbank' },
     unlock: { type: 'coursePass', level: 2 },
     prestigeValue: 15,
     holes: [
@@ -142,7 +150,8 @@ export const COURSES = [
     description: 'A championship course inside an active volcano. Updrafts launch the ball, ash buries it.',
     targetBase: 950,
     targetStep: 130,
-    parYardScale: 3.1,
+    designYards: 1250,
+    hazardNames: { water: 'Lava Flow', bunker: 'Ash Pit' },
     unlock: { type: 'coursePass', level: 3 },
     prestigeValue: 22,
     holes: [
@@ -283,6 +292,27 @@ export function getCourseById(courseId) {
 export function getHoleDefinition(courseId, hole) {
   const course = getCourseById(courseId);
   return course.holes[hole - 1] || course.holes[0];
+}
+
+// Fairway hazards follow a fixed rhythm so each hole plays the same every visit.
+// Bands are fractions of hole length, measured from the tee.
+const HAZARD_PATTERN = [
+  { every: 3, offset: 0, type: 'water', from: 0.42, to: 0.56 },
+  { every: 4, offset: 2, type: 'bunker', from: 0.62, to: 0.72 },
+  { every: 5, offset: 1, type: 'bunker', from: 0.3, to: 0.38 },
+];
+
+export function getHoleHazards(courseId, hole, targetDistance) {
+  const course = getCourseById(courseId);
+  const names = course.hazardNames || { water: 'Water', bunker: 'Bunker' };
+  return HAZARD_PATTERN
+    .filter(pattern => hole % pattern.every === pattern.offset)
+    .map(pattern => ({
+      type: pattern.type,
+      name: names[pattern.type],
+      start: Math.round(targetDistance * pattern.from),
+      end: Math.round(targetDistance * pattern.to),
+    }));
 }
 
 export function getNextCourseId(courseId) {

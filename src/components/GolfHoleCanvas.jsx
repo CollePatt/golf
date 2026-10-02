@@ -12,10 +12,17 @@ function easeOut(t) {
   return 1 - (1 - t) * (1 - t)
 }
 
-export default function GolfHoleCanvas({ yardsThisRun, targetDistance, approachDistance = 120, theme }) {
+const HAZARD_STYLES = {
+  water: { fill: 'rgba(56, 132, 214, 0.85)', label: '#e0f2fe' },
+  bunker: { fill: 'rgba(233, 205, 140, 0.95)', label: '#3f2d12' },
+}
+
+export default function GolfHoleCanvas({ yardsThisRun, targetDistance, approachDistance = 120, hazards = [], theme }) {
   const canvasRef = useRef(null)
   const rafRef = useRef(null)
   const prevYardsRef = useRef(0)
+  const hazardsRef = useRef(hazards)
+  hazardsRef.current = hazards
 
   const r = useRef({
     ballVX: 0,
@@ -90,6 +97,23 @@ export default function GolfHoleCanvas({ yardsThisRun, targetDistance, approachD
         ctx.textAlign = 'center'
         const labelX = Math.max(44, Math.min(W - 44, approachStartX + 64))
         ctx.fillText('APPROACH', labelX, GROUND_Y - 12)
+      }
+
+      // Fairway hazards
+      for (const hazard of hazardsRef.current) {
+        const style = HAZARD_STYLES[hazard.type] || HAZARD_STYLES.bunker
+        const startX = hazard.start * SCALE - cam
+        const endX = hazard.end * SCALE - cam
+        if (endX < 0 || startX > W) continue
+        ctx.fillStyle = style.fill
+        ctx.beginPath()
+        ctx.ellipse((startX + endX) / 2, GROUND_Y + 5, (endX - startX) / 2, 7, 0, 0, Math.PI * 2)
+        ctx.fill()
+        ctx.fillStyle = style.label
+        ctx.font = 'bold 10px system-ui'
+        ctx.textAlign = 'center'
+        const labelX = Math.max(startX + 30, Math.min(endX - 30, W / 2))
+        ctx.fillText(hazard.name.toUpperCase(), labelX, GROUND_Y + 26)
       }
 
       // Yardage tick marks

@@ -4,7 +4,7 @@ function getBestRecordScoreToPar(state) {
   const scores = Object.values(state.courseRecords)
     .filter(record => !record.migrated)
     .map(record => record.scoreToPar);
-  return scores.length ? Math.min(...scores) : 0;
+  return scores.length ? Math.min(...scores) : Infinity;
 }
 
 function hasClearedCoursePassCourse(state) {
@@ -79,12 +79,20 @@ export const ACHIEVEMENTS = [
     progress: state => `${Math.min(1, state.lifetimeStats.coursesCompleted)} / 1`,
   },
   {
-    id: 'deepRed',
-    title: 'Deep Red',
-    description: 'Finish any course 35 or more under par.',
+    id: 'redNumbers',
+    title: 'Red Numbers',
+    description: 'Finish any course under par.',
     rewardYards: 1500,
-    isUnlocked: state => getBestRecordScoreToPar(state) <= -35,
-    progress: state => `${Math.min(35, Math.max(0, -getBestRecordScoreToPar(state)))} / 35`,
+    isUnlocked: state => getBestRecordScoreToPar(state) < 0,
+    progress: state => `${getBestRecordScoreToPar(state) < 0 ? 1 : 0} / 1`,
+  },
+  {
+    id: 'holedOut',
+    title: 'Holed Out',
+    description: 'Hole an approach shot without needing a putt.',
+    rewardYards: 600,
+    isUnlocked: state => state.lifetimeStats.holeOuts >= 1,
+    progress: state => `${Math.min(1, state.lifetimeStats.holeOuts)} / 1`,
   },
   {
     id: 'turnedPro',

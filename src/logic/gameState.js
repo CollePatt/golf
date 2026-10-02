@@ -23,12 +23,11 @@ export function yardsForHole(hole, courseId = COURSES[0].id) {
   return (course.targetBase ?? 300) + (hole - 1) * (course.targetStep ?? 50);
 }
 
+// Par = full swings to reach the green at the course's design power, plus two putts.
 export function parForHole(hole, courseId = COURSES[0].id) {
-  const yards = yardsForHole(hole, courseId) / (getCourseById(courseId).parYardScale ?? 1);
-  if (yards < 400) return 4;
-  if (yards < 600) return 5;
-  if (yards < 850) return 6;
-  return 7;
+  const course = getCourseById(courseId);
+  const swingsToGreen = Math.ceil(yardsForHole(hole, courseId) / (course.designYards ?? 260));
+  return Math.max(3, Math.min(5, swingsToGreen + 2));
 }
 
 function buildInitialUpgrades() {
@@ -68,6 +67,10 @@ function createLifetimeStats() {
     coursesCompleted: 0,
     bestSwing: 0,
     achievementYards: 0,
+    putts: 0,
+    onePutts: 0,
+    holeOuts: 0,
+    waterBalls: 0,
   };
 }
 
@@ -92,6 +95,7 @@ export function createInitialState() {
     hole: 1,
     targetDistance: yardsForHole(1),
     yardsThisHole: 0,              // resets each hole
+    lie: 'fairway',                // 'fairway' | 'sand'
     currentHoleShots: 0,
     ballsLeft: BASE_STARTING_BALLS,
     totalShots: 0,                 // shots taken this round (for prestige later)
@@ -265,6 +269,7 @@ export function normalizeState(savedState) {
       ? state.targetDistance
       : yardsForHole(normalizedHole, normalizedCourseId),
     currentHoleShots: Number.isFinite(state?.currentHoleShots) ? state.currentHoleShots : 0,
+    lie: state?.lie === 'sand' ? 'sand' : 'fairway',
     upgrades: normalizeUpgradeState(state?.upgrades),
     wind: normalizeWind(state?.wind),
     lastSwing: state?.lastSwing || null,

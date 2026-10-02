@@ -30,7 +30,9 @@ After adding a screenshot, uncomment this line:
 - Wider tabbed layout for play, upgrades, scorecard, and guide screens.
 - Simplified play stats with expandable detailed stats.
 - On-screen rules and a clear goal for new players.
-- Approach Mode inside 120 yards, where landing accuracy matters more than raw overflow.
+- Approach Mode once the pin is in reach, where landing accuracy matters more than raw overflow.
+- Real pars (3/4/5), automatic putting from approach proximity, and the Flat Stick upgrade.
+- Fairway water and bunkers, plus a Lay Up swing mode to play around them.
 - Named holes with light gameplay traits and changing course palettes.
 - Moon Links second course with its own yardage curve, hole names, and lunar palettes.
 - Course-completion perk choices that carry into the next course attempt.

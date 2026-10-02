@@ -8,15 +8,19 @@ import {
 } from './gameState.js';
 import { getEffectLevels, getStartingBalls } from './swingLogic.js';
 
-// Pro Points for one course = prestigeValue × (par / shots)², clamped.
-// Even par pays the course value; 10% under par pays ~23% more, 10% over pays ~17% less.
+// Pro Points for one course = prestigeValue × (1 + 5% per stroke under par), clamped.
+// Even par pays the course value; 10 under pays 1.5×, 10 over pays 0.5×.
+export const POINTS_PER_STROKE = 0.05;
 export const MIN_SHOT_EFFICIENCY = 0.25;
 export const MAX_SHOT_EFFICIENCY = 3;
 
 export function getShotEfficiency(courseId, shots) {
   if (!Number.isFinite(shots) || shots <= 0) return 0;
-  const ratio = getCourseParTotal(courseId) / shots;
-  return Math.max(MIN_SHOT_EFFICIENCY, Math.min(MAX_SHOT_EFFICIENCY, ratio * ratio));
+  const strokesUnderPar = getCourseParTotal(courseId) - shots;
+  return Math.max(
+    MIN_SHOT_EFFICIENCY,
+    Math.min(MAX_SHOT_EFFICIENCY, 1 + strokesUnderPar * POINTS_PER_STROKE)
+  );
 }
 
 export function getCoursePrestigePoints(courseId, shots) {
