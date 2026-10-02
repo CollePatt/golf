@@ -7,13 +7,21 @@ import {
   getScoreToPar,
   parForHole,
 } from '../logic/gameState.js';
-import { formatAutoSwingInterval, getApproachControlStats, getEffectLevels } from '../logic/swingLogic.js';
+import { formatAutoSwingInterval } from '../logic/swingLogic.js';
 import {
   getApproachFinishWindow,
   getApproachRange,
   isApproachDistance,
 } from '../logic/approachLogic.js';
-import { getActiveHazards, getNextHazard, SAND_DISTANCE_MULTIPLIER } from '../logic/holeLogic.js';
+import {
+  getActiveHazards,
+  getNextHazard,
+  getSandMultiplier,
+  getShotApproachStats,
+} from '../logic/holeLogic.js';
+import { getPickupRadius } from '../logic/pickupLogic.js';
+import { getBallById } from '../data/balls.js';
+import SpriteIcon from './SpriteIcon.jsx';
 import { getCoursePerkById } from '../data/coursePerks.js';
 import { SWING_MODES, getSwingMode } from '../data/swingModes.js';
 
@@ -55,9 +63,12 @@ export default function HoleScreen({
   const nextHazard = approachActive ? null : getNextHazard(activeHazards, yardsThisHole);
   const inSand = state.lie === 'sand';
   const focusedReady = focusMeter >= focusReady;
-  const effectLevels = getEffectLevels(state);
-  const manualApproachStats = getApproachControlStats(effectLevels, 'manual');
-  const autoApproachStats = getApproachControlStats(effectLevels, 'auto');
+  const manualApproachStats = getShotApproachStats(state, 'manual');
+  const autoApproachStats = getShotApproachStats(state, 'auto');
+  const equippedBall = getBallById(state.equippedBall);
+  const holePickups = state.holePickups?.items || [];
+  const pickupsLeft = holePickups.filter(item => !item.collected).length;
+  const buffs = state.buffs || {};
   const approachWindow = getApproachFinishWindow(selectedSwingMode.id, focusedReady, manualApproachStats);
   const displayedExpectedYards = approachActive ? Math.min(yardsPerSwing, remaining) : yardsPerSwing;
   const approachTightening = Math.round((1 - manualApproachStats.errorMultiplier) * 100);
@@ -107,6 +118,9 @@ export default function HoleScreen({
             targetDistance={targetDistance}
             approachDistance={approachRange}
             hazards={activeHazards}
+            pickups={state.holePickups}
+            pickupRadius={getPickupRadius(state, yardsPerSwing)}
+            ballStyle={equippedBall.id}
             theme={theme}
             themeId={holeDefinition.theme}
           />
@@ -168,6 +182,12 @@ export default function HoleScreen({
                 <p className={`hazard-line ${lastSwing.hazard.type}`}>{lastSwing.hazard.description}</p>
               )}
               {lastSwing?.laidUp && <p className="hazard-line layup">Laid up short of trouble.</p>}
+              {lastSwing?.pickups?.map((pickup, index) => (
+                <p key={`${pickup.type}-${index}`} className="pickup-line">
+                  <SpriteIcon sheet="pickups" tag={pickup.type} scale={2} />
+                  {pickup.label}: {pickup.description}
+                </p>
+              ))}
               {lastSwing?.event && (
                 <p className="shot-event-line">
                   {lastSwing.event.label}: {lastSwing.event.description}
@@ -223,6 +243,38 @@ export default function HoleScreen({
               <strong>{totalYardsThisRound}</strong>
             </div>
           </div>
+          <div className="equipped-ball-card">
+            <SpriteIcon sheet="balls" tag={equippedBall.id} scale={4} />
+            <div>
+              <span>Ball: {equippedBall.label}</span>
+              <p>{equippedBall.description}</p>
+            </div>
+          </div>
+          {(pickupsLeft > 0 || buffs.tailwindSwings > 0 || buffs.clover || buffs.magnet) && (
+            <div className="buff-row" aria-label="Pickups and active boosts">
+              {pickupsLeft > 0 && (
+                <span className="buff-chip">{pickupsLeft} pickup{pickupsLeft > 1 ? 's' : ''} on this hole</span>
+              )}
+              {buffs.tailwindSwings > 0 && (
+                <span className="buff-chip">
+                  <SpriteIcon sheet="pickups" tag="tailwind" scale={2} />
+                  Tailwind ×{buffs.tailwindSwings}
+                </span>
+              )}
+              {buffs.clover && (
+                <span className="buff-chip">
+                  <SpriteIcon sheet="pickups" tag="clover" scale={2} />
+                  Perfect next
+                </span>
+              )}
+              {buffs.magnet && (
+                <span className="buff-chip">
+                  <SpriteIcon sheet="pickups" tag="magnet" scale={2} />
+                  Magnet
+                </span>
+              )}
+            </div>
+          )}
           <div className="round-modifier">
             <div>
               <span>Wind</span>
@@ -235,7 +287,7 @@ export default function HoleScreen({
               <span>{inSand ? 'In The Sand' : nextHazard.type === 'water' ? 'Water Ahead' : 'Bunker Ahead'}</span>
               <strong>
                 {inSand
-                  ? `Next shot ${Math.round((1 - SAND_DISTANCE_MULTIPLIER) * 100)}% shorter`
+                  ? `Next shot ${Math.round((1 - getSandMultiplier(state)) * 100)}% shorter`
                   : `${nextHazard.name}: ${Math.max(0, nextHazard.start - yardsThisHole)}–${nextHazard.end - yardsThisHole} yds out`}
               </strong>
               {!inSand && (

@@ -10,8 +10,10 @@ import { PRO_UPGRADES } from '../data/proUpgrades.js';
 import { createCoursePerkChoices, getCoursePerkById } from '../data/coursePerks.js';
 import { getSwingMode } from '../data/swingModes.js';
 import { normalizeWind, rollWind } from './runModifiers.js';
+import { DEFAULT_BALL_ID, isBallUnlocked } from '../data/balls.js';
+import { createBuffs, normalizeBuffs, normalizeHolePickups } from './pickupLogic.js';
 
-export const SAVE_VERSION = 12;
+export const SAVE_VERSION = 13;
 
 export const BASE_YARDS_PER_SWING = 25;
 export const BASE_STARTING_BALLS = 10;
@@ -71,6 +73,8 @@ function createLifetimeStats() {
     onePutts: 0,
     holeOuts: 0,
     waterBalls: 0,
+    pickups: 0,
+    pickupsByType: {},
   };
 }
 
@@ -116,6 +120,9 @@ export function createInitialState() {
     courseRecords: {},             // courseId -> all-time best round
     prestige: createPrestigeState(),
     lastProResult: null,           // { earned, count } after the most recent prestige
+    equippedBall: DEFAULT_BALL_ID, // see data/balls.js; kept when turning pro
+    holePickups: null,             // { key, items } for the current hole, rolled lazily
+    buffs: createBuffs(),          // pickup effects waiting on the next swings
     lifetimeStats: createLifetimeStats(),
     achievements: {},
     recentAchievements: [],
@@ -229,9 +236,13 @@ export function migrateState(state) {
 }
 
 function normalizeLifetimeStats(lifetimeStats = {}) {
-  return {
+  const stats = {
     ...createLifetimeStats(),
     ...lifetimeStats,
+  };
+  return {
+    ...stats,
+    pickupsByType: stats.pickupsByType && typeof stats.pickupsByType === 'object' ? stats.pickupsByType : {},
   };
 }
 
@@ -259,7 +270,7 @@ export function normalizeState(savedState) {
     Math.max(1, Number.isFinite(state?.hole) ? state.hole : initial.hole)
   );
 
-  return {
+  const normalized = {
     ...initial,
     ...state,
     version: SAVE_VERSION,
@@ -289,11 +300,17 @@ export function normalizeState(savedState) {
     courseRecords: normalizeRoundRecords(state?.courseRecords),
     prestige: normalizePrestigeState(state?.prestige),
     lifetimeStats: normalizeLifetimeStats(state?.lifetimeStats),
+    holePickups: normalizeHolePickups(state?.holePickups),
+    buffs: normalizeBuffs(state?.buffs),
     achievements: state?.achievements || {},
     recentAchievements: Array.isArray(state?.recentAchievements) ? state.recentAchievements : [],
     scorecard: normalizeScorecard(state?.scorecard, normalizedCourseId),
     roundsCompleted: Number.isFinite(state?.roundsCompleted) ? state.roundsCompleted : 0,
     bestCompletedRound: state?.bestCompletedRound || null,
+  };
+  return {
+    ...normalized,
+    equippedBall: isBallUnlocked(state?.equippedBall, normalized) ? state.equippedBall : DEFAULT_BALL_ID,
   };
 }
 

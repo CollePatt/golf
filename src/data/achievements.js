@@ -1,10 +1,15 @@
 import { COURSES } from './courses.js';
+import { BALLS, isBallUnlocked } from './balls.js';
 
 function getBestRecordScoreToPar(state) {
   const scores = Object.values(state.courseRecords)
     .filter(record => !record.migrated)
     .map(record => record.scoreToPar);
   return scores.length ? Math.min(...scores) : Infinity;
+}
+
+function countUnlockedBalls(state) {
+  return BALLS.filter(ball => isBallUnlocked(ball.id, state)).length;
 }
 
 function hasClearedCoursePassCourse(state) {
@@ -109,6 +114,22 @@ export const ACHIEVEMENTS = [
     rewardYards: 3000,
     isUnlocked: state => hasClearedCoursePassCourse(state),
     progress: state => `${hasClearedCoursePassCourse(state) ? 1 : 0} / 1`,
+  },
+  {
+    id: 'treasureHunter',
+    title: 'Treasure Hunter',
+    description: 'Collect 25 course pickups.',
+    rewardYards: 800,
+    isUnlocked: state => (state.lifetimeStats.pickups ?? 0) >= 25,
+    progress: state => `${Math.min(25, state.lifetimeStats.pickups ?? 0)} / 25`,
+  },
+  {
+    id: 'fullBag',
+    title: 'Full Bag',
+    description: 'Unlock every golf ball.',
+    rewardYards: 2500,
+    isUnlocked: state => countUnlockedBalls(state) >= BALLS.length,
+    progress: state => `${countUnlockedBalls(state)} / ${BALLS.length}`,
   },
 ];
 

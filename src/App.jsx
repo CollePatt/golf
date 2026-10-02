@@ -21,6 +21,14 @@ import { applyTurnPro, buyProUpgrade, canTurnPro } from './logic/prestigeLogic.j
 import { getShotExpectedYards, playShot } from './logic/holeLogic.js';
 import { COURSES, getNextCourseId, isCourseUnlocked } from './data/courses.js';
 import { ACHIEVEMENTS } from './data/achievements.js';
+import { getBallEffects, isBallUnlocked } from './data/balls.js';
+import {
+  collectPickups,
+  consumeSwingBuffs,
+  createBuffs,
+  getHolePickupKey,
+  withHolePickups,
+} from './logic/pickupLogic.js';
 import {
   createCoursePerkChoices,
   getCoursePerkFocusGain,
@@ -36,6 +44,7 @@ import AchievementsPanel from './components/AchievementsPanel.jsx';
 import GuidePanel from './components/GuidePanel.jsx';
 import CourseSelectPanel from './components/CourseSelectPanel.jsx';
 import ProPanel from './components/ProPanel.jsx';
+import BallBagPanel from './components/BallBagPanel.jsx';
 import './App.css';
 
 const FOCUS_GAIN_PER_MANUAL_SWING = 18;
@@ -108,17 +117,37 @@ function getDefaultNextCourseId(s) {
 }
 
 function getEarnedUpgradeYards(s, totalYards) {
-  return Math.round(totalYards * getYardsEarnedMultiplier(getEffectLevels(s)));
+  return Math.round(
+    totalYards
+      * getYardsEarnedMultiplier(getEffectLevels(s))
+      * (getBallEffects(s).yardsEarnedMult ?? 1)
+  );
 }
 
-function advanceSwingState(s, source = 'manual') {
-  if (s.phase !== 'run' || s.ballsLeft <= 0) return s;
+function advanceSwingState(prev, source = 'manual') {
+  if (prev.phase !== 'run' || prev.ballsLeft <= 0) return prev;
 
-  const focused = source === 'manual' && s.focusMeter >= FOCUS_READY;
-  const swingMode = getSwingMode(s.selectedSwingMode);
-  const shot = playShot(s, { source, focused });
-  const resolvedSwing = shot.swing;
-  const swing = shot.swing;
+  const focused = source === 'manual' && prev.focusMeter >= FOCUS_READY;
+  const swingMode = getSwingMode(prev.selectedSwingMode);
+  const ready = withHolePickups(prev);
+  const shot = playShot(ready, { source, focused });
+  // Pickups are collected where the ball stops; their rewards land before the
+  // swing is folded into round state, so an Extra Ball can save the round.
+  const pickupResult = collectPickups(
+    { ...ready, buffs: consumeSwingBuffs(ready.buffs) },
+    shot.restAt,
+    shot.swing.expectedYards
+  );
+  const s = {
+    ...pickupResult.state,
+    buffs: shot.holeCleared
+      ? { ...pickupResult.state.buffs, magnet: false }
+      : pickupResult.state.buffs,
+  };
+  const resolvedSwing = pickupResult.collected.length > 0
+    ? { ...shot.swing, pickups: pickupResult.collected }
+    : shot.swing;
+  const swing = resolvedSwing;
   const yards = shot.swing.yards;
   const newYardsThisHole = shot.yardsThisHole;
 
@@ -130,11 +159,12 @@ function advanceSwingState(s, source = 'manual') {
     + swingMode.focusGainBonus
     + getCoursePerkFocusGain(s.activeCoursePerk)
     + (swing.event?.focusGain ?? 0);
-  const newFocusMeter = source === 'manual'
+  const swingFocusMeter = source === 'manual'
     ? focused
       ? 0
       : Math.min(FOCUS_READY, s.focusMeter + manualFocusGain)
     : s.focusMeter;
+  const newFocusMeter = pickupResult.fillFocus ? FOCUS_READY : swingFocusMeter;
 
   const holeCleared = shot.holeCleared;
   const lastHole = s.hole >= HOLES_PER_ROUND;
@@ -246,6 +276,12 @@ export default function App() {
   }, [state.phase]);
 
   const effectLevels = getEffectLevels(state);
+  const holePickupKey = getHolePickupKey(state);
+
+  // Each hole rolls its pickups the first time it is shown.
+  useEffect(() => {
+    if (state.phase === 'run') setState(s => withHolePickups(s));
+  }, [state.phase, holePickupKey]);
   const autoSwingIntervalMs = getAutoSwingIntervalMs(effectLevels);
 
   useEffect(() => {
@@ -265,6 +301,10 @@ export default function App() {
       ...s,
       autoSwingEnabled: !s.autoSwingEnabled,
     }));
+  }
+
+  function handleEquipBall(ballId) {
+    setState(s => (isBallUnlocked(ballId, s) ? { ...s, equippedBall: ballId } : s));
   }
 
   function handleSelectSwingMode(modeId) {
@@ -362,6 +402,8 @@ export default function App() {
         nextCoursePerk: null,
         recentAchievements: [],
         lastProResult: null,
+        holePickups: null,
+        buffs: createBuffs(),
         scorecard: createScorecard(nextCourseId),
         roundResult: null,
       };
@@ -386,6 +428,7 @@ export default function App() {
         : null,
     },
     { id: 'courses', label: 'Courses' },
+    { id: 'bag', label: 'Ball Bag' },
     {
       id: 'pro',
       label: 'Pro Tour',
@@ -470,6 +513,8 @@ export default function App() {
           onBuyProUpgrade={handleBuyProUpgrade}
         />
       )}
+
+      {activeTab === 'bag' && <BallBagPanel state={state} onEquipBall={handleEquipBall} />}
 
       {activeTab === 'scorecard' && <ScorecardPanel state={state} />}
 

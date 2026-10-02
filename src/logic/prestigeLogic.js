@@ -87,6 +87,7 @@ export function applyTurnPro(state) {
     scorecard: createScorecard(startingCourseId),
     ballsLeft: getStartingBalls(getEffectLevels({ ...fresh, prestige })),
     lastProResult: { earned, count: prestige.count },
+    equippedBall: state.equippedBall,
   };
 }
 

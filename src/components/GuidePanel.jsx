@@ -55,6 +55,17 @@ export default function GuidePanel() {
         </section>
 
         <section className="guide-card">
+          <h3>Balls and Pickups</h3>
+          <ul>
+            <li>Equip one ball at a time in the Ball Bag. Each trades one strength for another.</li>
+            <li>New balls unlock from lifetime milestones and stay unlocked after turning pro.</li>
+            <li>Pickups float over every hole. Stop the ball inside the ring under one to collect it.</li>
+            <li>Coins pay upgrade yards, Stars fill Focus, Clovers make the next swing Perfect.</li>
+            <li>Tailwind adds distance for three swings, Extra Ball adds a ball, Magnet widens the ring.</li>
+          </ul>
+        </section>
+
+        <section className="guide-card">
           <h3>Pro Tour</h3>
           <ul>
             <li>Clear Meadow Municipal and Moon Links in one cycle to unlock Turn Pro.</li>

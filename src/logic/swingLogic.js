@@ -65,7 +65,7 @@ export function rollSwingYards(upgrades, wind, holeDefinition = null, options = 
     swingMode.id
   );
   const focused = Boolean(options.focused);
-  const perfect = !focused && Math.random() < swingMode.perfectChance;
+  const perfect = !focused && (Boolean(options.forcePerfect) || Math.random() < swingMode.perfectChance);
   const event = rollShotEvent();
   const variance = perfect
     ? swingMode.perfectMultiplier

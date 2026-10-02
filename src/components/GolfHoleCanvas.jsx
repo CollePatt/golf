@@ -44,6 +44,18 @@ function easeOut(t) {
   return 1 - (1 - t) * (1 - t)
 }
 
+const PICKUP_SHEET_SCALE = 2
+const PICKUP_FLOAT = 46
+const PICKUP_POP_MS = 520
+const PICKUP_COLORS = {
+  coin: '#ffd23f',
+  star: '#fff1a8',
+  clover: '#4caf50',
+  tailwind: '#d9f2ff',
+  extraBall: '#ffffff',
+  magnet: '#e04848',
+}
+
 const HAZARD_STYLES = {
   water: { fill: 'rgba(56, 132, 214, 0.85)', label: '#e0f2fe' },
   bunker: { fill: 'rgba(233, 205, 140, 0.95)', label: '#3f2d12' },
@@ -54,6 +66,8 @@ export default function GolfHoleCanvas({
   targetDistance,
   approachDistance = 120,
   hazards = [],
+  pickups = null,
+  pickupRadius = 0,
   theme,
   themeId,
   ballStyle = 'classic',
@@ -71,6 +85,10 @@ export default function GolfHoleCanvas({
   const prevYardsRef = useRef(0)
   const hazardsRef = useRef(hazards)
   hazardsRef.current = hazards
+  const pickupsRef = useRef({ pickups, pickupRadius, yardsThisRun })
+  pickupsRef.current = { pickups, pickupRadius, yardsThisRun }
+  // id -> timestamp the pop animation started, per hole.
+  const popsRef = useRef({ key: null, starts: {} })
 
   const r = useRef({
     ballVX: 0,
@@ -154,6 +172,78 @@ export default function GolfHoleCanvas({
       }
       const pose = mode === 'swing' ? swingPose(swingElapsed) : mode === 'walk' ? walkPose(ts) : swingPose(null)
       ctx.drawImage(sprites.renderGolfer(pose), x, y, GOLFER_W * PX, GOLFER_H * PX)
+    }
+
+    // Pickups float over the fairway with a faint ring showing how close the
+    // ball has to stop. A collected one stays until the ball lands, then pops.
+    function drawPickups(ctx, st, ts, cam, W) {
+      const { pickups: hole, pickupRadius: radius, yardsThisRun: restYards } = pickupsRef.current
+      if (!hole) return
+      const pops = popsRef.current
+      if (pops.key !== hole.key) {
+        pops.key = hole.key
+        pops.starts = {}
+        for (const item of hole.items) if (item.collected) pops.starts[item.id] = -Infinity
+      }
+      const sheet = sprites && SHEETS.pickups
+      for (const item of hole.items) {
+        const x = item.at * SCALE - cam
+        if (x < -40 || x > W + 40) continue
+        let lift = 0
+        let alpha = 1
+        if (item.collected) {
+          // The swing that collected it may not have started animating yet.
+          const settled = !st.isAnim && prevYardsRef.current === restYards
+          if (pops.starts[item.id] == null && settled) pops.starts[item.id] = ts
+          const start = pops.starts[item.id]
+          if (start != null) {
+            const t = (ts - start) / PICKUP_POP_MS
+            if (t >= 1) continue
+            lift = t * 26
+            alpha = 1 - t
+          }
+        } else if (radius > 0) {
+          const rx = Math.max(6, radius * SCALE)
+          ctx.fillStyle = 'rgba(255, 246, 194, 0.22)'
+          ctx.strokeStyle = 'rgba(255, 246, 194, 0.75)'
+          ctx.lineWidth = 1.5
+          ctx.setLineDash([4, 4])
+          ctx.beginPath()
+          ctx.ellipse(x, GROUND_Y + 3, rx, 4, 0, 0, Math.PI * 2)
+          ctx.fill()
+          ctx.stroke()
+          ctx.setLineDash([])
+          // Tether from the ring up to the floating pickup.
+          ctx.strokeStyle = 'rgba(255, 246, 194, 0.35)'
+          ctx.beginPath()
+          ctx.moveTo(x, GROUND_Y)
+          ctx.lineTo(x, GROUND_Y - PICKUP_FLOAT + 14)
+          ctx.stroke()
+        }
+
+        const bob = Math.sin(ts / 320 + item.id * 1.7) * 3
+        const y = GROUND_Y - PICKUP_FLOAT + bob - lift
+        ctx.globalAlpha = alpha
+        // Dark halo so light sprites read against the sky.
+        ctx.fillStyle = 'rgba(16, 32, 24, 0.35)'
+        ctx.beginPath()
+        ctx.arc(x, y, 15, 0, Math.PI * 2)
+        ctx.fill()
+        if (sheet && sheet.tags[item.type]) {
+          const frame = sheet.frameAt(item.type, ts + item.id * 90)
+          const half = (sheet.cell.w * PICKUP_SHEET_SCALE) / 2
+          sheet.draw(ctx, frame, x - half, y - half, PICKUP_SHEET_SCALE)
+        } else {
+          ctx.fillStyle = PICKUP_COLORS[item.type] || '#ffffff'
+          ctx.strokeStyle = 'rgba(0, 0, 0, 0.45)'
+          ctx.lineWidth = 2
+          ctx.beginPath()
+          ctx.arc(x, y, 8, 0, Math.PI * 2)
+          ctx.fill()
+          ctx.stroke()
+        }
+        ctx.globalAlpha = 1
+      }
     }
 
     function draw(ts) {
@@ -302,6 +392,8 @@ export default function GolfHoleCanvas({
         ctx.ellipse(flagSX, GROUND_Y + 3, 5, 2, 0, 0, Math.PI * 2)
         ctx.fill()
       } 
+
+      drawPickups(ctx, st, ts, cam, W)
 
       // Tee peg
       const teeSX = -cam
