@@ -101,6 +101,7 @@ export default function HoleScreen({
             targetDistance={targetDistance}
             approachDistance={APPROACH_DISTANCE}
             theme={theme}
+            themeId={holeDefinition.theme}
           />
           {approachActive && (
             <div className="approach-panel">

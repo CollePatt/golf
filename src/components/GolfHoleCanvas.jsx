@@ -1,4 +1,18 @@
-import { useRef, useEffect } from 'react'
+import { useRef, useEffect, useMemo } from 'react'
+import { spritesSupported } from '../sprites/pixelSprite.js'
+import { buildCourseSprites, PX } from '../sprites/courseSprites.js'
+import { drawSpriteScenery, drawSpriteGround } from '../sprites/sceneryRenderer.js'
+import {
+  createGolferRenderer,
+  addressClubHead,
+  swingPose,
+  walkPose,
+  GOLFER_W,
+  GOLFER_H,
+  SWING_IMPACT_MS,
+  SWING_FINISH_MS,
+} from '../sprites/golferSprites.js'
+import { SHEETS, requestSheets } from '../sprites/sheets.js'
 
 const SCALE = 4
 const H = 240
@@ -7,13 +21,46 @@ const BALL_R = 6
 const ARC_H = 88
 const ANIM_MS = 680
 const CAM_LERP = 0.09
+// Sprite mode leaves room left of the tee so the golfer is on screen.
+const TEE_PAD = 96
+const BALL_SHEET_SCALE = 2
+
+function loadSprites(themeId, theme) {
+  if (!spritesSupported()) return null
+  try {
+    const course = buildCourseSprites(themeId, theme)
+    return {
+      ...course,
+      renderGolfer: createGolferRenderer(course.recipe.golfer),
+      clubHead: addressClubHead(),
+    }
+  } catch (err) {
+    console.warn('Sprite build failed, using flat renderer', err)
+    return null
+  }
+}
 
 function easeOut(t) {
   return 1 - (1 - t) * (1 - t)
 }
 
-export default function GolfHoleCanvas({ yardsThisRun, targetDistance, approachDistance = 120, theme }) {
+export default function GolfHoleCanvas({
+  yardsThisRun,
+  targetDistance,
+  approachDistance = 120,
+  theme,
+  themeId,
+  ballStyle = 'classic',
+  useSprites = true,
+}) {
   const canvasRef = useRef(null)
+  const sprites = useMemo(
+    () => (useSprites ? loadSprites(themeId, theme) : null),
+    [useSprites, themeId, theme],
+  )
+  useEffect(() => {
+    if (useSprites) requestSheets()
+  }, [useSprites])
   const rafRef = useRef(null)
   const prevYardsRef = useRef(0)
 
@@ -24,6 +71,10 @@ export default function GolfHoleCanvas({ yardsThisRun, targetDistance, approachD
     animFrom: 0,
     animTo: 0,
     animStart: null,
+    swingStart: null,
+    golferX: 0,
+    walkFrom: 0,
+    walkStart: null,
   })
 
   // Main render loop — runs once on mount, restarts if targetDistance changes
@@ -34,17 +85,90 @@ export default function GolfHoleCanvas({ yardsThisRun, targetDistance, approachD
     canvas.width = canvas.offsetWidth
     canvas.height = H
 
+    // Swing timing comes from the Aseprite sheet when it has loaded: the
+    // 'swing' tag ends at impact and the 'follow' tag runs to the finish.
+    function golferTiming() {
+      const sheet = sprites && SHEETS[sprites.recipe.golfer]
+      if (!sheet) return { sheet: null, impactMs: SWING_IMPACT_MS, finishMs: SWING_FINISH_MS }
+      const impactMs = sheet.tagDuration('swing')
+      return { sheet, impactMs, finishMs: impactMs + sheet.tagDuration('follow') }
+    }
+
+    // Golfer stands at the ball's last lie, swings, holds the finish while the
+    // ball flies, then walks up to where it landed.
+    function drawGolfer(ctx, st, ts, cam) {
+      const { sheet, impactMs, finishMs } = golferTiming()
+      let mode = 'idle'
+      const swingElapsed = st.swingStart == null ? null : ts - st.swingStart
+      const holding = st.isAnim || (st.landedAt != null && ts - st.landedAt < 220)
+      if (swingElapsed != null && (holding || swingElapsed < finishMs)) {
+        st.walkStart = null
+        mode = 'swing'
+      } else if (Math.abs(st.golferX - st.ballVX) > 1) {
+        st.swingStart = null
+        if (st.walkStart == null) {
+          st.walkStart = ts
+          st.walkFrom = st.golferX
+          st.walkDur = Math.max(320, Math.min(1100, Math.abs(st.ballVX - st.golferX) * 1.2))
+        }
+        const t = Math.min(1, (ts - st.walkStart) / st.walkDur)
+        st.golferX = st.walkFrom + (st.ballVX - st.walkFrom) * t
+        if (t >= 1) {
+          st.golferX = st.ballVX
+          st.walkStart = null
+        }
+        mode = 'walk'
+      } else {
+        st.swingStart = null
+      }
+
+      const anchor = sheet?.slices.ball || { x: sprites.clubHead.x + 2, y: GOLFER_H - 2 }
+      const cell = sheet?.cell || { w: GOLFER_W, h: GOLFER_H }
+      const x = Math.round(st.golferX - cam - anchor.x * PX)
+      const y = GROUND_Y - anchor.y * PX
+      if (x < -cell.w * PX || x > canvas.width) return
+      ctx.fillStyle = 'rgba(0,0,0,0.2)'
+      ctx.beginPath()
+      ctx.ellipse(x + (anchor.x - 13) * PX, GROUND_Y + 3, 7 * PX, PX, 0, 0, Math.PI * 2)
+      ctx.fill()
+
+      if (sheet) {
+        let frame
+        if (mode === 'swing') {
+          frame = swingElapsed < impactMs
+            ? sheet.frameAt('swing', swingElapsed, false)
+            : sheet.frameAt('follow', swingElapsed - impactMs, false)
+        } else {
+          frame = sheet.frameAt(mode, ts)
+        }
+        sheet.draw(ctx, frame, x, y, PX)
+        return
+      }
+      const pose = mode === 'swing' ? swingPose(swingElapsed) : mode === 'walk' ? walkPose(ts) : swingPose(null)
+      ctx.drawImage(sprites.renderGolfer(pose), x, y, GOLFER_W * PX, GOLFER_H * PX)
+    }
+
     function draw(ts) {
       const ctx = canvas.getContext('2d')
       const W = canvas.width
       const vW = targetDistance * SCALE
       const st = r.current
 
-      // Advance arc animation
+      const pad = sprites ? TEE_PAD : 0
+
+      // Advance arc animation. In sprite mode the ball waits for the club to
+      // reach impact before it launches.
       let ballY = GROUND_Y
       if (st.isAnim) {
-        if (!st.animStart) st.animStart = ts
-        const rawT = Math.min((ts - st.animStart) / ANIM_MS, 1)
+        if (!st.animStart) {
+          if (sprites) {
+            if (st.swingStart == null) st.swingStart = ts
+            st.animStart = st.swingStart + golferTiming().impactMs
+          } else {
+            st.animStart = ts
+          }
+        }
+        const rawT = Math.max(0, Math.min((ts - st.animStart) / ANIM_MS, 1))
         const t = easeOut(rawT)
         st.ballVX = st.animFrom + (st.animTo - st.animFrom) * t
         ballY = GROUND_Y - Math.sin(rawT * Math.PI) * ARC_H
@@ -52,17 +176,19 @@ export default function GolfHoleCanvas({ yardsThisRun, targetDistance, approachD
           st.isAnim = false
           st.ballVX = st.animTo
           st.animStart = null
+          st.landedAt = ts
           ballY = GROUND_Y
         }
       }
 
       // Smooth camera follow
-      const targetCamX = Math.max(0, Math.min(vW - W, st.ballVX - W / 2))
+      const targetCamX = Math.max(0, Math.min(vW + pad * 1.5 - W, st.ballVX + pad - W / 2))
       st.cameraX += (targetCamX - st.cameraX) * CAM_LERP
-      const cam = st.cameraX
+      const cam = st.cameraX - pad
 
       // Clear
       ctx.clearRect(0, 0, W, H)
+      ctx.imageSmoothingEnabled = false
 
       // Sky
       const skyGrad = ctx.createLinearGradient(0, 0, 0, GROUND_Y)
@@ -71,13 +197,18 @@ export default function GolfHoleCanvas({ yardsThisRun, targetDistance, approachD
       ctx.fillStyle = skyGrad
       ctx.fillRect(0, 0, W, GROUND_Y)
 
-      // Ground body
-      ctx.fillStyle = theme.ground
-      ctx.fillRect(0, GROUND_Y, W, H - GROUND_Y)
+      if (sprites) {
+        drawSpriteScenery(ctx, { W, cam: st.cameraX, ts, groundY: GROUND_Y, sprites })
+        drawSpriteGround(ctx, { W, H, cam: st.cameraX, groundY: GROUND_Y, sprites, theme })
+      } else {
+        // Ground body
+        ctx.fillStyle = theme.ground
+        ctx.fillRect(0, GROUND_Y, W, H - GROUND_Y)
 
-      // Fairway top stripe
-      ctx.fillStyle = theme.fairway
-      ctx.fillRect(0, GROUND_Y, W, 10)
+        // Fairway top stripe
+        ctx.fillStyle = theme.fairway
+        ctx.fillRect(0, GROUND_Y, W, 10)
+      }
 
       // Approach zone near the pin
       const approachStartX = Math.max(0, (targetDistance - approachDistance) * SCALE - cam)
@@ -133,7 +264,12 @@ export default function GolfHoleCanvas({ yardsThisRun, targetDistance, approachD
         ctx.globalAlpha = 1
       }
 
-      if (flagOnscreen) {
+      if (flagOnscreen && sprites) {
+        const flagSprite = sprites.flag[Math.floor(ts / 380) % 2]
+        ctx.fillStyle = 'rgba(0,0,0,0.35)'
+        ctx.fillRect(Math.round(flagSX) - PX * 2, GROUND_Y, PX * 4, PX)
+        ctx.drawImage(flagSprite, Math.round(flagSX) - 1, GROUND_Y - flagSprite.height + PX)
+      } else if (flagOnscreen) {
         drawFlag(flagSX)
         // Cup shadow
         ctx.fillStyle = 'rgba(0,0,0,0.2)'
@@ -149,6 +285,10 @@ export default function GolfHoleCanvas({ yardsThisRun, targetDistance, approachD
         ctx.fillRect(teeSX - 1, GROUND_Y - 5, 3, 5)
       }
 
+      if (sprites) {
+        drawGolfer(ctx, st, ts, cam)
+      }
+
       // Ball ground shadow (flattens when ball is in air)
       const shadowScale = Math.max(0.3, (ballY - (GROUND_Y - ARC_H)) / ARC_H)
       ctx.fillStyle = 'rgba(0,0,0,0.18)'
@@ -157,20 +297,31 @@ export default function GolfHoleCanvas({ yardsThisRun, targetDistance, approachD
       ctx.fill()
 
       // Ball
-      ctx.fillStyle = '#ffffff'
-      ctx.beginPath()
-      ctx.arc(st.ballVX - cam, ballY, BALL_R, 0, Math.PI * 2)
-      ctx.fill()
-      ctx.strokeStyle = 'rgba(0,0,0,0.12)'
-      ctx.lineWidth = 1
-      ctx.stroke()
+      const ballSheet = sprites && SHEETS.balls
+      if (ballSheet) {
+        const frame = ballSheet.frameAt(ballStyle, st.isAnim ? ts : 0)
+        const c = ballSheet.slices.center || { x: 8, y: 4 }
+        const s = BALL_SHEET_SCALE
+        ballSheet.draw(ctx, frame, st.ballVX - cam - c.x * s, ballY + 3 - (c.y + 4) * s, s)
+      } else if (sprites) {
+        const b = sprites.ball
+        ctx.drawImage(b, Math.round(st.ballVX - cam - b.width / 2), Math.round(ballY - b.height + 3))
+      } else {
+        ctx.fillStyle = '#ffffff'
+        ctx.beginPath()
+        ctx.arc(st.ballVX - cam, ballY, BALL_R, 0, Math.PI * 2)
+        ctx.fill()
+        ctx.strokeStyle = 'rgba(0,0,0,0.12)'
+        ctx.lineWidth = 1
+        ctx.stroke()
+      }
 
       rafRef.current = requestAnimationFrame(draw)
     }
 
     rafRef.current = requestAnimationFrame(draw)
     return () => cancelAnimationFrame(rafRef.current)
-  }, [targetDistance, approachDistance, theme])
+  }, [targetDistance, approachDistance, theme, sprites, ballStyle])
 
   useEffect(() => {
     prevYardsRef.current = yardsThisRun
@@ -178,6 +329,9 @@ export default function GolfHoleCanvas({ yardsThisRun, targetDistance, approachD
     r.current.cameraX = 0
     r.current.isAnim = false
     r.current.animStart = null
+    r.current.swingStart = null
+    r.current.golferX = r.current.ballVX
+    r.current.walkStart = null
   }, [targetDistance])
 
   // Trigger arc animation on each swing
@@ -188,6 +342,9 @@ export default function GolfHoleCanvas({ yardsThisRun, targetDistance, approachD
       r.current.animTo = Math.min(yardsThisRun, targetDistance) * SCALE
       r.current.isAnim = true
       r.current.animStart = null
+      r.current.swingStart = null
+      r.current.golferX = r.current.animFrom
+      r.current.walkStart = null
       prevYardsRef.current = yardsThisRun
     }
   }, [yardsThisRun, targetDistance])
