@@ -204,7 +204,7 @@ h3 {
 
 .swing-mode-selector {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   gap: 0.5rem;
 }
 
@@ -905,7 +905,7 @@ h3 {
 
 .guide-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
   gap: 0.85rem;
 }
 
@@ -1202,6 +1202,307 @@ h3 {
 .reset-btn:hover {
   color: #81c784;
   border-color: #4a6a4a;
+}
+
+/* Putting and hazards */
+.swing-panel .putting-line {
+  color: #a5d6a7;
+  font-weight: 700;
+}
+
+.swing-panel .hazard-line.water {
+  color: #90caf9;
+}
+
+.swing-panel .hazard-line.bunker,
+.swing-panel .hazard-line.layup {
+  color: #f1d58a;
+}
+
+.hazard-panel {
+  padding: 0.75rem;
+  border: 1px solid #f1d58a;
+  border-radius: 8px;
+  background: rgba(241, 213, 138, 0.08);
+}
+
+.hazard-panel.water {
+  border-color: #64b5f6;
+  background: rgba(100, 181, 246, 0.1);
+}
+
+.hazard-panel span,
+.hazard-panel strong {
+  display: block;
+}
+
+.hazard-panel span {
+  color: #f1d58a;
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.hazard-panel.water span {
+  color: #90caf9;
+}
+
+.hazard-panel strong {
+  margin-top: 0.2rem;
+  color: #ffffff;
+}
+
+.hazard-panel p {
+  margin-top: 0.3rem;
+  color: #c8e6c9;
+  font-size: 0.82rem;
+}
+
+/* Round start actions */
+.round-start-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 1.5rem;
+}
+
+.round-start-actions .next-btn {
+  flex: 1;
+  margin-top: 0;
+}
+
+.round-start-actions .hint {
+  margin: 0;
+}
+
+.secondary-btn {
+  padding: 0.85rem 1.1rem;
+  font-size: 0.95rem;
+  font-weight: bold;
+  background: transparent;
+  color: #c8e6c9;
+  border: 1px solid #385045;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.secondary-btn:hover {
+  border-color: #81c784;
+  color: #ffffff;
+}
+
+.stat-note {
+  color: #f1d58a;
+}
+
+/* Course select */
+.course-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 0.9rem;
+}
+
+.course-card {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid #2e4a2e;
+  border-radius: 10px;
+  background: #16231f;
+}
+
+.course-card.selected {
+  border-color: #64b5f6;
+  box-shadow: 0 0 0 1px rgba(100, 181, 246, 0.4);
+}
+
+.course-card.locked {
+  opacity: 0.62;
+}
+
+.course-card.locked .course-banner {
+  filter: grayscale(0.85);
+}
+
+.course-banner {
+  display: flex;
+  justify-content: space-between;
+  align-items: start;
+  height: 64px;
+  padding: 0.55rem;
+}
+
+.course-status,
+.course-tag {
+  padding: 0.2rem 0.5rem;
+  border-radius: 999px;
+  background: rgba(10, 18, 14, 0.78);
+  color: #ffffff;
+  font-size: 0.7rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.course-status.cleared {
+  color: #81c784;
+}
+
+.course-status.playing {
+  color: #64b5f6;
+}
+
+.course-status.locked {
+  color: #bdbdbd;
+}
+
+.course-tag.pass {
+  color: #f1d58a;
+}
+
+.course-body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 0.55rem;
+  padding: 0.85rem;
+}
+
+.course-body h3 {
+  margin: 0;
+}
+
+.course-facts {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.45rem 0.75rem;
+}
+
+.course-facts dt {
+  color: #81c784;
+  font-size: 0.7rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.course-facts dd {
+  color: #ffffff;
+  font-size: 0.86rem;
+}
+
+.course-lock {
+  margin-top: auto;
+  color: #f1d58a;
+  font-size: 0.85rem;
+}
+
+.course-select-btn {
+  margin-top: auto;
+  padding: 0.6rem;
+  font-weight: bold;
+  background: #2e7d32;
+  color: #ffffff;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.course-select-btn:hover {
+  background: #388e3c;
+}
+
+.course-select-btn.active {
+  background: #1565c0;
+}
+
+/* Pro tour */
+.pro-callout {
+  border-color: #b39ddb;
+  background: rgba(179, 157, 219, 0.1);
+}
+
+.pro-callout span {
+  color: #d1c4e9;
+}
+
+.pro-pill strong {
+  color: #d1c4e9;
+}
+
+.pro-turn-panel {
+  margin: 1rem 0 1.5rem;
+  padding: 1rem;
+  border: 1px solid #b39ddb;
+  border-radius: 8px;
+  background: rgba(179, 157, 219, 0.06);
+}
+
+.pro-turn-panel h3 {
+  margin: 0 0 0.65rem;
+}
+
+.pro-turn-panel .hint {
+  margin-top: 0.65rem;
+}
+
+.pro-btn {
+  background: #5e35b1;
+}
+
+.pro-btn:hover:not(:disabled) {
+  background: #7e57c2;
+}
+
+.pro-btn.confirming {
+  background: #c62828;
+}
+
+.pro-btn.confirming:hover:not(:disabled) {
+  background: #d32f2f;
+}
+
+.pro-upgrade-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 0.75rem;
+}
+
+.pro-upgrade-grid .upgrade-card {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 0;
+  border-color: #4a3d6b;
+  background: #221f33;
+}
+
+.pro-upgrade-grid .upgrade-card.unlocked {
+  border-color: #b39ddb;
+}
+
+.pro-upgrade-grid .upgrade-header {
+  gap: 0.5rem;
+}
+
+.pro-upgrade-grid .upgrade-status {
+  white-space: nowrap;
+}
+
+.pro-upgrade-grid .allocate-btn {
+  margin-top: auto;
+}
+
+@media (max-width: 820px) {
+  .round-start-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .course-grid,
+  .pro-upgrade-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 @media (max-width: 820px) {

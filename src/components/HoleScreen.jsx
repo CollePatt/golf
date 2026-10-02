@@ -7,12 +7,13 @@ import {
   getScoreToPar,
   parForHole,
 } from '../logic/gameState.js';
-import { formatAutoSwingInterval, getApproachControlStats } from '../logic/swingLogic.js';
+import { formatAutoSwingInterval, getApproachControlStats, getEffectLevels } from '../logic/swingLogic.js';
 import {
-  APPROACH_DISTANCE,
   getApproachFinishWindow,
+  getApproachRange,
   isApproachDistance,
 } from '../logic/approachLogic.js';
+import { getActiveHazards, getNextHazard, SAND_DISTANCE_MULTIPLIER } from '../logic/holeLogic.js';
 import { getCoursePerkById } from '../data/coursePerks.js';
 import { SWING_MODES, getSwingMode } from '../data/swingModes.js';
 
@@ -48,10 +49,15 @@ export default function HoleScreen({
   const remaining = Math.max(0, targetDistance - yardsThisHole);
   const completedHoles = getCompletedHoles(scorecard);
   const scoreToPar = getScoreToPar(scorecard);
-  const approachActive = isApproachDistance(remaining);
+  const approachRange = getApproachRange(yardsPerSwing);
+  const approachActive = isApproachDistance(remaining, approachRange);
+  const activeHazards = getActiveHazards(state, yardsPerSwing);
+  const nextHazard = approachActive ? null : getNextHazard(activeHazards, yardsThisHole);
+  const inSand = state.lie === 'sand';
   const focusedReady = focusMeter >= focusReady;
-  const manualApproachStats = getApproachControlStats(state.upgrades, 'manual');
-  const autoApproachStats = getApproachControlStats(state.upgrades, 'auto');
+  const effectLevels = getEffectLevels(state);
+  const manualApproachStats = getApproachControlStats(effectLevels, 'manual');
+  const autoApproachStats = getApproachControlStats(effectLevels, 'auto');
   const approachWindow = getApproachFinishWindow(selectedSwingMode.id, focusedReady, manualApproachStats);
   const displayedExpectedYards = approachActive ? Math.min(yardsPerSwing, remaining) : yardsPerSwing;
   const approachTightening = Math.round((1 - manualApproachStats.errorMultiplier) * 100);
@@ -66,7 +72,7 @@ export default function HoleScreen({
           <p className="hint">
             {course.name} | {approachActive
               ? `Land close from ${remaining} yds to finish the hole.`
-              : `Clear ${remaining} more yards to reach approach range.`}
+              : `Clear ${remaining - approachRange} more yards to reach approach range.`}
           </p>
         </div>
         <div className="score-popover-anchor" tabIndex={0}>
@@ -99,7 +105,8 @@ export default function HoleScreen({
           <GolfHoleCanvas
             yardsThisRun={yardsThisHole}
             targetDistance={targetDistance}
-            approachDistance={APPROACH_DISTANCE}
+            approachDistance={approachRange}
+            hazards={activeHazards}
             theme={theme}
             themeId={holeDefinition.theme}
           />
@@ -150,6 +157,17 @@ export default function HoleScreen({
                   {lastSwing.approach.label}: {lastSwing.approach.description}
                 </p>
               )}
+              {lastSwing?.putting && (
+                <p className="putting-line">
+                  {lastSwing.putting.putts === 0
+                    ? 'Holed out, no putt needed!'
+                    : `${lastSwing.putting.putts} putt${lastSwing.putting.putts > 1 ? 's' : ''} from ${lastSwing.putting.proximity * 3} ft.`}
+                </p>
+              )}
+              {lastSwing?.hazard && (
+                <p className={`hazard-line ${lastSwing.hazard.type}`}>{lastSwing.hazard.description}</p>
+              )}
+              {lastSwing?.laidUp && <p className="hazard-line layup">Laid up short of trouble.</p>}
               {lastSwing?.event && (
                 <p className="shot-event-line">
                   {lastSwing.event.label}: {lastSwing.event.description}
@@ -212,6 +230,24 @@ export default function HoleScreen({
             </div>
             <p>{wind.description}</p>
           </div>
+          {(nextHazard || inSand) && (
+            <div className={`hazard-panel ${inSand ? 'sand' : nextHazard.type}`}>
+              <span>{inSand ? 'In The Sand' : nextHazard.type === 'water' ? 'Water Ahead' : 'Bunker Ahead'}</span>
+              <strong>
+                {inSand
+                  ? `Next shot ${Math.round((1 - SAND_DISTANCE_MULTIPLIER) * 100)}% shorter`
+                  : `${nextHazard.name}: ${Math.max(0, nextHazard.start - yardsThisHole)}–${nextHazard.end - yardsThisHole} yds out`}
+              </strong>
+              {!inSand && (
+                <p>
+                  {nextHazard.type === 'water'
+                    ? 'Landing in it costs a stroke and a ball.'
+                    : 'Landing in it shortens your next shot.'}
+                  {' '}Lay Up stops short of it.
+                </p>
+              )}
+            </div>
+          )}
           <div className="hole-trait-panel">
             <span>Hole Trait</span>
             <strong>{holeDefinition.trait.label}</strong>
@@ -231,7 +267,8 @@ export default function HoleScreen({
               <p className="stat">Course perk: <strong>{activeCoursePerk?.label || 'None'}</strong></p>
               <p className="stat">Swing mode: <strong>{selectedSwingMode.label}</strong></p>
               <p className="stat">Shot phase: <strong>{approachActive ? 'Approach' : 'Fairway'}</strong></p>
-              <p className="stat">Approach zone: <strong>{APPROACH_DISTANCE} yds</strong></p>
+              <p className="stat">Approach range: <strong>{approachRange} yds</strong></p>
+              <p className="stat">Lie: <strong>{inSand ? 'Sand' : 'Fairway'}</strong></p>
               <p className="stat">Approach control: <strong>{approachTightening}% tighter</strong></p>
               <p className="stat">Auto approach: <strong>{autoApproachTightening}% tighter</strong></p>
               <p className="stat">Target: <strong>{targetDistance} yds</strong></p>

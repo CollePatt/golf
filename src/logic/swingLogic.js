@@ -1,13 +1,25 @@
 import { BASE_YARDS_PER_SWING, BASE_STARTING_BALLS } from './gameState.js';
 import { UPGRADES } from '../data/upgrades.js';
+import { PRO_UPGRADES } from '../data/proUpgrades.js';
 import { rollShotEvent } from '../data/shotEvents.js';
 import { getSwingMode } from '../data/swingModes.js';
 import { normalizeWind } from './runModifiers.js';
 
+const ALL_UPGRADES = [...UPGRADES, ...PRO_UPGRADES];
+
+// Tier 1 and Tier 2 levels in one map. Every helper below takes this shape,
+// so pass getEffectLevels(state) rather than state.upgrades.
+export function getEffectLevels(state) {
+  return {
+    ...state.upgrades,
+    ...(state.prestige?.upgrades || {}),
+  };
+}
+
 // Iterate every upgrade definition and apply its effects scaled by current level.
 // Additive effects scale linearly with level; multipliers scale exponentially.
 function forEachActiveEffect(upgrades, fn) {
-  for (const def of UPGRADES) {
+  for (const def of ALL_UPGRADES) {
     const level = upgrades[def.id]?.level ?? 0;
     if (level <= 0) continue;
     for (const e of def.effects) fn(e, level);
@@ -119,6 +131,30 @@ export function getApproachControlStats(upgrades, source = 'manual') {
     errorMultiplier,
     longPenaltyMultiplier,
   };
+}
+
+export function getPuttingBonus(upgrades) {
+  let bonus = 0;
+  forEachActiveEffect(upgrades, (e, level) => {
+    if (e.type === 'puttBonus') bonus += e.value * level;
+  });
+  return bonus;
+}
+
+export function getYardsEarnedMultiplier(upgrades) {
+  let mult = 1;
+  forEachActiveEffect(upgrades, (e, level) => {
+    if (e.type === 'yardsEarnedMult') mult *= Math.pow(e.value, level);
+  });
+  return mult;
+}
+
+export function getCoursePassLevel(upgrades) {
+  let passLevel = 0;
+  forEachActiveEffect(upgrades, (e, level) => {
+    if (e.type === 'unlockCourse') passLevel += e.value * level;
+  });
+  return passLevel;
 }
 
 export function formatAutoSwingInterval(intervalMs) {

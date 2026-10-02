@@ -1,11 +1,19 @@
 import { UPGRADES } from '../data/upgrades.js';
-import { getCourseById, getNextCourseId } from '../data/courses.js';
+import { getCourseById } from '../data/courses.js';
 import { getCoursePerkById } from '../data/coursePerks.js';
 import { formatScoreToPar, getCompletedHoles, getScoreToPar } from '../logic/gameState.js';
+import { getEffectLevels, getYardsEarnedMultiplier } from '../logic/swingLogic.js';
+import { canTurnPro } from '../logic/prestigeLogic.js';
 import RoundRecap from './RoundRecap.jsx';
 import UpgradeBar from './UpgradeBar.jsx';
 
-export default function UpgradeScreen({ state, onAllocate, onChooseCoursePerk, onStartNextRound }) {
+export default function UpgradeScreen({
+  state,
+  onAllocate,
+  onChooseCoursePerk,
+  onStartNextRound,
+  onViewCourses,
+}) {
   const {
     roundResult,
     hole,
@@ -31,10 +39,9 @@ export default function UpgradeScreen({ state, onAllocate, onChooseCoursePerk, o
     : `Reached hole ${hole} in ${totalShots} shots.`;
   const completedHoles = getCompletedHoles(scorecard);
   const scoreToPar = getScoreToPar(scorecard);
-  const nextCourseId = roundResult === 'complete'
-    ? getNextCourseId(state.courseId) || state.courseId
-    : state.courseId;
-  const nextCourse = getCourseById(nextCourseId);
+  const nextCourse = getCourseById(state.selectedCourseId);
+  const effectLevels = getEffectLevels(state);
+  const yardsEarnedMultiplier = getYardsEarnedMultiplier(effectLevels);
   const selectedCoursePerk = getCoursePerkById(nextCoursePerk);
   const needsCoursePerk = state.phase === 'upgrade' && roundResult === 'complete' && !nextCoursePerk;
 
@@ -59,9 +66,21 @@ export default function UpgradeScreen({ state, onAllocate, onChooseCoursePerk, o
               : 'None yet'}
           </strong>
         </p>
-        <p className="stat">Yards earned this round: <strong>{totalYardsThisRound}</strong></p>
+        <p className="stat">
+          Yards earned this round: <strong>{totalYardsThisRound}</strong>
+          {yardsEarnedMultiplier > 1 && (
+            <small className="stat-note"> (Yardage Book ×{yardsEarnedMultiplier.toFixed(2)})</small>
+          )}
+        </p>
         <p className="stat">Yards to spend: <strong>{yardsToAllocate}</strong></p>
       </div>
+
+      {canTurnPro(state) && (
+        <div className="achievement-callout pro-callout">
+          <span>Pro Tour</span>
+          <strong>You have finished the tour. Turn pro from the Pro Tour tab whenever you are ready.</strong>
+        </div>
+      )}
 
       {state.phase === 'upgrade' && <RoundRecap scorecard={scorecard} />}
 
@@ -109,16 +128,21 @@ export default function UpgradeScreen({ state, onAllocate, onChooseCoursePerk, o
           key={upgrade.id}
           upgrade={upgrade}
           upgradeState={upgrades[upgrade.id]}
-          upgrades={upgrades}
+          upgrades={effectLevels}
           yardsToAllocate={yardsToAllocate}
           onAllocate={onAllocate}
         />
       ))}
 
       {state.phase === 'upgrade' && (
-        <button className="next-btn" onClick={onStartNextRound} disabled={needsCoursePerk}>
-          {roundResult === 'complete' ? `Start ${nextCourse.name}` : 'Start New Round'}
-        </button>
+        <div className="round-start-actions">
+          <button className="next-btn" onClick={onStartNextRound} disabled={needsCoursePerk}>
+            Start {nextCourse.name}
+          </button>
+          <button type="button" className="secondary-btn" onClick={onViewCourses}>
+            Change Course
+          </button>
+        </div>
       )}
     </div>
   );

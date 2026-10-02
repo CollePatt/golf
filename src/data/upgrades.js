@@ -9,6 +9,7 @@
 //   approachErrorMult: multiplies approach miss spread by value^level
 //   approachLongPenaltyMult: multiplies long approach misses by value^level
 //   autoApproachErrorMult: multiplies auto approach miss spread by value^level
+//   puttBonus: adds value × level to one-putt odds and removes it from three-putt odds
 //
 // Cost to buy the next level (level → level+1) is:
 //   baseCost × costGrowth ^ level
@@ -74,6 +75,15 @@ export const UPGRADES = [
       { type: 'approachWindow', value: 1 },
       { type: 'autoApproachErrorMult', value: 0.9 },
     ],
+  },
+  {
+    id: 'flatStick',
+    label: 'Flat Stick',
+    description: 'More one-putts and fewer three-putts',
+    baseCost: 550,
+    costGrowth: 1.5,
+    maxLevel: 8,
+    effects: [{ type: 'puttBonus', value: 0.035 }],
   },
 ];
 

@@ -3,6 +3,7 @@ import {
   getApproachControlStats,
   formatAutoSwingInterval,
   getAutoSwingIntervalMs,
+  getPuttingBonus,
   getStartingBalls,
   getYardsPerSwing,
 } from '../logic/swingLogic.js';
@@ -36,6 +37,8 @@ function buildPreview(upgrade, upgradeState, upgrades) {
   const nextTightening = Math.round((1 - nextApproach.errorMultiplier) * 100);
   const currentAutoTightening = Math.round((1 - currentAutoApproach.errorMultiplier) * 100);
   const nextAutoTightening = Math.round((1 - nextAutoApproach.errorMultiplier) * 100);
+  const currentPutting = Math.round(getPuttingBonus(upgrades) * 100);
+  const nextPutting = Math.round(getPuttingBonus(nextUpgrades) * 100);
   const changes = [];
 
   if (nextYards !== currentYards) {
@@ -49,6 +52,9 @@ function buildPreview(upgrade, upgradeState, upgrades) {
   }
   if (nextWindow !== currentWindow) {
     changes.push(`${currentWindow} -> ${nextWindow} yd approach window`);
+  }
+  if (nextPutting !== currentPutting) {
+    changes.push(`+${currentPutting}% -> +${nextPutting}% one-putt odds`);
   }
   if (nextTightening !== currentTightening) {
     changes.push(`${currentTightening}% -> ${nextTightening}% tighter approach misses`);

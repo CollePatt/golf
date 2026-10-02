@@ -261,6 +261,73 @@ export const SCENERY = {
     props: 'lander',
     decor: 'rock',
   },
+  // Course Pass courses. Treeless recipes get the smooth rolling hill profile.
+  dune: {
+    golfer: 'meadow',
+    hills: ['#e2b46a', '#c99449'],
+    sky: { kind: 'sun', x: 0.8, y: 34, colors: { Y: '#fff7c2', y: '#ffd166' } },
+    decor: 'rock',
+  },
+  mirage: {
+    golfer: 'meadow',
+    hills: ['#efcf8a', '#d5a95e'],
+    sky: { kind: 'sun', x: 0.5, y: 28, colors: { Y: '#ffffff', y: '#fff1a8' } },
+    decor: 'rock',
+  },
+  dusk: {
+    golfer: 'meadow',
+    hills: ['#8a4f5e', '#9c6a46'],
+    sky: { kind: 'sun', x: 0.3, y: 118, colors: { Y: '#ffd38a', y: '#ff7b54' } },
+    stars: true,
+    decor: 'rock',
+  },
+  frost: {
+    golfer: 'meadow',
+    leaves: { G: '#dbe9f1', L: '#ffffff', D: '#8fb3c7', T: '#5a3a22' },
+    tree: 'pine',
+    hills: ['#c9dfeb', '#a9c7d8'],
+    sky: { kind: 'sun', x: 0.85, y: 40, colors: { Y: '#ffffff', y: '#fff4c2' } },
+    clouds: '#ffffff',
+    decor: 'bush',
+  },
+  aurora: {
+    golfer: 'meadow',
+    leaves: { G: '#2c5a5f', L: '#4f8a85', D: '#173a40', T: '#3a2a1c' },
+    tree: 'pine',
+    hills: ['#1f4a5c', '#2f6070'],
+    sky: null,
+    stars: true,
+    decor: 'bush',
+  },
+  blizzard: {
+    golfer: 'meadow',
+    leaves: { G: '#e4ecf2', L: '#ffffff', D: '#a3b5c2', T: '#5a3a22' },
+    tree: 'pine',
+    hills: ['#b7c3cd', '#9aa9b5'],
+    sky: null,
+    clouds: '#eef2f5',
+    decor: 'bush',
+  },
+  ember: {
+    golfer: 'meadow',
+    hills: ['#5c1f12', '#3a1a14'],
+    sky: { kind: 'sun', x: 0.75, y: 70, colors: { Y: '#ffb347', y: '#ff5e1a' } },
+    decor: 'rock',
+  },
+  ash: {
+    golfer: 'meadow',
+    hills: ['#6b6460', '#55504c'],
+    sky: null,
+    clouds: '#9c9590',
+    decor: 'rock',
+  },
+  magma: {
+    golfer: 'meadow',
+    hills: ['#3b1208', '#5a1a0a'],
+    sky: { kind: 'sun', x: 0.6, y: 96, colors: { Y: '#ffd166', y: '#ef4444' } },
+    stars: true,
+    decor: 'rock',
+  },
 }
 
 function tileFor(rows, palette) {

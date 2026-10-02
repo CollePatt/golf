@@ -7,27 +7,22 @@ import {
   recordHoleScore,
   summarizeCompletedRound,
   isBetterCompletedRound,
+  recordCourseRound,
 } from './logic/gameState.js';
 import { rollWind } from './logic/runModifiers.js';
 import {
-  getApproachControlStats,
   getAutoSwingIntervalMs,
-  getExpectedYardsPerSwing,
+  getCoursePassLevel,
+  getEffectLevels,
   getStartingBalls,
-  rollSwingYards,
+  getYardsEarnedMultiplier,
 } from './logic/swingLogic.js';
-import {
-  APPROACH_DISTANCE,
-  getApproachEntryRemaining,
-  getRemainingDistance,
-  isApproachDistance,
-  resolveApproachShot,
-} from './logic/approachLogic.js';
-import { getHoleDefinition, getNextCourseId } from './data/courses.js';
+import { applyTurnPro, buyProUpgrade, canTurnPro } from './logic/prestigeLogic.js';
+import { getShotExpectedYards, playShot } from './logic/holeLogic.js';
+import { COURSES, getNextCourseId, isCourseUnlocked } from './data/courses.js';
 import { ACHIEVEMENTS } from './data/achievements.js';
 import {
   createCoursePerkChoices,
-  getCoursePerkDistanceMultiplier,
   getCoursePerkFocusGain,
   getCoursePerkStartingBalls,
 } from './data/coursePerks.js';
@@ -39,6 +34,8 @@ import UpgradeScreen from './components/UpgradeScreen.jsx';
 import ScorecardPanel from './components/ScorecardPanel.jsx';
 import AchievementsPanel from './components/AchievementsPanel.jsx';
 import GuidePanel from './components/GuidePanel.jsx';
+import CourseSelectPanel from './components/CourseSelectPanel.jsx';
+import ProPanel from './components/ProPanel.jsx';
 import './App.css';
 
 const FOCUS_GAIN_PER_MANUAL_SWING = 18;
@@ -82,6 +79,10 @@ function updateLifetimeStats(s, swing, holeCleared, courseCompleted) {
     holesCleared: s.lifetimeStats.holesCleared + (holeCleared ? 1 : 0),
     coursesCompleted: s.lifetimeStats.coursesCompleted + (courseCompleted ? 1 : 0),
     bestSwing: Math.max(s.lifetimeStats.bestSwing, swing.yards),
+    putts: s.lifetimeStats.putts + (swing.putting?.putts ?? 0),
+    onePutts: s.lifetimeStats.onePutts + (swing.putting?.putts === 1 ? 1 : 0),
+    holeOuts: s.lifetimeStats.holeOuts + (swing.putting?.putts === 0 ? 1 : 0),
+    waterBalls: s.lifetimeStats.waterBalls + (swing.hazard?.type === 'water' ? 1 : 0),
   };
 }
 
@@ -91,65 +92,39 @@ function addCompletedCourse(completedCourseIds, courseId) {
     : [...completedCourseIds, courseId];
 }
 
+function getCourseUnlockContext(s) {
+  return {
+    completedCourseIds: s.completedCourseIds,
+    coursePassLevel: getCoursePassLevel(getEffectLevels(s)),
+  };
+}
+
+// After finishing a course, queue the next stop on the tour if it is open.
+function getDefaultNextCourseId(s) {
+  const nextCourseId = getNextCourseId(s.courseId);
+  return nextCourseId && isCourseUnlocked(nextCourseId, getCourseUnlockContext(s))
+    ? nextCourseId
+    : s.courseId;
+}
+
+function getEarnedUpgradeYards(s, totalYards) {
+  return Math.round(totalYards * getYardsEarnedMultiplier(getEffectLevels(s)));
+}
+
 function advanceSwingState(s, source = 'manual') {
   if (s.phase !== 'run' || s.ballsLeft <= 0) return s;
 
-  const holeDefinition = getHoleDefinition(s.courseId, s.hole);
   const focused = source === 'manual' && s.focusMeter >= FOCUS_READY;
-  const coursePerkDistanceMultiplier = getCoursePerkDistanceMultiplier(s.activeCoursePerk);
   const swingMode = getSwingMode(s.selectedSwingMode);
-  const approachStats = getApproachControlStats(s.upgrades, source);
-  const swing = rollSwingYards(s.upgrades, s.wind, holeDefinition, {
-    focused,
-    source,
-    distanceMultiplier: coursePerkDistanceMultiplier,
-    swingMode: swingMode.id,
-  });
-  const remainingBefore = getRemainingDistance(s.targetDistance, s.yardsThisHole);
-  const approachActive = isApproachDistance(remainingBefore);
-  let resolvedSwing = { ...swing, shotPhase: 'fairway' };
-  let yards = swing.yards;
-  let newYardsThisHole = s.yardsThisHole + yards;
+  const shot = playShot(s, { source, focused });
+  const resolvedSwing = shot.swing;
+  const swing = shot.swing;
+  const yards = shot.swing.yards;
+  const newYardsThisHole = shot.yardsThisHole;
 
-  if (approachActive) {
-    const approach = resolveApproachShot({
-      remaining: remainingBefore,
-      swing,
-      swingModeId: swingMode.id,
-      approachStats,
-      focused,
-    });
-    yards = approach.carry;
-    newYardsThisHole = approach.cleared
-      ? s.targetDistance
-      : s.targetDistance - approach.nextRemaining;
-    resolvedSwing = {
-      ...swing,
-      yards,
-      shotPhase: 'approach',
-      approach,
-    };
-  } else if (newYardsThisHole >= s.targetDistance - APPROACH_DISTANCE) {
-    const nextRemaining = getApproachEntryRemaining(remainingBefore, yards);
-    newYardsThisHole = s.targetDistance - nextRemaining;
-    resolvedSwing = {
-      ...swing,
-      shotPhase: 'fairway',
-      approach: {
-        label: 'Approach Range',
-        description: `Set up a ${nextRemaining} yd approach.`,
-        carry: yards,
-        miss: null,
-        nextRemaining,
-        cleared: false,
-        grade: 'setup',
-      },
-    };
-  }
-
-  const newBalls = s.ballsLeft - 1;
-  const newHoleShots = s.currentHoleShots + 1;
-  const newTotalShots = s.totalShots + 1;
+  const newBalls = Math.max(0, s.ballsLeft - shot.ballsUsed);
+  const newHoleShots = s.currentHoleShots + shot.strokes;
+  const newTotalShots = s.totalShots + shot.strokes;
   const newTotalYards = s.totalYardsThisRound + yards;
   const manualFocusGain = FOCUS_GAIN_PER_MANUAL_SWING
     + swingMode.focusGainBonus
@@ -161,7 +136,7 @@ function advanceSwingState(s, source = 'manual') {
       : Math.min(FOCUS_READY, s.focusMeter + manualFocusGain)
     : s.focusMeter;
 
-  const holeCleared = Boolean(resolvedSwing.approach?.cleared);
+  const holeCleared = shot.holeCleared;
   const lastHole = s.hole >= HOLES_PER_ROUND;
   const courseCompleted = holeCleared && lastHole;
   const lifetimeStats = updateLifetimeStats(s, resolvedSwing, holeCleared, courseCompleted);
@@ -172,6 +147,7 @@ function advanceSwingState(s, source = 'manual') {
   // Round ends: completed all 18 holes, or ran out of balls.
   if (holeCleared && lastHole) {
     const completedRound = summarizeCompletedRound(nextScorecard, newTotalShots, newTotalYards);
+    const completedCourseIds = addCompletedCourse(s.completedCourseIds, s.courseId);
     return applyAchievementUnlocks({
       ...s,
       yardsThisHole: newYardsThisHole,
@@ -183,16 +159,20 @@ function advanceSwingState(s, source = 'manual') {
       focusMeter: newFocusMeter,
       lifetimeStats,
       scorecard: nextScorecard,
+      lie: 'fairway',
       roundsCompleted: s.roundsCompleted + 1,
       bestCompletedRound: isBetterCompletedRound(completedRound, s.bestCompletedRound)
         ? completedRound
         : s.bestCompletedRound,
-      completedCourseIds: addCompletedCourse(s.completedCourseIds, s.courseId),
+      completedCourseIds,
+      selectedCourseId: getDefaultNextCourseId({ ...s, completedCourseIds }),
+      cycleBestRounds: recordCourseRound(s.cycleBestRounds, s.courseId, completedRound),
+      courseRecords: recordCourseRound(s.courseRecords, s.courseId, completedRound),
       pendingCoursePerkChoices: createCoursePerkChoices(),
       nextCoursePerk: null,
       phase: 'upgrade',
       roundResult: 'complete',
-      yardsToAllocate: newTotalYards,
+      yardsToAllocate: getEarnedUpgradeYards(s, newTotalYards),
     });
   }
 
@@ -203,6 +183,7 @@ function advanceSwingState(s, source = 'manual') {
       hole: reachedHole,
       targetDistance: yardsForHole(reachedHole, s.courseId),
       yardsThisHole: holeCleared ? 0 : newYardsThisHole,
+      lie: holeCleared ? 'fairway' : shot.lie,
       currentHoleShots: holeCleared ? 0 : newHoleShots,
       ballsLeft: 0,
       totalShots: newTotalShots,
@@ -213,7 +194,7 @@ function advanceSwingState(s, source = 'manual') {
       scorecard: nextScorecard,
       phase: 'upgrade',
       roundResult: 'outOfBalls',
-      yardsToAllocate: newTotalYards,
+      yardsToAllocate: getEarnedUpgradeYards(s, newTotalYards),
     });
   }
 
@@ -226,6 +207,7 @@ function advanceSwingState(s, source = 'manual') {
       targetDistance: yardsForHole(nextHole, s.courseId),
       yardsThisHole: 0,
       currentHoleShots: 0,
+      lie: 'fairway',
       ballsLeft: newBalls,
       totalShots: newTotalShots,
       totalYardsThisRound: newTotalYards,
@@ -240,6 +222,7 @@ function advanceSwingState(s, source = 'manual') {
   return applyAchievementUnlocks({
     ...s,
     yardsThisHole: newYardsThisHole,
+    lie: shot.lie,
     currentHoleShots: newHoleShots,
     ballsLeft: newBalls,
     totalShots: newTotalShots,
@@ -262,7 +245,8 @@ export default function App() {
     if (state.phase === 'upgrade') setActiveTab('upgrades');
   }, [state.phase]);
 
-  const autoSwingIntervalMs = getAutoSwingIntervalMs(state.upgrades);
+  const effectLevels = getEffectLevels(state);
+  const autoSwingIntervalMs = getAutoSwingIntervalMs(effectLevels);
 
   useEffect(() => {
     if (state.phase !== 'run' || !state.autoSwingEnabled || !autoSwingIntervalMs) return undefined;
@@ -298,8 +282,8 @@ export default function App() {
         s.yardsToAllocate,
         amount
       );
-      const hadAutoSwing = Boolean(getAutoSwingIntervalMs(s.upgrades));
-      const hasAutoSwing = Boolean(getAutoSwingIntervalMs(upgradeState));
+      const hadAutoSwing = Boolean(getAutoSwingIntervalMs(getEffectLevels(s)));
+      const hasAutoSwing = Boolean(getAutoSwingIntervalMs(getEffectLevels({ ...s, upgrades: upgradeState })));
       return {
         ...s,
         upgrades: upgradeState,
@@ -319,6 +303,30 @@ export default function App() {
     });
   }
 
+  function handleSelectCourse(courseId) {
+    setState(s => {
+      if (s.phase !== 'upgrade' || !isCourseUnlocked(courseId, getCourseUnlockContext(s))) return s;
+      return {
+        ...s,
+        selectedCourseId: courseId,
+      };
+    });
+  }
+
+  function handleBuyProUpgrade(upgradeId) {
+    setState(s => {
+      const next = buyProUpgrade(s, upgradeId);
+      const hadAutoSwing = Boolean(getAutoSwingIntervalMs(getEffectLevels(s)));
+      const hasAutoSwing = Boolean(getAutoSwingIntervalMs(getEffectLevels(next)));
+      return hasAutoSwing && !hadAutoSwing ? { ...next, autoSwingEnabled: true } : next;
+    });
+  }
+
+  function handleTurnPro() {
+    setActiveTab('play');
+    setState(s => applyAchievementUnlocks(applyTurnPro(s)));
+  }
+
   function handleStartNextRound() {
     if (state.roundResult === 'complete' && !state.nextCoursePerk) return;
 
@@ -327,20 +335,22 @@ export default function App() {
       if (s.roundResult === 'complete' && !s.nextCoursePerk) return s;
 
       const completedRound = s.roundResult === 'complete';
-      const nextCourseId = completedRound
-        ? getNextCourseId(s.courseId) || s.courseId
-        : s.courseId;
+      const nextCourseId = isCourseUnlocked(s.selectedCourseId, getCourseUnlockContext(s))
+        ? s.selectedCourseId
+        : COURSES[0].id;
       const activeCoursePerk = completedRound ? s.nextCoursePerk : null;
 
       return {
         ...s,
         phase: 'run',
         courseId: nextCourseId,
+        selectedCourseId: nextCourseId,
         hole: 1,
         targetDistance: yardsForHole(1, nextCourseId),
         yardsThisHole: 0,
         currentHoleShots: 0,
-        ballsLeft: getStartingBalls(s.upgrades) + getCoursePerkStartingBalls(activeCoursePerk),
+        lie: 'fairway',
+        ballsLeft: getStartingBalls(getEffectLevels(s)) + getCoursePerkStartingBalls(activeCoursePerk),
         totalShots: 0,
         totalYardsThisRound: 0,
         yardsToAllocate: 0,
@@ -351,6 +361,7 @@ export default function App() {
         pendingCoursePerkChoices: [],
         nextCoursePerk: null,
         recentAchievements: [],
+        lastProResult: null,
         scorecard: createScorecard(nextCourseId),
         roundResult: null,
       };
@@ -374,6 +385,12 @@ export default function App() {
         ? 'Spend'
         : null,
     },
+    { id: 'courses', label: 'Courses' },
+    {
+      id: 'pro',
+      label: 'Pro Tour',
+      badge: canTurnPro(state) ? 'Ready' : null,
+    },
     { id: 'scorecard', label: 'Scorecard' },
     { id: 'achievements', label: 'Achievements' },
     { id: 'guide', label: 'Guide' },
@@ -388,7 +405,7 @@ export default function App() {
         </div>
         <div className="goal-banner">
           <span>Final Goal</span>
-          <strong>Complete courses, unlock new stops, then beat your best score.</strong>
+          <strong>Complete the tour, turn pro, and open harder courses.</strong>
         </div>
       </header>
 
@@ -412,13 +429,7 @@ export default function App() {
           onSwing={handleSwing}
           onSelectSwingMode={handleSelectSwingMode}
           onToggleAutoSwing={handleToggleAutoSwing}
-          yardsPerSwing={getExpectedYardsPerSwing(
-            state.upgrades,
-            state.wind,
-            getHoleDefinition(state.courseId, state.hole),
-            getCoursePerkDistanceMultiplier(state.activeCoursePerk),
-            state.selectedSwingMode
-          )}
+          yardsPerSwing={getShotExpectedYards(state)}
           autoSwingIntervalMs={autoSwingIntervalMs}
           focusReady={FOCUS_READY}
         />
@@ -440,6 +451,23 @@ export default function App() {
           onAllocate={handleAllocate}
           onChooseCoursePerk={handleChooseCoursePerk}
           onStartNextRound={handleStartNextRound}
+          onViewCourses={() => setActiveTab('courses')}
+        />
+      )}
+
+      {activeTab === 'courses' && (
+        <CourseSelectPanel
+          state={state}
+          onSelectCourse={handleSelectCourse}
+          onStartNextRound={handleStartNextRound}
+        />
+      )}
+
+      {activeTab === 'pro' && (
+        <ProPanel
+          state={state}
+          onTurnPro={handleTurnPro}
+          onBuyProUpgrade={handleBuyProUpgrade}
         />
       )}
 
