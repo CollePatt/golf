@@ -7,7 +7,7 @@ export default function BallBagPanel({ state, onEquipBall }) {
   const pickupsByType = state.lifetimeStats.pickupsByType || {};
 
   return (
-    <div className="screen">
+    <div className="door-panel">
       <div className="screen-heading">
         <div>
           <h2>Ball Bag</h2>

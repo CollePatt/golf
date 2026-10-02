@@ -1,6 +1,6 @@
 export default function GuidePanel() {
   return (
-    <div className="screen guide-screen">
+    <div className="door-panel guide-screen">
       <div className="screen-heading">
         <div>
           <h2>Goal</h2>
@@ -48,9 +48,9 @@ export default function GuidePanel() {
             <li>Flat Stick raises one-putt odds and cuts three-putts.</li>
             <li>Caddie Read improves approach finish windows and makes Auto Caddie better near the green.</li>
             <li>Unlock Auto Caddie to keep swinging while you look away.</li>
-            <li>Use the upgrade tab after each run to invest your earnings.</li>
+            <li>Spend your yards in the Pro Shop after each round.</li>
             <li>Clear Meadow Municipal to unlock Moon Links.</li>
-            <li>Use the Courses tab between rounds to replay any open course.</li>
+            <li>Pick any open course from the Clubhouse between rounds.</li>
           </ul>
         </section>
 

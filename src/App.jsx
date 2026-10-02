@@ -19,7 +19,7 @@ import {
 } from './logic/swingLogic.js';
 import { applyTurnPro, buyProUpgrade, canTurnPro } from './logic/prestigeLogic.js';
 import { getShotExpectedYards, playShot } from './logic/holeLogic.js';
-import { COURSES, getNextCourseId, isCourseUnlocked } from './data/courses.js';
+import { COURSES, PRO_CHAIN_COURSE_IDS, getNextCourseId, isCourseUnlocked } from './data/courses.js';
 import { ACHIEVEMENTS } from './data/achievements.js';
 import { getBallEffects, isBallUnlocked } from './data/balls.js';
 import {
@@ -38,12 +38,10 @@ import { getSwingMode } from './data/swingModes.js';
 import { allocateToUpgrade } from './logic/upgradeLogic.js';
 import { saveGame, loadGame, clearSave } from './logic/storage.js';
 import HoleScreen from './components/HoleScreen.jsx';
-import UpgradeScreen from './components/UpgradeScreen.jsx';
+import Clubhouse from './components/Clubhouse.jsx';
+import Overlay from './components/Overlay.jsx';
 import ScorecardPanel from './components/ScorecardPanel.jsx';
-import AchievementsPanel from './components/AchievementsPanel.jsx';
 import GuidePanel from './components/GuidePanel.jsx';
-import CourseSelectPanel from './components/CourseSelectPanel.jsx';
-import ProPanel from './components/ProPanel.jsx';
 import BallBagPanel from './components/BallBagPanel.jsx';
 import './App.css';
 
@@ -265,14 +263,20 @@ function advanceSwingState(prev, source = 'manual') {
 
 export default function App() {
   const [state, setState] = useState(() => loadGame() || createInitialState());
-  const [activeTab, setActiveTab] = useState(() => state.phase === 'upgrade' ? 'upgrades' : 'play');
+  const [view, setView] = useState(() => state.phase === 'upgrade' ? 'clubhouse' : 'course');
+  const [door, setDoor] = useState('shop');
+  const [overlay, setOverlay] = useState(null);
 
   useEffect(() => {
     saveGame(state);
   }, [state]);
 
   useEffect(() => {
-    if (state.phase === 'upgrade') setActiveTab('upgrades');
+    if (state.phase === 'upgrade') {
+      setView('clubhouse');
+      setDoor('shop');
+      setOverlay(null);
+    }
   }, [state.phase]);
 
   const effectLevels = getEffectLevels(state);
@@ -363,14 +367,14 @@ export default function App() {
   }
 
   function handleTurnPro() {
-    setActiveTab('play');
+    setView('clubhouse');
     setState(s => applyAchievementUnlocks(applyTurnPro(s)));
   }
 
   function handleStartNextRound() {
     if (state.roundResult === 'complete' && !state.nextCoursePerk) return;
 
-    setActiveTab('play');
+    setView('course');
     setState(s => {
       if (s.roundResult === 'complete' && !s.nextCoursePerk) return s;
 
@@ -412,115 +416,71 @@ export default function App() {
 
   function handleReset() {
     clearSave();
-    setActiveTab('play');
+    setView('course');
+    setOverlay(null);
     setState(createInitialState());
   }
 
-  const tabs = [
-    { id: 'play', label: 'Play' },
-    {
-      id: 'upgrades',
-      label: 'Upgrades',
-      badge: state.phase === 'upgrade' && state.roundResult === 'complete' && !state.nextCoursePerk
-        ? 'Perk'
-        : state.phase === 'upgrade' && state.yardsToAllocate > 0
-        ? 'Spend'
-        : null,
-    },
-    { id: 'courses', label: 'Courses' },
-    { id: 'bag', label: 'Ball Bag' },
-    {
-      id: 'pro',
-      label: 'Pro Tour',
-      badge: canTurnPro(state) ? 'Ready' : null,
-    },
-    { id: 'scorecard', label: 'Scorecard' },
-    { id: 'achievements', label: 'Achievements' },
-    { id: 'guide', label: 'Guide' },
-  ];
+  const tourOfficeOpen = canTurnPro(state)
+    || state.prestige.count > 0
+    || PRO_CHAIN_COURSE_IDS.some(courseId => state.completedCourseIds.includes(courseId));
 
   return (
     <div className="app">
       <header className="app-header">
-        <div>
-          <p className="eyebrow">Incremental golf</p>
-          <h1>Golf</h1>
-        </div>
-        <div className="goal-banner">
-          <span>Final Goal</span>
-          <strong>Complete the tour, turn pro, and open harder courses.</strong>
-        </div>
+        <h1>Golf</h1>
+        <p className="app-goal">Clear the tour, turn pro, open harder courses.</p>
       </header>
 
-      <nav className="tabs" aria-label="Game sections">
-        {tabs.map(tab => (
-          <button
-            key={tab.id}
-            type="button"
-            className={`tab-btn ${activeTab === tab.id ? 'active' : ''}`}
-            onClick={() => setActiveTab(tab.id)}
-          >
-            {tab.label}
-            {tab.badge && <span>{tab.badge}</span>}
-          </button>
-        ))}
-      </nav>
+      <main key={view} className="view-enter">
+        {view === 'course' && state.phase === 'run' && (
+          <HoleScreen
+            state={state}
+            onSwing={handleSwing}
+            onSelectSwingMode={handleSelectSwingMode}
+            onToggleAutoSwing={handleToggleAutoSwing}
+            onOpenOverlay={setOverlay}
+            onOpenClubhouse={() => setView('clubhouse')}
+            yardsPerSwing={getShotExpectedYards(state)}
+            autoSwingIntervalMs={autoSwingIntervalMs}
+            focusReady={FOCUS_READY}
+          />
+        )}
 
-      {activeTab === 'play' && state.phase === 'run' && (
-        <HoleScreen
-          state={state}
-          onSwing={handleSwing}
-          onSelectSwingMode={handleSelectSwingMode}
-          onToggleAutoSwing={handleToggleAutoSwing}
-          yardsPerSwing={getShotExpectedYards(state)}
-          autoSwingIntervalMs={autoSwingIntervalMs}
-          focusReady={FOCUS_READY}
-        />
+        {(view === 'clubhouse' || state.phase !== 'run') && (
+          <Clubhouse
+            state={state}
+            door={door}
+            onOpenDoor={setDoor}
+            showTourOffice={tourOfficeOpen}
+            onBackToCourse={() => setView('course')}
+            onAllocate={handleAllocate}
+            onChooseCoursePerk={handleChooseCoursePerk}
+            onSelectCourse={handleSelectCourse}
+            onStartNextRound={handleStartNextRound}
+            onEquipBall={handleEquipBall}
+            onTurnPro={handleTurnPro}
+            onBuyProUpgrade={handleBuyProUpgrade}
+            onOpenGuide={() => setOverlay('guide')}
+          />
+        )}
+      </main>
+
+      {overlay === 'scorecard' && (
+        <Overlay title="Scorecard" onClose={() => setOverlay(null)}>
+          <ScorecardPanel state={state} />
+        </Overlay>
       )}
-
-      {activeTab === 'play' && state.phase === 'upgrade' && (
-        <div className="screen">
-          <h2>Round Ended</h2>
-          <p className="hint">Spend your earned yards in the upgrades tab, then choose any unlocked course reward.</p>
-          <button className="next-btn" onClick={() => setActiveTab('upgrades')}>
-            View Upgrades
-          </button>
-        </div>
+      {overlay === 'bag' && (
+        <Overlay title="Ball Bag" onClose={() => setOverlay(null)}>
+          <BallBagPanel state={state} onEquipBall={handleEquipBall} />
+        </Overlay>
       )}
-
-      {activeTab === 'upgrades' && (
-        <UpgradeScreen
-          state={state}
-          onAllocate={handleAllocate}
-          onChooseCoursePerk={handleChooseCoursePerk}
-          onStartNextRound={handleStartNextRound}
-          onViewCourses={() => setActiveTab('courses')}
-        />
+      {overlay === 'guide' && (
+        <Overlay title="How to Play" onClose={() => setOverlay(null)}>
+          <GuidePanel />
+        </Overlay>
       )}
-
-      {activeTab === 'courses' && (
-        <CourseSelectPanel
-          state={state}
-          onSelectCourse={handleSelectCourse}
-          onStartNextRound={handleStartNextRound}
-        />
-      )}
-
-      {activeTab === 'pro' && (
-        <ProPanel
-          state={state}
-          onTurnPro={handleTurnPro}
-          onBuyProUpgrade={handleBuyProUpgrade}
-        />
-      )}
-
-      {activeTab === 'bag' && <BallBagPanel state={state} onEquipBall={handleEquipBall} />}
-
-      {activeTab === 'scorecard' && <ScorecardPanel state={state} />}
-
-      {activeTab === 'achievements' && <AchievementsPanel state={state} />}
-
-      {activeTab === 'guide' && <GuidePanel />}
 
       <button className="reset-btn" onClick={handleReset}>
         Reset Game

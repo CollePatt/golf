@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react';
 import GolfHoleCanvas from './GolfHoleCanvas.jsx'
 import { getCourseById, getCourseTheme, getHoleDefinition } from '../data/courses.js';
 import {
@@ -30,6 +31,8 @@ export default function HoleScreen({
   onSwing,
   onSelectSwingMode,
   onToggleAutoSwing,
+  onOpenOverlay,
+  onOpenClubhouse,
   yardsPerSwing,
   autoSwingIntervalMs,
   focusReady,
@@ -74,269 +77,225 @@ export default function HoleScreen({
   const approachTightening = Math.round((1 - manualApproachStats.errorMultiplier) * 100);
   const autoApproachTightening = Math.round((1 - autoApproachStats.errorMultiplier) * 100);
 
+  const scoreLabel = formatScoreToPar(scoreToPar);
+  const par = parForHole(hole, state.courseId);
+
+  // Space swings, unless focus is on another control (which Space already presses).
+  useEffect(() => {
+    function onKey(event) {
+      if (event.code !== 'Space' || event.repeat) return;
+      if (event.target.closest?.('button, input, select, textarea, summary, [role="dialog"]')) return;
+      event.preventDefault();
+      onSwing();
+    }
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [onSwing]);
+
+  // Only float yards for swings taken while this screen is up.
+  const swingsAtMount = useRef(state.lifetimeStats.swings);
+  const showFloat = lastSwing && state.lifetimeStats.swings !== swingsAtMount.current;
+
   return (
-    <div className="screen">
-      <div className="screen-heading">
-        <div>
-          <h2>Hole {hole} / {HOLES_PER_ROUND}</h2>
-          <p className="hole-name">{holeDefinition.name}</p>
-          <p className="hint">
-            {course.name} | {approachActive
-              ? `Land close from ${remaining} yds to finish the hole.`
-              : `Clear ${remaining - approachRange} more yards to reach approach range.`}
+    <div className="course-view">
+      <div className="course-bar">
+        <div className="hole-title">
+          <h2>Hole {hole}<small> / {HOLES_PER_ROUND}</small></h2>
+          <p>{holeDefinition.name} · {course.name}</p>
+        </div>
+        <div className="toolbar">
+          <button type="button" className="btn small" onClick={() => onOpenOverlay('bag')}>
+            <SpriteIcon sheet="balls" tag={equippedBall.id} scale={2} />
+            Bag
+          </button>
+          <button type="button" className="btn small" onClick={() => onOpenOverlay('guide')} aria-label="How to play">?</button>
+          <button type="button" className="btn small" onClick={onOpenClubhouse}>Clubhouse</button>
+        </div>
+      </div>
+
+      <div className="stage">
+        <GolfHoleCanvas
+          yardsThisRun={yardsThisHole}
+          targetDistance={targetDistance}
+          approachDistance={approachRange}
+          hazards={activeHazards}
+          pickups={state.holePickups}
+          pickupRadius={getPickupRadius(state, yardsPerSwing)}
+          ballStyle={equippedBall.id}
+          theme={theme}
+          themeId={holeDefinition.theme}
+        />
+        <div className="hud">
+          <div className="hud-group">
+            <span className="tag">Par {par}</span>
+            <span className="tag"><b>{remaining}</b> yds to pin</span>
+          </div>
+          <div className="hud-group">
+            <span className="tag" title={`${ballsLeft} balls left`}>
+              <SpriteIcon sheet="balls" tag={equippedBall.id} scale={2} />
+              ×{ballsLeft}
+            </span>
+            <span className="tag" title={wind.description}>{wind.label}</span>
+            <button type="button" className="score-chip" onClick={() => onOpenOverlay('scorecard')} aria-label={`Score ${scoreLabel}, open scorecard`}>
+              {scoreLabel}
+            </button>
+          </div>
+        </div>
+        {showFloat && (
+          <span key={state.lifetimeStats.swings} className={`yard-float ${lastSwing.quality === 'Perfect' ? 'perfect' : ''}`}>
+            +{lastSwing.yards} yds
+          </span>
+        )}
+      </div>
+
+      {approachActive && (
+        <p className="approach-strip">
+          <b>Approach</b> {remaining} yds to the pin. Land within {approachWindow} yds to finish.
+          {approachTightening > 0 && ` Misses ${approachTightening}% tighter.`}
+        </p>
+      )}
+
+      <div className="panel deck">
+        <div className="deck-controls">
+          <div className="modes" role="group" aria-label="Swing mode">
+            {SWING_MODES.map(mode => (
+              <button
+                key={mode.id}
+                type="button"
+                className={`btn small ${selectedSwingMode.id === mode.id ? 'on' : ''}`}
+                onClick={() => onSelectSwingMode(mode.id)}
+                aria-pressed={selectedSwingMode.id === mode.id}
+                title={mode.description}
+              >
+                {mode.label}
+              </button>
+            ))}
+          </div>
+          <p className="mode-hint">{selectedSwingMode.description}</p>
+          <div className="meter-row">
+            <span className="label">Focus</span>
+            <span className={`blocks ${focusedReady ? 'ready' : ''}`} role="meter" aria-label="Focus" aria-valuemin={0} aria-valuemax={focusReady} aria-valuenow={focusMeter}>
+              {Array.from({ length: 10 }, (_, index) => (
+                <i key={index} className={focusMeter >= ((index + 1) * focusReady) / 10 ? 'full' : ''} />
+              ))}
+            </span>
+            <span className="auto-caddie">
+              <span className="label">Auto Caddie</span>
+              <button
+                type="button"
+                className={`btn small ${autoSwingEnabled && autoSwingIntervalMs ? 'on' : ''}`}
+                onClick={onToggleAutoSwing}
+                disabled={!autoSwingIntervalMs}
+                aria-pressed={autoSwingEnabled}
+              >
+                {!autoSwingIntervalMs
+                  ? 'Locked'
+                  : autoSwingEnabled
+                  ? `On · ${formatAutoSwingInterval(autoSwingIntervalMs)}`
+                  : 'Off'}
+              </button>
+            </span>
+          </div>
+        </div>
+        <button type="button" className={`btn go swing ${focusedReady ? 'focused' : ''}`} onClick={onSwing}>
+          {focusedReady ? 'Focused swing' : 'Swing'}
+          <small>{displayedExpectedYards} yds · Space</small>
+        </button>
+      </div>
+
+      {lastSwing && (
+        <div className="last-shot" aria-live="polite">
+          <span className="label">Last shot</span>
+          <p>
+            {lastSwing.yards} yds, {lastSwing.quality.toLowerCase()}
+            {lastSwing.source === 'auto' ? ' (auto)' : ''}
+            {lastSwingMode && lastSwingMode.id !== 'normal' ? `, ${lastSwingMode.label}` : ''}.
+            {lastSwing.approach && <span className={`approach-result ${lastSwing.approach.grade}`}> {lastSwing.approach.label}: {lastSwing.approach.description}</span>}
+            {lastSwing.putting && (
+              <span> {lastSwing.putting.putts === 0
+                ? 'Holed out!'
+                : `${lastSwing.putting.putts} putt${lastSwing.putting.putts > 1 ? 's' : ''} from ${lastSwing.putting.proximity * 3} ft.`}</span>
+            )}
+            {lastSwing.hazard && <span className={`hazard-line ${lastSwing.hazard.type}`}> {lastSwing.hazard.description}</span>}
+            {lastSwing.laidUp && <span> Laid up short of trouble.</span>}
+            {lastSwing.event && <span> {lastSwing.event.label}: {lastSwing.event.description}</span>}
           </p>
+          {lastSwing.pickups?.map((pickup, index) => (
+            <p key={`${pickup.type}-${index}`} className="pickup-line">
+              <SpriteIcon sheet="pickups" tag={pickup.type} scale={2} />
+              {pickup.label}: {pickup.description}
+            </p>
+          ))}
         </div>
-        <div className="score-popover-anchor" tabIndex={0}>
-          <div className="summary-pill">
-            <span>Score</span>
-            <strong>{formatScoreToPar(scoreToPar)}</strong>
-          </div>
-          <div className="scorecard-popover" aria-hidden="true">
-            <div className="scorecard-grid compact" aria-label="Round scorecard preview">
-              {scorecard.map(entry => {
-                const isCurrent = entry.hole === hole;
-                const isComplete = Number.isFinite(entry.shots);
-                return (
-                  <div
-                    key={entry.hole}
-                    className={`scorecard-cell ${isCurrent ? 'current' : ''} ${isComplete ? 'complete' : ''}`}
-                  >
-                    <span>{entry.hole}</span>
-                    <strong>{isComplete ? formatScoreToPar(entry.scoreToPar) : '-'}</strong>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        </div>
+      )}
+
+      <div className="chips" aria-label="Hole conditions">
+        {inSand && (
+          <span className="chip warn">
+            <b>In the sand</b> next shot {Math.round((1 - getSandMultiplier(state)) * 100)}% shorter
+          </span>
+        )}
+        {!inSand && nextHazard && (
+          <span className={`chip warn ${nextHazard.type}`} title={nextHazard.type === 'water' ? 'Landing in it costs a stroke and a ball. Lay Up stops short.' : 'Landing in it shortens your next shot. Lay Up stops short.'}>
+            <b>{nextHazard.type === 'water' ? 'Water' : 'Bunker'}</b>
+            {Math.max(0, nextHazard.start - yardsThisHole)}–{nextHazard.end - yardsThisHole} yds out
+          </span>
+        )}
+        <span className="chip" title={holeDefinition.trait.description}>
+          <b>{holeDefinition.trait.label}</b> {holeDefinition.trait.description}
+        </span>
+        <span className="chip"><b>{wind.label}</b> {wind.description}</span>
+        {pickupsLeft > 0 && (
+          <span className="chip">
+            <SpriteIcon sheet="pickups" tag="coin" scale={2} />
+            {pickupsLeft} pickup{pickupsLeft > 1 ? 's' : ''} on this hole
+          </span>
+        )}
+        {buffs.tailwindSwings > 0 && (
+          <span className="chip buff">
+            <SpriteIcon sheet="pickups" tag="tailwind" scale={2} />
+            Tailwind ×{buffs.tailwindSwings}
+          </span>
+        )}
+        {buffs.clover && (
+          <span className="chip buff">
+            <SpriteIcon sheet="pickups" tag="clover" scale={2} />
+            Perfect next
+          </span>
+        )}
+        {buffs.magnet && (
+          <span className="chip buff">
+            <SpriteIcon sheet="pickups" tag="magnet" scale={2} />
+            Magnet
+          </span>
+        )}
+        {activeCoursePerk && (
+          <span className="chip buff" title={activeCoursePerk.description}><b>Perk</b> {activeCoursePerk.label}</span>
+        )}
       </div>
 
-      <div className="hole-layout">
-        <div className="hole-main">
-          <GolfHoleCanvas
-            yardsThisRun={yardsThisHole}
-            targetDistance={targetDistance}
-            approachDistance={approachRange}
-            hazards={activeHazards}
-            pickups={state.holePickups}
-            pickupRadius={getPickupRadius(state, yardsPerSwing)}
-            ballStyle={equippedBall.id}
-            theme={theme}
-            themeId={holeDefinition.theme}
-          />
-          {approachActive && (
-            <div className="approach-panel">
-            <div>
-              <span>Approach Mode</span>
-              <strong>{remaining} yds to the pin</strong>
-            </div>
-              <p>
-                Land within {approachWindow} yds to finish.
-                {approachTightening > 0 ? ` Misses are ${approachTightening}% tighter.` : ' Focus widens the finish window.'}
-              </p>
-            </div>
-          )}
-          <div className="swing-mode-panel">
-            <div className="swing-mode-heading">
-              <span>Swing Mode</span>
-              <strong>{selectedSwingMode.label}</strong>
-            </div>
-            <div className="swing-mode-selector" aria-label="Swing mode">
-              {SWING_MODES.map(mode => (
-                <button
-                  key={mode.id}
-                  type="button"
-                  className={`mode-btn ${selectedSwingMode.id === mode.id ? 'active' : ''}`}
-                  onClick={() => onSelectSwingMode(mode.id)}
-                  aria-pressed={selectedSwingMode.id === mode.id}
-                >
-                  <span>{mode.label}</span>
-                  <small>{mode.description}</small>
-                </button>
-              ))}
-            </div>
-          </div>
-          <div className="swing-panel">
-            <div>
-              <span>{approachActive ? 'Expected Carry' : 'Expected Swing'}</span>
-              <strong>{displayedExpectedYards} yds</strong>
-              {lastSwing && (
-                <p>
-                  Last: {lastSwing.yards} yds ({lastSwing.quality}, {lastSwingMode.label}
-                  {lastSwing.source === 'auto' ? ', auto' : ''})
-                </p>
-              )}
-              {lastSwing?.approach && (
-                <p className={`approach-result ${lastSwing.approach.grade}`}>
-                  {lastSwing.approach.label}: {lastSwing.approach.description}
-                </p>
-              )}
-              {lastSwing?.putting && (
-                <p className="putting-line">
-                  {lastSwing.putting.putts === 0
-                    ? 'Holed out, no putt needed!'
-                    : `${lastSwing.putting.putts} putt${lastSwing.putting.putts > 1 ? 's' : ''} from ${lastSwing.putting.proximity * 3} ft.`}
-                </p>
-              )}
-              {lastSwing?.hazard && (
-                <p className={`hazard-line ${lastSwing.hazard.type}`}>{lastSwing.hazard.description}</p>
-              )}
-              {lastSwing?.laidUp && <p className="hazard-line layup">Laid up short of trouble.</p>}
-              {lastSwing?.pickups?.map((pickup, index) => (
-                <p key={`${pickup.type}-${index}`} className="pickup-line">
-                  <SpriteIcon sheet="pickups" tag={pickup.type} scale={2} />
-                  {pickup.label}: {pickup.description}
-                </p>
-              ))}
-              {lastSwing?.event && (
-                <p className="shot-event-line">
-                  {lastSwing.event.label}: {lastSwing.event.description}
-                </p>
-              )}
-            </div>
-            <button className="swing-btn" onClick={onSwing}>
-              {focusMeter >= focusReady ? 'Focused Swing' : 'Swing'}
-            </button>
-          </div>
-          <div className="focus-panel">
-            <div className="focus-header">
-              <span>Focus</span>
-              <strong>{focusMeter} / {focusReady}</strong>
-            </div>
-            <div className="focus-bar" aria-label="Manual focus meter">
-              <div className="focus-fill" style={{ width: `${Math.min(100, focusMeter)}%` }} />
-            </div>
-            <p>Manual swings build Focus. A full meter powers up your next manual shot.</p>
-          </div>
-          <div className={`auto-swing-panel ${autoSwingIntervalMs ? 'unlocked' : ''}`}>
-            <div>
-              <span>Auto Caddie</span>
-              <strong>{autoSwingIntervalMs ? `${formatAutoSwingInterval(autoSwingIntervalMs)} / swing` : 'Locked'}</strong>
-            </div>
-            <button
-              className="toggle-btn"
-              onClick={onToggleAutoSwing}
-              disabled={!autoSwingIntervalMs}
-              aria-pressed={autoSwingEnabled}
-            >
-              {autoSwingEnabled && autoSwingIntervalMs ? 'On' : 'Off'}
-            </button>
-          </div>
+      <details className="all-stats">
+        <summary>All stats</summary>
+        <div className="stats">
+          <p className="stat">Course: <strong>{course.name}</strong></p>
+          <p className="stat">Ball: <strong>{equippedBall.label}</strong></p>
+          <p className="stat">Course perk: <strong>{activeCoursePerk?.label || 'None'}</strong></p>
+          <p className="stat">Swing mode: <strong>{selectedSwingMode.label}</strong></p>
+          <p className="stat">Shot phase: <strong>{approachActive ? 'Approach' : 'Fairway'}</strong></p>
+          <p className="stat">Approach range: <strong>{approachRange} yds</strong></p>
+          <p className="stat">Lie: <strong>{inSand ? 'Sand' : 'Fairway'}</strong></p>
+          <p className="stat">Approach control: <strong>{approachTightening}% tighter</strong></p>
+          <p className="stat">Auto approach: <strong>{autoApproachTightening}% tighter</strong></p>
+          <p className="stat">Target: <strong>{targetDistance} yds</strong></p>
+          <p className="stat">Par: <strong>{par}</strong></p>
+          <p className="stat">Yards this hole: <strong>{yardsThisHole}</strong></p>
+          <p className="stat">Shots this hole: <strong>{currentHoleShots}</strong></p>
+          <p className="stat">Shots this round: <strong>{totalShots}</strong></p>
+          <p className="stat">Holes cleared: <strong>{completedHoles.length}</strong></p>
+          <p className="stat">Yards earned: <strong>{totalYardsThisRound}</strong></p>
+          <p className="stat">Score to par: <strong>{scoreLabel}</strong></p>
         </div>
-
-        <aside className="hole-sidebar" aria-label="Round status">
-          <div className="quick-stats" aria-label="Key round stats">
-            <div className="quick-stat">
-              <span>Need</span>
-              <strong>{remaining} yds</strong>
-            </div>
-            <div className="quick-stat">
-              <span>Balls</span>
-              <strong>{ballsLeft}</strong>
-            </div>
-            <div className="quick-stat">
-              <span>Hole Shots</span>
-              <strong>{currentHoleShots}</strong>
-            </div>
-            <div className="quick-stat">
-              <span>Earned</span>
-              <strong>{totalYardsThisRound}</strong>
-            </div>
-          </div>
-          <div className="equipped-ball-card">
-            <SpriteIcon sheet="balls" tag={equippedBall.id} scale={4} />
-            <div>
-              <span>Ball: {equippedBall.label}</span>
-              <p>{equippedBall.description}</p>
-            </div>
-          </div>
-          {(pickupsLeft > 0 || buffs.tailwindSwings > 0 || buffs.clover || buffs.magnet) && (
-            <div className="buff-row" aria-label="Pickups and active boosts">
-              {pickupsLeft > 0 && (
-                <span className="buff-chip">{pickupsLeft} pickup{pickupsLeft > 1 ? 's' : ''} on this hole</span>
-              )}
-              {buffs.tailwindSwings > 0 && (
-                <span className="buff-chip">
-                  <SpriteIcon sheet="pickups" tag="tailwind" scale={2} />
-                  Tailwind ×{buffs.tailwindSwings}
-                </span>
-              )}
-              {buffs.clover && (
-                <span className="buff-chip">
-                  <SpriteIcon sheet="pickups" tag="clover" scale={2} />
-                  Perfect next
-                </span>
-              )}
-              {buffs.magnet && (
-                <span className="buff-chip">
-                  <SpriteIcon sheet="pickups" tag="magnet" scale={2} />
-                  Magnet
-                </span>
-              )}
-            </div>
-          )}
-          <div className="round-modifier">
-            <div>
-              <span>Wind</span>
-              <strong>{wind.label}</strong>
-            </div>
-            <p>{wind.description}</p>
-          </div>
-          {(nextHazard || inSand) && (
-            <div className={`hazard-panel ${inSand ? 'sand' : nextHazard.type}`}>
-              <span>{inSand ? 'In The Sand' : nextHazard.type === 'water' ? 'Water Ahead' : 'Bunker Ahead'}</span>
-              <strong>
-                {inSand
-                  ? `Next shot ${Math.round((1 - getSandMultiplier(state)) * 100)}% shorter`
-                  : `${nextHazard.name}: ${Math.max(0, nextHazard.start - yardsThisHole)}–${nextHazard.end - yardsThisHole} yds out`}
-              </strong>
-              {!inSand && (
-                <p>
-                  {nextHazard.type === 'water'
-                    ? 'Landing in it costs a stroke and a ball.'
-                    : 'Landing in it shortens your next shot.'}
-                  {' '}Lay Up stops short of it.
-                </p>
-              )}
-            </div>
-          )}
-          <div className="hole-trait-panel">
-            <span>Hole Trait</span>
-            <strong>{holeDefinition.trait.label}</strong>
-            <p>{holeDefinition.trait.description}</p>
-          </div>
-          {activeCoursePerk && (
-            <div className="course-perk-card active">
-              <span>Course Perk</span>
-              <strong>{activeCoursePerk.label}</strong>
-              <p>{activeCoursePerk.description}</p>
-            </div>
-          )}
-          <details className="all-stats">
-            <summary>All Stats</summary>
-            <div className="stats">
-              <p className="stat">Course: <strong>{course.name}</strong></p>
-              <p className="stat">Course perk: <strong>{activeCoursePerk?.label || 'None'}</strong></p>
-              <p className="stat">Swing mode: <strong>{selectedSwingMode.label}</strong></p>
-              <p className="stat">Shot phase: <strong>{approachActive ? 'Approach' : 'Fairway'}</strong></p>
-              <p className="stat">Approach range: <strong>{approachRange} yds</strong></p>
-              <p className="stat">Lie: <strong>{inSand ? 'Sand' : 'Fairway'}</strong></p>
-              <p className="stat">Approach control: <strong>{approachTightening}% tighter</strong></p>
-              <p className="stat">Auto approach: <strong>{autoApproachTightening}% tighter</strong></p>
-              <p className="stat">Target: <strong>{targetDistance} yds</strong></p>
-              <p className="stat">Par: <strong>{parForHole(hole, state.courseId)}</strong></p>
-              <p className="stat">Yards this hole: <strong>{yardsThisHole}</strong></p>
-              <p className="stat">Remaining: <strong>{remaining} yds</strong></p>
-              <p className="stat">Balls left: <strong>{ballsLeft}</strong></p>
-              <p className="stat">Shots this hole: <strong>{currentHoleShots}</strong></p>
-              <p className="stat">Shots this round: <strong>{totalShots}</strong></p>
-              <p className="stat">Holes cleared: <strong>{completedHoles.length}</strong></p>
-              <p className="stat">Yards earned: <strong>{totalYardsThisRound}</strong></p>
-              <p className="stat">Score to par: <strong>{formatScoreToPar(scoreToPar)}</strong></p>
-            </div>
-          </details>
-        </aside>
-      </div>
+      </details>
     </div>
   );
 }
