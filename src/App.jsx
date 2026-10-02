@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
   createInitialState,
   createScorecard,
@@ -47,6 +47,8 @@ import './App.css';
 
 const FOCUS_GAIN_PER_MANUAL_SWING = 18;
 const FOCUS_READY = 100;
+// Manual swings wait for the ball-flight animation, so click spam can't outrun it.
+const MANUAL_SWING_COOLDOWN_MS = 700;
 
 function applyAchievementUnlocks(state) {
   const newlyUnlocked = ACHIEVEMENTS.filter(achievement => (
@@ -200,7 +202,7 @@ function advanceSwingState(prev, source = 'manual') {
       nextCoursePerk: null,
       phase: 'upgrade',
       roundResult: 'complete',
-      yardsToAllocate: getEarnedUpgradeYards(s, newTotalYards),
+      yardsToAllocate: s.yardsToAllocate + getEarnedUpgradeYards(s, newTotalYards),
     });
   }
 
@@ -222,7 +224,7 @@ function advanceSwingState(prev, source = 'manual') {
       scorecard: nextScorecard,
       phase: 'upgrade',
       roundResult: 'outOfBalls',
-      yardsToAllocate: getEarnedUpgradeYards(s, newTotalYards),
+      yardsToAllocate: s.yardsToAllocate + getEarnedUpgradeYards(s, newTotalYards),
     });
   }
 
@@ -296,7 +298,12 @@ export default function App() {
     return () => window.clearInterval(intervalId);
   }, [state.phase, state.autoSwingEnabled, autoSwingIntervalMs]);
 
+  const lastManualSwingAt = useRef(0);
+
   function handleSwing() {
+    const now = Date.now();
+    if (now - lastManualSwingAt.current < MANUAL_SWING_COOLDOWN_MS) return;
+    lastManualSwingAt.current = now;
     setState(s => advanceSwingState(s, 'manual'));
   }
 
@@ -397,7 +404,7 @@ export default function App() {
         ballsLeft: getStartingBalls(getEffectLevels(s)) + getCoursePerkStartingBalls(activeCoursePerk),
         totalShots: 0,
         totalYardsThisRound: 0,
-        yardsToAllocate: 0,
+        // Unspent yards carry over to the next Clubhouse visit.
         wind: rollWind(),
         lastSwing: null,
         focusMeter: 0,
@@ -414,7 +421,10 @@ export default function App() {
     });
   }
 
+  const [confirmingReset, setConfirmingReset] = useState(false);
+
   function handleReset() {
+    setConfirmingReset(false);
     clearSave();
     setView('course');
     setOverlay(null);
@@ -482,9 +492,17 @@ export default function App() {
         </Overlay>
       )}
 
-      <button className="reset-btn" onClick={handleReset}>
-        Reset Game
-      </button>
+      {confirmingReset ? (
+        <div className="reset-confirm" role="alertdialog" aria-label="Confirm reset">
+          <p>Erase everything, including Pro upgrades, records and achievements?</p>
+          <button className="reset-btn danger" onClick={handleReset}>Erase save</button>
+          <button className="reset-btn" onClick={() => setConfirmingReset(false)} autoFocus>Keep playing</button>
+        </div>
+      ) : (
+        <button className="reset-btn" onClick={() => setConfirmingReset(true)}>
+          Reset Game
+        </button>
+      )}
     </div>
   );
 }
