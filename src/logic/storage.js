@@ -4,7 +4,8 @@ const SAVE_KEY = 'golf_save';
 
 export function saveGame(state) {
   try {
-    localStorage.setItem(SAVE_KEY, JSON.stringify(state));
+    // savedAt tells the next load how long the game was closed (offline progress).
+    localStorage.setItem(SAVE_KEY, JSON.stringify({ ...state, savedAt: Date.now() }));
   } catch (e) {
     console.warn('Could not save game:', e);
   }
