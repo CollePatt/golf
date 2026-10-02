@@ -1,3 +1,22 @@
+function toHoleDefinition([name, theme, label, description, distanceMultiplier]) {
+  return {
+    name,
+    theme,
+    trait: {
+      label,
+      description,
+      distanceMultiplier,
+    },
+  };
+}
+
+// unlock:
+//   start: always available
+//   chain: available once `after` is completed in the current pro cycle
+//   coursePass: available once the Course Pass Tier 2 upgrade reaches `level`
+//
+// prestigeValue: Pro Points for an even-par finish (see prestigeLogic.js).
+// parYardScale: divides hole yardage before par lookup so long courses keep sensible pars.
 export const COURSES = [
   {
     id: 'meadowMunicipal',
@@ -5,6 +24,8 @@ export const COURSES = [
     description: 'A forgiving local course that gets longer and moodier as the round goes on.',
     targetBase: 300,
     targetStep: 50,
+    unlock: { type: 'start' },
+    prestigeValue: 4,
     holes: [
       ['Starter Strip', 'morning', 'Fresh Fairway', '+5% swing distance', 1.05],
       ['Willow Bend', 'morning', 'Soft Turf', '-4% swing distance', 0.96],
@@ -24,15 +45,7 @@ export const COURSES = [
       ['Gallery Rise', 'sunset', 'Adrenaline', '+8% swing distance', 1.08],
       ['Last Light', 'sunset', 'Long Shadows', '-4% swing distance', 0.96],
       ['Home Green', 'sunset', 'Championship Nerves', '+12% swing distance', 1.12],
-    ].map(([name, theme, label, description, distanceMultiplier]) => ({
-      name,
-      theme,
-      trait: {
-        label,
-        description,
-        distanceMultiplier,
-      },
-    })),
+    ].map(toHoleDefinition),
   },
   {
     id: 'moonLinks',
@@ -40,6 +53,8 @@ export const COURSES = [
     description: 'A low-gravity course with long carries, crater lips, and a very quiet gallery.',
     targetBase: 380,
     targetStep: 65,
+    unlock: { type: 'chain', after: 'meadowMunicipal' },
+    prestigeValue: 6,
     holes: [
       ['Tranquility Tee', 'moon', 'Low Gravity', '+30% swing distance', 1.3],
       ['Crater Cup', 'moon', 'Crater Lip', '-8% swing distance', 0.92],
@@ -59,15 +74,97 @@ export const COURSES = [
       ['Silent Gallery', 'eclipse', 'Heavy Nerves', '-6% swing distance', 0.94],
       ['Lunar Ladder', 'eclipse', 'Climb Out', '-10% swing distance', 0.9],
       ['Home Module', 'eclipse', 'Return Burn', '+35% swing distance', 1.35],
-    ].map(([name, theme, label, description, distanceMultiplier]) => ({
-      name,
-      theme,
-      trait: {
-        label,
-        description,
-        distanceMultiplier,
-      },
-    })),
+    ].map(toHoleDefinition),
+  },
+  {
+    id: 'saharaSands',
+    name: 'Sahara Sands',
+    description: 'Endless dunes, baked fairways that roll forever, and bunkers the size of towns.',
+    targetBase: 520,
+    targetStep: 80,
+    parYardScale: 1.7,
+    unlock: { type: 'coursePass', level: 1 },
+    prestigeValue: 10,
+    holes: [
+      ['Oasis Opener', 'dune', 'Hardpan Roll', '+14% swing distance', 1.14],
+      ['Camel Crossing', 'dune', 'Soft Sand', '-9% swing distance', 0.91],
+      ['Wadi Run', 'dune', 'Dry Riverbed', '+18% swing distance', 1.18],
+      ['Sandstorm Ridge', 'dune', 'Gritty Gust', '-12% swing distance', 0.88],
+      ['Caravan Line', 'dune', 'Packed Track', '+10% swing distance', 1.1],
+      ['Mirage Flats', 'mirage', 'False Read', '-6% swing distance', 0.94],
+      ['Heat Shimmer', 'mirage', 'Thin Hot Air', '+16% swing distance', 1.16],
+      ['Glass Sand', 'mirage', 'Fused Crust', '+20% swing distance', 1.2],
+      ['Scorpion Bowl', 'mirage', 'Deep Bunker', '-14% swing distance', 0.86],
+      ['Sun Dial', 'mirage', 'Noon Glare', '-5% swing distance', 0.95],
+      ['Pyramid Carry', 'mirage', 'High Launch', '+12% swing distance', 1.12],
+      ['Dune Sea', 'dusk', 'Rolling Crest', '+22% swing distance', 1.22],
+      ['Bedouin Bend', 'dusk', 'Cooling Air', '+4% swing distance', 1.04],
+      ['Salt Pan', 'dusk', 'Flat Bake', '+25% swing distance', 1.25],
+      ['Vulture Rock', 'dusk', 'Ragged Lie', '-10% swing distance', 0.9],
+      ['Last Well', 'dusk', 'Thirsty Turf', '-7% swing distance', 0.93],
+      ['Starfall Dune', 'dusk', 'Night Wind', '+8% swing distance', 1.08],
+      ['Sultan Green', 'dusk', 'Grand Finish', '+28% swing distance', 1.28],
+    ].map(toHoleDefinition),
+  },
+  {
+    id: 'glacierGreens',
+    name: 'Glacier Greens',
+    description: 'Ice-slick fairways and thin alpine air. Long carries, but snowbanks swallow mistakes.',
+    targetBase: 700,
+    targetStep: 100,
+    parYardScale: 2.3,
+    unlock: { type: 'coursePass', level: 2 },
+    prestigeValue: 15,
+    holes: [
+      ['Base Camp', 'frost', 'Fresh Powder', '-8% swing distance', 0.92],
+      ['Ice Shelf', 'frost', 'Glass Roll', '+26% swing distance', 1.26],
+      ['Crevasse Hop', 'frost', 'Nervy Carry', '-6% swing distance', 0.94],
+      ['Penguin Parade', 'frost', 'Slide Out', '+18% swing distance', 1.18],
+      ['Snowcat Track', 'frost', 'Groomed Lane', '+12% swing distance', 1.12],
+      ['Avalanche Chute', 'frost', 'Downhill Blast', '+30% swing distance', 1.3],
+      ['Frozen Falls', 'aurora', 'Icicle Drag', '-10% swing distance', 0.9],
+      ['Northern Lights', 'aurora', 'Clear Night', '+14% swing distance', 1.14],
+      ['Polar Pin', 'aurora', 'Frost Bite', '-12% swing distance', 0.88],
+      ['Igloo Turn', 'aurora', 'Tight Dogleg', '-5% swing distance', 0.95],
+      ['Seracs', 'aurora', 'Thin Air', '+20% swing distance', 1.2],
+      ['Moraine Ridge', 'aurora', 'Loose Scree', '-8% swing distance', 0.92],
+      ['Whiteout', 'blizzard', 'Blind Line', '-15% swing distance', 0.85],
+      ['Ski Jump', 'blizzard', 'Launch Ramp', '+35% swing distance', 1.35],
+      ['Yeti Rough', 'blizzard', 'Deep Drift', '-12% swing distance', 0.88],
+      ['Summit Push', 'blizzard', 'Altitude', '+24% swing distance', 1.24],
+      ['Cornice Edge', 'blizzard', 'Wind Lip', '+6% swing distance', 1.06],
+      ['Peak Green', 'blizzard', 'On Top Of The World', '+32% swing distance', 1.32],
+    ].map(toHoleDefinition),
+  },
+  {
+    id: 'calderaClassic',
+    name: 'Caldera Classic',
+    description: 'A championship course inside an active volcano. Updrafts launch the ball, ash buries it.',
+    targetBase: 950,
+    targetStep: 130,
+    parYardScale: 3.1,
+    unlock: { type: 'coursePass', level: 3 },
+    prestigeValue: 22,
+    holes: [
+      ['Obsidian Tee', 'ember', 'Glassy Lie', '+16% swing distance', 1.16],
+      ['Lava Tube', 'ember', 'Tunnel Shot', '-8% swing distance', 0.92],
+      ['Basalt Steps', 'ember', 'Terraced Roll', '+12% swing distance', 1.12],
+      ['Sulfur Springs', 'ember', 'Steam Cloud', '-10% swing distance', 0.9],
+      ['Updraft Alley', 'ember', 'Thermal Lift', '+34% swing distance', 1.34],
+      ['Pumice Field', 'ash', 'Floaty Turf', '+20% swing distance', 1.2],
+      ['Ash Fall', 'ash', 'Grey Out', '-14% swing distance', 0.86],
+      ['Fumarole Bend', 'ash', 'Hot Vent', '+26% swing distance', 1.26],
+      ['Cinder Cone', 'ash', 'Loose Cinders', '-12% swing distance', 0.88],
+      ['Smoke Signal', 'ash', 'Hazy Read', '-6% swing distance', 0.94],
+      ['Rim Walk', 'ash', 'Edge Nerves', '-4% swing distance', 0.96],
+      ['Magma Moat', 'magma', 'Forced Carry', '-10% swing distance', 0.9],
+      ['Pyroclast Drive', 'magma', 'Eruption Boost', '+38% swing distance', 1.38],
+      ['Dragon Spine', 'magma', 'Ridge Bounce', '+18% swing distance', 1.18],
+      ['Crucible', 'magma', 'Heat Haze', '-8% swing distance', 0.92],
+      ['Flowfront', 'magma', 'Moving Ground', '+10% swing distance', 1.1],
+      ['Vent Shot', 'magma', 'Blast Lift', '+30% swing distance', 1.3],
+      ['Caldera Cup', 'magma', 'Final Eruption', '+40% swing distance', 1.4],
+    ].map(toHoleDefinition),
   },
 ];
 
@@ -114,6 +211,69 @@ export const COURSE_THEMES = {
     fairway: '#a3a3a3',
     flag: '#f0abfc',
   },
+  dune: {
+    skyTop: '#e9a23b',
+    skyBottom: '#fbe3a6',
+    ground: '#b9853f',
+    fairway: '#d9b26a',
+    flag: '#0f766e',
+  },
+  mirage: {
+    skyTop: '#f2c14e',
+    skyBottom: '#fdf3c4',
+    ground: '#c08a43',
+    fairway: '#e3c27d',
+    flag: '#be123c',
+  },
+  dusk: {
+    skyTop: '#5b2a6e',
+    skyBottom: '#f08a5d',
+    ground: '#7a4e2d',
+    fairway: '#b98a52',
+    flag: '#facc15',
+  },
+  frost: {
+    skyTop: '#7fb8e6',
+    skyBottom: '#e6f4fb',
+    ground: '#b9d3e3',
+    fairway: '#e8f3f8',
+    flag: '#dc2626',
+  },
+  aurora: {
+    skyTop: '#0b1d33',
+    skyBottom: '#1f6f78',
+    ground: '#6b8ba3',
+    fairway: '#c3d9e6',
+    flag: '#4ade80',
+  },
+  blizzard: {
+    skyTop: '#8a99a8',
+    skyBottom: '#dfe6ec',
+    ground: '#a7b6c2',
+    fairway: '#f1f5f9',
+    flag: '#f97316',
+  },
+  ember: {
+    skyTop: '#3b0d0c',
+    skyBottom: '#c2410c',
+    ground: '#292524',
+    fairway: '#57534e',
+    flag: '#fde047',
+  },
+  ash: {
+    skyTop: '#44403c',
+    skyBottom: '#a8a29e',
+    ground: '#3f3a36',
+    fairway: '#78716c',
+    flag: '#f97316',
+  },
+  magma: {
+    skyTop: '#1c0a05',
+    skyBottom: '#7c2d12',
+    ground: '#1c1917',
+    fairway: '#44403c',
+    flag: '#fbbf24',
+  },
 };
 
 export function getCourseById(courseId) {
@@ -129,6 +289,31 @@ export function getNextCourseId(courseId) {
   const courseIndex = COURSES.findIndex(course => course.id === courseId);
   if (courseIndex < 0 || courseIndex >= COURSES.length - 1) return null;
   return COURSES[courseIndex + 1].id;
+}
+
+export function isValidCourseId(courseId) {
+  return COURSES.some(course => course.id === courseId);
+}
+
+// Courses whose completion is required before going pro.
+export const PRO_CHAIN_COURSE_IDS = COURSES
+  .filter(course => course.unlock.type !== 'coursePass')
+  .map(course => course.id);
+
+export function isCourseUnlocked(courseId, { completedCourseIds = [], coursePassLevel = 0 } = {}) {
+  if (!isValidCourseId(courseId)) return false;
+  const { unlock } = getCourseById(courseId);
+  if (unlock.type === 'start') return true;
+  if (unlock.type === 'chain') return completedCourseIds.includes(unlock.after);
+  if (unlock.type === 'coursePass') return coursePassLevel >= unlock.level;
+  return false;
+}
+
+export function describeCourseUnlock(courseId) {
+  const { unlock } = getCourseById(courseId);
+  if (unlock.type === 'chain') return `Complete ${getCourseById(unlock.after).name} this pro cycle.`;
+  if (unlock.type === 'coursePass') return `Requires Course Pass level ${unlock.level}.`;
+  return 'Always open.';
 }
 
 export function getCourseTheme(themeId) {

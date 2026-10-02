@@ -19,8 +19,9 @@ After adding a screenshot, uncomment this line:
 1. Swing through an 18-hole round with a limited number of balls.
 2. Earn yardage from every swing.
 3. Spend earned yards on permanent upgrades.
-4. Complete a course, choose a temporary perk, and bring it into the next course.
-5. Start the next round with better stats.
+4. Complete a course, choose a temporary perk, and pick the next course to play.
+5. Clear the tour, turn pro for Pro Points, and buy permanent Tier 2 upgrades.
+6. Start the next cycle stronger and unlock harder courses with Course Pass.
 
 ## Current Features
 
@@ -43,7 +44,11 @@ After adding a screenshot, uncomment this line:
 - Partial upgrade investments with next-level stat previews.
 - Unlockable Auto Caddie for idle swings with upgradeable speed.
 - Round recap table with per-hole score details.
-- Local storage save/load support.
+- Course select tab with per-course records, cycle bests, and unlock requirements.
+- Pro Tour prestige: fewer shots across cleared courses earns more Pro Points.
+- Tier 2 Pro upgrades: Pro Clubs, Course Pass, Auto Driver, Yardage Book, and Tour Bag.
+- Course Pass courses: Sahara Sands, Glacier Greens, and Caldera Classic.
+- Local storage save/load support with versioned migrations.
 - Round-end upgrade screen.
 
 ## Run Locally
@@ -71,6 +76,8 @@ The Pages build uses `/golf/` as the asset base path. Local development continue
 - `src/logic/` contains save, swing, upgrade, and round helpers.
 - `src/data/upgrades.js` defines upgrade costs and effects.
 - `src/data/courses.js` defines course progression, hole themes, and yardage curves.
+- `src/data/proUpgrades.js` defines Tier 2 upgrades bought with Pro Points.
+- `src/logic/prestigeLogic.js` handles Pro Point scoring and the prestige reset.
 - `src/data/coursePerks.js` defines temporary course-completion rewards.
 - `src/data/swingModes.js` defines safe, normal, and aggressive shot behavior.
 - `src/components/` contains the game and upgrade screens.
@@ -79,8 +86,8 @@ The Pages build uses `/golf/` as the asset base path. Local development continue
 
 The next wave is focused on making the game feel more like golf and more replayable:
 
-- Course selection and richer course unlocks.
-- Prestige scoring and Tier 2 progression.
-- Better course selection and replay controls.
+- More Course Pass courses (see the course table in ROADMAP.md).
+- Rarer and course-specific perks.
+- Shot-mode upgrades.
 
 See [ROADMAP.md](ROADMAP.md) for the living backlog.

@@ -7,15 +7,20 @@ import {
   recordHoleScore,
   summarizeCompletedRound,
   isBetterCompletedRound,
+  recordCourseRound,
 } from './logic/gameState.js';
 import { rollWind } from './logic/runModifiers.js';
 import {
   getApproachControlStats,
   getAutoSwingIntervalMs,
+  getCoursePassLevel,
+  getEffectLevels,
   getExpectedYardsPerSwing,
   getStartingBalls,
+  getYardsEarnedMultiplier,
   rollSwingYards,
 } from './logic/swingLogic.js';
+import { applyTurnPro, buyProUpgrade, canTurnPro } from './logic/prestigeLogic.js';
 import {
   APPROACH_DISTANCE,
   getApproachEntryRemaining,
@@ -23,7 +28,7 @@ import {
   isApproachDistance,
   resolveApproachShot,
 } from './logic/approachLogic.js';
-import { getHoleDefinition, getNextCourseId } from './data/courses.js';
+import { COURSES, getHoleDefinition, getNextCourseId, isCourseUnlocked } from './data/courses.js';
 import { ACHIEVEMENTS } from './data/achievements.js';
 import {
   createCoursePerkChoices,
@@ -39,6 +44,8 @@ import UpgradeScreen from './components/UpgradeScreen.jsx';
 import ScorecardPanel from './components/ScorecardPanel.jsx';
 import AchievementsPanel from './components/AchievementsPanel.jsx';
 import GuidePanel from './components/GuidePanel.jsx';
+import CourseSelectPanel from './components/CourseSelectPanel.jsx';
+import ProPanel from './components/ProPanel.jsx';
 import './App.css';
 
 const FOCUS_GAIN_PER_MANUAL_SWING = 18;
@@ -91,6 +98,25 @@ function addCompletedCourse(completedCourseIds, courseId) {
     : [...completedCourseIds, courseId];
 }
 
+function getCourseUnlockContext(s) {
+  return {
+    completedCourseIds: s.completedCourseIds,
+    coursePassLevel: getCoursePassLevel(getEffectLevels(s)),
+  };
+}
+
+// After finishing a course, queue the next stop on the tour if it is open.
+function getDefaultNextCourseId(s) {
+  const nextCourseId = getNextCourseId(s.courseId);
+  return nextCourseId && isCourseUnlocked(nextCourseId, getCourseUnlockContext(s))
+    ? nextCourseId
+    : s.courseId;
+}
+
+function getEarnedUpgradeYards(s, totalYards) {
+  return Math.round(totalYards * getYardsEarnedMultiplier(getEffectLevels(s)));
+}
+
 function advanceSwingState(s, source = 'manual') {
   if (s.phase !== 'run' || s.ballsLeft <= 0) return s;
 
@@ -98,8 +124,9 @@ function advanceSwingState(s, source = 'manual') {
   const focused = source === 'manual' && s.focusMeter >= FOCUS_READY;
   const coursePerkDistanceMultiplier = getCoursePerkDistanceMultiplier(s.activeCoursePerk);
   const swingMode = getSwingMode(s.selectedSwingMode);
-  const approachStats = getApproachControlStats(s.upgrades, source);
-  const swing = rollSwingYards(s.upgrades, s.wind, holeDefinition, {
+  const effectLevels = getEffectLevels(s);
+  const approachStats = getApproachControlStats(effectLevels, source);
+  const swing = rollSwingYards(effectLevels, s.wind, holeDefinition, {
     focused,
     source,
     distanceMultiplier: coursePerkDistanceMultiplier,
@@ -172,6 +199,7 @@ function advanceSwingState(s, source = 'manual') {
   // Round ends: completed all 18 holes, or ran out of balls.
   if (holeCleared && lastHole) {
     const completedRound = summarizeCompletedRound(nextScorecard, newTotalShots, newTotalYards);
+    const completedCourseIds = addCompletedCourse(s.completedCourseIds, s.courseId);
     return applyAchievementUnlocks({
       ...s,
       yardsThisHole: newYardsThisHole,
@@ -187,12 +215,15 @@ function advanceSwingState(s, source = 'manual') {
       bestCompletedRound: isBetterCompletedRound(completedRound, s.bestCompletedRound)
         ? completedRound
         : s.bestCompletedRound,
-      completedCourseIds: addCompletedCourse(s.completedCourseIds, s.courseId),
+      completedCourseIds,
+      selectedCourseId: getDefaultNextCourseId({ ...s, completedCourseIds }),
+      cycleBestRounds: recordCourseRound(s.cycleBestRounds, s.courseId, completedRound),
+      courseRecords: recordCourseRound(s.courseRecords, s.courseId, completedRound),
       pendingCoursePerkChoices: createCoursePerkChoices(),
       nextCoursePerk: null,
       phase: 'upgrade',
       roundResult: 'complete',
-      yardsToAllocate: newTotalYards,
+      yardsToAllocate: getEarnedUpgradeYards(s, newTotalYards),
     });
   }
 
@@ -213,7 +244,7 @@ function advanceSwingState(s, source = 'manual') {
       scorecard: nextScorecard,
       phase: 'upgrade',
       roundResult: 'outOfBalls',
-      yardsToAllocate: newTotalYards,
+      yardsToAllocate: getEarnedUpgradeYards(s, newTotalYards),
     });
   }
 
@@ -262,7 +293,8 @@ export default function App() {
     if (state.phase === 'upgrade') setActiveTab('upgrades');
   }, [state.phase]);
 
-  const autoSwingIntervalMs = getAutoSwingIntervalMs(state.upgrades);
+  const effectLevels = getEffectLevels(state);
+  const autoSwingIntervalMs = getAutoSwingIntervalMs(effectLevels);
 
   useEffect(() => {
     if (state.phase !== 'run' || !state.autoSwingEnabled || !autoSwingIntervalMs) return undefined;
@@ -298,8 +330,8 @@ export default function App() {
         s.yardsToAllocate,
         amount
       );
-      const hadAutoSwing = Boolean(getAutoSwingIntervalMs(s.upgrades));
-      const hasAutoSwing = Boolean(getAutoSwingIntervalMs(upgradeState));
+      const hadAutoSwing = Boolean(getAutoSwingIntervalMs(getEffectLevels(s)));
+      const hasAutoSwing = Boolean(getAutoSwingIntervalMs(getEffectLevels({ ...s, upgrades: upgradeState })));
       return {
         ...s,
         upgrades: upgradeState,
@@ -319,6 +351,30 @@ export default function App() {
     });
   }
 
+  function handleSelectCourse(courseId) {
+    setState(s => {
+      if (s.phase !== 'upgrade' || !isCourseUnlocked(courseId, getCourseUnlockContext(s))) return s;
+      return {
+        ...s,
+        selectedCourseId: courseId,
+      };
+    });
+  }
+
+  function handleBuyProUpgrade(upgradeId) {
+    setState(s => {
+      const next = buyProUpgrade(s, upgradeId);
+      const hadAutoSwing = Boolean(getAutoSwingIntervalMs(getEffectLevels(s)));
+      const hasAutoSwing = Boolean(getAutoSwingIntervalMs(getEffectLevels(next)));
+      return hasAutoSwing && !hadAutoSwing ? { ...next, autoSwingEnabled: true } : next;
+    });
+  }
+
+  function handleTurnPro() {
+    setActiveTab('play');
+    setState(s => applyAchievementUnlocks(applyTurnPro(s)));
+  }
+
   function handleStartNextRound() {
     if (state.roundResult === 'complete' && !state.nextCoursePerk) return;
 
@@ -327,20 +383,21 @@ export default function App() {
       if (s.roundResult === 'complete' && !s.nextCoursePerk) return s;
 
       const completedRound = s.roundResult === 'complete';
-      const nextCourseId = completedRound
-        ? getNextCourseId(s.courseId) || s.courseId
-        : s.courseId;
+      const nextCourseId = isCourseUnlocked(s.selectedCourseId, getCourseUnlockContext(s))
+        ? s.selectedCourseId
+        : COURSES[0].id;
       const activeCoursePerk = completedRound ? s.nextCoursePerk : null;
 
       return {
         ...s,
         phase: 'run',
         courseId: nextCourseId,
+        selectedCourseId: nextCourseId,
         hole: 1,
         targetDistance: yardsForHole(1, nextCourseId),
         yardsThisHole: 0,
         currentHoleShots: 0,
-        ballsLeft: getStartingBalls(s.upgrades) + getCoursePerkStartingBalls(activeCoursePerk),
+        ballsLeft: getStartingBalls(getEffectLevels(s)) + getCoursePerkStartingBalls(activeCoursePerk),
         totalShots: 0,
         totalYardsThisRound: 0,
         yardsToAllocate: 0,
@@ -351,6 +408,7 @@ export default function App() {
         pendingCoursePerkChoices: [],
         nextCoursePerk: null,
         recentAchievements: [],
+        lastProResult: null,
         scorecard: createScorecard(nextCourseId),
         roundResult: null,
       };
@@ -374,6 +432,12 @@ export default function App() {
         ? 'Spend'
         : null,
     },
+    { id: 'courses', label: 'Courses' },
+    {
+      id: 'pro',
+      label: 'Pro Tour',
+      badge: canTurnPro(state) ? 'Ready' : null,
+    },
     { id: 'scorecard', label: 'Scorecard' },
     { id: 'achievements', label: 'Achievements' },
     { id: 'guide', label: 'Guide' },
@@ -388,7 +452,7 @@ export default function App() {
         </div>
         <div className="goal-banner">
           <span>Final Goal</span>
-          <strong>Complete courses, unlock new stops, then beat your best score.</strong>
+          <strong>Complete the tour, turn pro, and open harder courses.</strong>
         </div>
       </header>
 
@@ -413,7 +477,7 @@ export default function App() {
           onSelectSwingMode={handleSelectSwingMode}
           onToggleAutoSwing={handleToggleAutoSwing}
           yardsPerSwing={getExpectedYardsPerSwing(
-            state.upgrades,
+            effectLevels,
             state.wind,
             getHoleDefinition(state.courseId, state.hole),
             getCoursePerkDistanceMultiplier(state.activeCoursePerk),
@@ -440,6 +504,23 @@ export default function App() {
           onAllocate={handleAllocate}
           onChooseCoursePerk={handleChooseCoursePerk}
           onStartNextRound={handleStartNextRound}
+          onViewCourses={() => setActiveTab('courses')}
+        />
+      )}
+
+      {activeTab === 'courses' && (
+        <CourseSelectPanel
+          state={state}
+          onSelectCourse={handleSelectCourse}
+          onStartNextRound={handleStartNextRound}
+        />
+      )}
+
+      {activeTab === 'pro' && (
+        <ProPanel
+          state={state}
+          onTurnPro={handleTurnPro}
+          onBuyProUpgrade={handleBuyProUpgrade}
         />
       )}
 

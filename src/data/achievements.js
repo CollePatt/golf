@@ -1,3 +1,18 @@
+import { COURSES } from './courses.js';
+
+function getBestRecordScoreToPar(state) {
+  const scores = Object.values(state.courseRecords)
+    .filter(record => !record.migrated)
+    .map(record => record.scoreToPar);
+  return scores.length ? Math.min(...scores) : 0;
+}
+
+function hasClearedCoursePassCourse(state) {
+  return COURSES.some(course => (
+    course.unlock.type === 'coursePass' && state.courseRecords[course.id]
+  ));
+}
+
 export const ACHIEVEMENTS = [
   {
     id: 'firstSwing',
@@ -62,6 +77,30 @@ export const ACHIEVEMENTS = [
     rewardYards: 1000,
     isUnlocked: state => state.lifetimeStats.coursesCompleted >= 1,
     progress: state => `${Math.min(1, state.lifetimeStats.coursesCompleted)} / 1`,
+  },
+  {
+    id: 'deepRed',
+    title: 'Deep Red',
+    description: 'Finish any course 35 or more under par.',
+    rewardYards: 1500,
+    isUnlocked: state => getBestRecordScoreToPar(state) <= -35,
+    progress: state => `${Math.min(35, Math.max(0, -getBestRecordScoreToPar(state)))} / 35`,
+  },
+  {
+    id: 'turnedPro',
+    title: 'Card Carrier',
+    description: 'Turn pro for the first time.',
+    rewardYards: 500,
+    isUnlocked: state => state.prestige.count >= 1,
+    progress: state => `${Math.min(1, state.prestige.count)} / 1`,
+  },
+  {
+    id: 'tourStop',
+    title: 'World Tour',
+    description: 'Clear a Course Pass course.',
+    rewardYards: 3000,
+    isUnlocked: state => hasClearedCoursePassCourse(state),
+    progress: state => `${hasClearedCoursePassCourse(state) ? 1 : 0} / 1`,
   },
 ];
 

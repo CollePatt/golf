@@ -1,10 +1,17 @@
 import { UPGRADES } from '../data/upgrades.js';
-import { COURSES, getCourseById } from '../data/courses.js';
+import {
+  COURSES,
+  getCourseById,
+  getNextCourseId,
+  isCourseUnlocked,
+  isValidCourseId,
+} from '../data/courses.js';
+import { PRO_UPGRADES } from '../data/proUpgrades.js';
 import { createCoursePerkChoices, getCoursePerkById } from '../data/coursePerks.js';
 import { getSwingMode } from '../data/swingModes.js';
 import { normalizeWind, rollWind } from './runModifiers.js';
 
-export const SAVE_VERSION = 11;
+export const SAVE_VERSION = 12;
 
 export const BASE_YARDS_PER_SWING = 25;
 export const BASE_STARTING_BALLS = 10;
@@ -17,7 +24,7 @@ export function yardsForHole(hole, courseId = COURSES[0].id) {
 }
 
 export function parForHole(hole, courseId = COURSES[0].id) {
-  const yards = yardsForHole(hole, courseId);
+  const yards = yardsForHole(hole, courseId) / (getCourseById(courseId).parYardScale ?? 1);
   if (yards < 400) return 4;
   if (yards < 600) return 5;
   if (yards < 850) return 6;
@@ -30,6 +37,23 @@ function buildInitialUpgrades() {
     upgrades[u.id] = { level: 0, progress: 0 };
   }
   return upgrades;
+}
+
+function buildInitialProUpgrades() {
+  const upgrades = {};
+  for (const u of PRO_UPGRADES) {
+    upgrades[u.id] = { level: 0 };
+  }
+  return upgrades;
+}
+
+export function createPrestigeState() {
+  return {
+    points: 0,                     // unspent Pro Points
+    totalEarned: 0,                // lifetime Pro Points
+    count: 0,                      // times turned pro
+    upgrades: buildInitialProUpgrades(),
+  };
 }
 
 function createLifetimeStats() {
@@ -82,7 +106,12 @@ export function createInitialState() {
     activeCoursePerk: null,
     pendingCoursePerkChoices: [],
     nextCoursePerk: null,
-    completedCourseIds: [],
+    completedCourseIds: [],        // completed in the current pro cycle
+    selectedCourseId: COURSES[0].id, // course the next round starts on
+    cycleBestRounds: {},           // courseId -> best round this pro cycle (prestige scoring)
+    courseRecords: {},             // courseId -> all-time best round
+    prestige: createPrestigeState(),
+    lastProResult: null,           // { earned, count } after the most recent prestige
     lifetimeStats: createLifetimeStats(),
     achievements: {},
     recentAchievements: [],
@@ -119,6 +148,82 @@ function normalizeScorecard(scorecard, courseId = COURSES[0].id) {
   });
 }
 
+function normalizeProUpgradeState(upgrades = {}) {
+  const initial = buildInitialProUpgrades();
+  for (const upgrade of PRO_UPGRADES) {
+    const level = upgrades?.[upgrade.id]?.level;
+    initial[upgrade.id] = {
+      level: Number.isFinite(level) ? Math.max(0, Math.min(upgrade.maxLevel, level)) : 0,
+    };
+  }
+  return initial;
+}
+
+function normalizePrestigeState(prestige = {}) {
+  const initial = createPrestigeState();
+  return {
+    points: Number.isFinite(prestige?.points) ? Math.max(0, prestige.points) : initial.points,
+    totalEarned: Number.isFinite(prestige?.totalEarned) ? prestige.totalEarned : initial.totalEarned,
+    count: Number.isFinite(prestige?.count) ? prestige.count : initial.count,
+    upgrades: normalizeProUpgradeState(prestige?.upgrades),
+  };
+}
+
+function normalizeRoundRecords(records) {
+  if (!records || typeof records !== 'object') return {};
+  const normalized = {};
+  for (const [courseId, record] of Object.entries(records)) {
+    if (!isValidCourseId(courseId) || !Number.isFinite(record?.shots)) continue;
+    normalized[courseId] = {
+      shots: record.shots,
+      scoreToPar: Number.isFinite(record.scoreToPar) ? record.scoreToPar : 0,
+      ...(record.migrated ? { migrated: true } : {}),
+    };
+  }
+  return normalized;
+}
+
+export function getCourseParTotal(courseId) {
+  return createScorecard(courseId).reduce((total, entry) => total + entry.par, 0);
+}
+
+// v11 saves waiting on the upgrade screen after a completed course used to
+// advance along the course chain, so keep that destination.
+function getMigratedSelectedCourseId(state, completedCourseIds) {
+  const courseId = getCourseById(state?.courseId).id;
+  if (state?.phase !== 'upgrade' || state?.roundResult !== 'complete') return courseId;
+  const nextCourseId = getNextCourseId(courseId);
+  return nextCourseId && isCourseUnlocked(nextCourseId, { completedCourseIds })
+    ? nextCourseId
+    : courseId;
+}
+
+// v11 -> v12: prestige, course select, and per-course records.
+// v11 saves only know which courses were completed, not how well, so each completed
+// course is seeded with an even-par round. That keeps an earned prestige available.
+function migrateV11ToV12(state) {
+  const completedCourseIds = Array.isArray(state?.completedCourseIds)
+    ? state.completedCourseIds.filter(isValidCourseId)
+    : [];
+  const seededRounds = {};
+  for (const courseId of completedCourseIds) {
+    seededRounds[courseId] = { shots: getCourseParTotal(courseId), scoreToPar: 0, migrated: true };
+  }
+  return {
+    ...state,
+    selectedCourseId: getMigratedSelectedCourseId(state, completedCourseIds),
+    cycleBestRounds: seededRounds,
+    courseRecords: seededRounds,
+    prestige: createPrestigeState(),
+  };
+}
+
+export function migrateState(state) {
+  let migrated = state;
+  if ((migrated?.version ?? 0) < 12) migrated = migrateV11ToV12(migrated);
+  return migrated;
+}
+
 function normalizeLifetimeStats(lifetimeStats = {}) {
   return {
     ...createLifetimeStats(),
@@ -135,7 +240,8 @@ function normalizeCoursePerkChoices(choices = []) {
   return choices.filter(choice => getCoursePerkById(choice));
 }
 
-export function normalizeState(state) {
+export function normalizeState(savedState) {
+  const state = migrateState(savedState);
   const initial = createInitialState();
   const normalizedCourseId = getCourseById(state?.courseId).id;
   const normalizedNextCoursePerk = normalizeCoursePerk(state?.nextCoursePerk);
@@ -173,6 +279,10 @@ export function normalizeState(state) {
     completedCourseIds: Array.isArray(state?.completedCourseIds)
       ? state.completedCourseIds.filter(courseId => getCourseById(courseId).id === courseId)
       : [],
+    selectedCourseId: isValidCourseId(state?.selectedCourseId) ? state.selectedCourseId : normalizedCourseId,
+    cycleBestRounds: normalizeRoundRecords(state?.cycleBestRounds),
+    courseRecords: normalizeRoundRecords(state?.courseRecords),
+    prestige: normalizePrestigeState(state?.prestige),
     lifetimeStats: normalizeLifetimeStats(state?.lifetimeStats),
     achievements: state?.achievements || {},
     recentAchievements: Array.isArray(state?.recentAchievements) ? state.recentAchievements : [],
@@ -211,6 +321,14 @@ export function summarizeCompletedRound(scorecard, totalShots, totalYards) {
     shots: totalShots,
     scoreToPar: getScoreToPar(scorecard),
     totalYards,
+  };
+}
+
+export function recordCourseRound(records, courseId, round) {
+  if (!isBetterCompletedRound(round, records[courseId])) return records;
+  return {
+    ...records,
+    [courseId]: { shots: round.shots, scoreToPar: round.scoreToPar },
   };
 }
 

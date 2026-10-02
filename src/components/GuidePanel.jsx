@@ -46,7 +46,19 @@ export default function GuidePanel() {
             <li>Unlock Auto Caddie to keep swinging while you look away.</li>
             <li>Use the upgrade tab after each run to invest your earnings.</li>
             <li>Clear Meadow Municipal to unlock Moon Links.</li>
-            <li>The long-term target is a prestige layer after completed courses.</li>
+            <li>Use the Courses tab between rounds to replay any open course.</li>
+          </ul>
+        </section>
+
+        <section className="guide-card">
+          <h3>Pro Tour</h3>
+          <ul>
+            <li>Clear Meadow Municipal and Moon Links in one cycle to unlock Turn Pro.</li>
+            <li>Each cleared course pays Pro Points from its best round this cycle.</li>
+            <li>Even par pays the course value; fewer shots pay more, extra shots pay less.</li>
+            <li>Turning pro resets yard upgrades, perks, and course progress.</li>
+            <li>Pro upgrades, achievements, lifetime stats, and course records are kept.</li>
+            <li>Course Pass opens Sahara Sands, Glacier Greens, and Caldera Classic.</li>
           </ul>
         </section>
       </div>

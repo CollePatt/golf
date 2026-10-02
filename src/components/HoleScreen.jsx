@@ -7,7 +7,7 @@ import {
   getScoreToPar,
   parForHole,
 } from '../logic/gameState.js';
-import { formatAutoSwingInterval, getApproachControlStats } from '../logic/swingLogic.js';
+import { formatAutoSwingInterval, getApproachControlStats, getEffectLevels } from '../logic/swingLogic.js';
 import {
   APPROACH_DISTANCE,
   getApproachFinishWindow,
@@ -50,8 +50,9 @@ export default function HoleScreen({
   const scoreToPar = getScoreToPar(scorecard);
   const approachActive = isApproachDistance(remaining);
   const focusedReady = focusMeter >= focusReady;
-  const manualApproachStats = getApproachControlStats(state.upgrades, 'manual');
-  const autoApproachStats = getApproachControlStats(state.upgrades, 'auto');
+  const effectLevels = getEffectLevels(state);
+  const manualApproachStats = getApproachControlStats(effectLevels, 'manual');
+  const autoApproachStats = getApproachControlStats(effectLevels, 'auto');
   const approachWindow = getApproachFinishWindow(selectedSwingMode.id, focusedReady, manualApproachStats);
   const displayedExpectedYards = approachActive ? Math.min(yardsPerSwing, remaining) : yardsPerSwing;
   const approachTightening = Math.round((1 - manualApproachStats.errorMultiplier) * 100);
