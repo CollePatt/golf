@@ -13,11 +13,11 @@ export default function ScorecardPanel({ state }) {
   const scoreToPar = getScoreToPar(scorecard);
 
   return (
-    <div className="screen">
+    <div className="door-panel">
       <div className="screen-heading">
         <div>
           <h2>Scorecard</h2>
-          <p className="hint">{course.name} | Track the current round without crowding the swing view.</p>
+          <p className="hint">{course.name}</p>
         </div>
         <div className="summary-pill">
           <span>Current</span>

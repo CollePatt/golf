@@ -5,7 +5,7 @@ export default function AchievementsPanel({ state }) {
   const { lifetimeStats } = state;
 
   return (
-    <div className="screen">
+    <div className="door-panel">
       <div className="screen-heading">
         <div>
           <h2>Achievements</h2>
