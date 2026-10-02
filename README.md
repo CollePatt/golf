@@ -27,6 +27,8 @@ After adding a screenshot, uncomment this line:
 
 - 18-hole run structure with increasing target distances.
 - Animated fairway view with ball movement and camera follow.
+- Original pixel-art sprites: a golfer with a swing and walk cycle (astronaut suit on Moon Links), ball, waving flag, and parallax scenery per course theme. The flat renderer remains as a fallback.
+- Aseprite-editable sprite sheets for the golfer, astronaut, six ball designs and six pickups (see `art/README.md`).
 - Wider tabbed layout for play, upgrades, scorecard, and guide screens.
 - Simplified play stats with expandable detailed stats.
 - On-screen rules and a clear goal for new players.

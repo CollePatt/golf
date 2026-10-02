@@ -1,0 +1,403 @@
+{
+ "frames": [
+  {
+   "filename": "golfer 0.aseprite",
+   "frame": {
+    "x": 0,
+    "y": 0,
+    "w": 36,
+    "h": 30
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 36,
+    "h": 30
+   },
+   "sourceSize": {
+    "w": 36,
+    "h": 30
+   },
+   "duration": 400
+  },
+  {
+   "filename": "golfer 1.aseprite",
+   "frame": {
+    "x": 36,
+    "y": 0,
+    "w": 36,
+    "h": 30
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 36,
+    "h": 30
+   },
+   "sourceSize": {
+    "w": 36,
+    "h": 30
+   },
+   "duration": 60
+  },
+  {
+   "filename": "golfer 2.aseprite",
+   "frame": {
+    "x": 72,
+    "y": 0,
+    "w": 36,
+    "h": 30
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 36,
+    "h": 30
+   },
+   "sourceSize": {
+    "w": 36,
+    "h": 30
+   },
+   "duration": 50
+  },
+  {
+   "filename": "golfer 3.aseprite",
+   "frame": {
+    "x": 108,
+    "y": 0,
+    "w": 36,
+    "h": 30
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 36,
+    "h": 30
+   },
+   "sourceSize": {
+    "w": 36,
+    "h": 30
+   },
+   "duration": 40
+  },
+  {
+   "filename": "golfer 4.aseprite",
+   "frame": {
+    "x": 144,
+    "y": 0,
+    "w": 36,
+    "h": 30
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 36,
+    "h": 30
+   },
+   "sourceSize": {
+    "w": 36,
+    "h": 30
+   },
+   "duration": 30
+  },
+  {
+   "filename": "golfer 5.aseprite",
+   "frame": {
+    "x": 180,
+    "y": 0,
+    "w": 36,
+    "h": 30
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 36,
+    "h": 30
+   },
+   "sourceSize": {
+    "w": 36,
+    "h": 30
+   },
+   "duration": 45
+  },
+  {
+   "filename": "golfer 6.aseprite",
+   "frame": {
+    "x": 216,
+    "y": 0,
+    "w": 36,
+    "h": 30
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 36,
+    "h": 30
+   },
+   "sourceSize": {
+    "w": 36,
+    "h": 30
+   },
+   "duration": 30
+  },
+  {
+   "filename": "golfer 7.aseprite",
+   "frame": {
+    "x": 252,
+    "y": 0,
+    "w": 36,
+    "h": 30
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 36,
+    "h": 30
+   },
+   "sourceSize": {
+    "w": 36,
+    "h": 30
+   },
+   "duration": 15
+  },
+  {
+   "filename": "golfer 8.aseprite",
+   "frame": {
+    "x": 0,
+    "y": 30,
+    "w": 36,
+    "h": 30
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 36,
+    "h": 30
+   },
+   "sourceSize": {
+    "w": 36,
+    "h": 30
+   },
+   "duration": 35
+  },
+  {
+   "filename": "golfer 9.aseprite",
+   "frame": {
+    "x": 36,
+    "y": 30,
+    "w": 36,
+    "h": 30
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 36,
+    "h": 30
+   },
+   "sourceSize": {
+    "w": 36,
+    "h": 30
+   },
+   "duration": 40
+  },
+  {
+   "filename": "golfer 10.aseprite",
+   "frame": {
+    "x": 72,
+    "y": 30,
+    "w": 36,
+    "h": 30
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 36,
+    "h": 30
+   },
+   "sourceSize": {
+    "w": 36,
+    "h": 30
+   },
+   "duration": 45
+  },
+  {
+   "filename": "golfer 11.aseprite",
+   "frame": {
+    "x": 108,
+    "y": 30,
+    "w": 36,
+    "h": 30
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 36,
+    "h": 30
+   },
+   "sourceSize": {
+    "w": 36,
+    "h": 30
+   },
+   "duration": 50
+  },
+  {
+   "filename": "golfer 12.aseprite",
+   "frame": {
+    "x": 144,
+    "y": 30,
+    "w": 36,
+    "h": 30
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 36,
+    "h": 30
+   },
+   "sourceSize": {
+    "w": 36,
+    "h": 30
+   },
+   "duration": 200
+  },
+  {
+   "filename": "golfer 13.aseprite",
+   "frame": {
+    "x": 180,
+    "y": 30,
+    "w": 36,
+    "h": 30
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 36,
+    "h": 30
+   },
+   "sourceSize": {
+    "w": 36,
+    "h": 30
+   },
+   "duration": 110
+  },
+  {
+   "filename": "golfer 14.aseprite",
+   "frame": {
+    "x": 216,
+    "y": 30,
+    "w": 36,
+    "h": 30
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 36,
+    "h": 30
+   },
+   "sourceSize": {
+    "w": 36,
+    "h": 30
+   },
+   "duration": 110
+  }
+ ],
+ "meta": {
+  "app": "https://www.aseprite.org/",
+  "version": "1.3",
+  "image": "golfer.png",
+  "format": "RGBA8888",
+  "size": {
+   "w": 288,
+   "h": 60
+  },
+  "scale": "1",
+  "frameTags": [
+   {
+    "name": "idle",
+    "from": 0,
+    "to": 0,
+    "direction": "forward",
+    "color": "#000000ff"
+   },
+   {
+    "name": "swing",
+    "from": 1,
+    "to": 7,
+    "direction": "forward",
+    "color": "#000000ff"
+   },
+   {
+    "name": "follow",
+    "from": 8,
+    "to": 12,
+    "direction": "forward",
+    "color": "#000000ff"
+   },
+   {
+    "name": "walk",
+    "from": 13,
+    "to": 14,
+    "direction": "forward",
+    "color": "#000000ff"
+   }
+  ],
+  "layers": [
+   {
+    "name": "Layer 1",
+    "opacity": 255,
+    "blendMode": "normal"
+   }
+  ],
+  "slices": [
+   {
+    "name": "ball",
+    "color": "#0000ffff",
+    "keys": [
+     {
+      "frame": 0,
+      "bounds": {
+       "x": 25,
+       "y": 28,
+       "w": 1,
+       "h": 1
+      },
+      "pivot": {
+       "x": 0,
+       "y": 0
+      }
+     }
+    ]
+   }
+  ]
+ }
+}

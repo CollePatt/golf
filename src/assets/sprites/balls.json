@@ -1,0 +1,615 @@
+{
+ "frames": [
+  {
+   "filename": "balls 0.aseprite",
+   "frame": {
+    "x": 0,
+    "y": 0,
+    "w": 12,
+    "h": 8
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 12,
+    "h": 8
+   },
+   "sourceSize": {
+    "w": 12,
+    "h": 8
+   },
+   "duration": 90
+  },
+  {
+   "filename": "balls 1.aseprite",
+   "frame": {
+    "x": 12,
+    "y": 0,
+    "w": 12,
+    "h": 8
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 12,
+    "h": 8
+   },
+   "sourceSize": {
+    "w": 12,
+    "h": 8
+   },
+   "duration": 90
+  },
+  {
+   "filename": "balls 2.aseprite",
+   "frame": {
+    "x": 24,
+    "y": 0,
+    "w": 12,
+    "h": 8
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 12,
+    "h": 8
+   },
+   "sourceSize": {
+    "w": 12,
+    "h": 8
+   },
+   "duration": 90
+  },
+  {
+   "filename": "balls 3.aseprite",
+   "frame": {
+    "x": 36,
+    "y": 0,
+    "w": 12,
+    "h": 8
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 12,
+    "h": 8
+   },
+   "sourceSize": {
+    "w": 12,
+    "h": 8
+   },
+   "duration": 90
+  },
+  {
+   "filename": "balls 4.aseprite",
+   "frame": {
+    "x": 0,
+    "y": 8,
+    "w": 12,
+    "h": 8
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 12,
+    "h": 8
+   },
+   "sourceSize": {
+    "w": 12,
+    "h": 8
+   },
+   "duration": 110
+  },
+  {
+   "filename": "balls 5.aseprite",
+   "frame": {
+    "x": 12,
+    "y": 8,
+    "w": 12,
+    "h": 8
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 12,
+    "h": 8
+   },
+   "sourceSize": {
+    "w": 12,
+    "h": 8
+   },
+   "duration": 110
+  },
+  {
+   "filename": "balls 6.aseprite",
+   "frame": {
+    "x": 24,
+    "y": 8,
+    "w": 12,
+    "h": 8
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 12,
+    "h": 8
+   },
+   "sourceSize": {
+    "w": 12,
+    "h": 8
+   },
+   "duration": 110
+  },
+  {
+   "filename": "balls 7.aseprite",
+   "frame": {
+    "x": 36,
+    "y": 8,
+    "w": 12,
+    "h": 8
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 12,
+    "h": 8
+   },
+   "sourceSize": {
+    "w": 12,
+    "h": 8
+   },
+   "duration": 110
+  },
+  {
+   "filename": "balls 8.aseprite",
+   "frame": {
+    "x": 0,
+    "y": 16,
+    "w": 12,
+    "h": 8
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 12,
+    "h": 8
+   },
+   "sourceSize": {
+    "w": 12,
+    "h": 8
+   },
+   "duration": 70
+  },
+  {
+   "filename": "balls 9.aseprite",
+   "frame": {
+    "x": 12,
+    "y": 16,
+    "w": 12,
+    "h": 8
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 12,
+    "h": 8
+   },
+   "sourceSize": {
+    "w": 12,
+    "h": 8
+   },
+   "duration": 70
+  },
+  {
+   "filename": "balls 10.aseprite",
+   "frame": {
+    "x": 24,
+    "y": 16,
+    "w": 12,
+    "h": 8
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 12,
+    "h": 8
+   },
+   "sourceSize": {
+    "w": 12,
+    "h": 8
+   },
+   "duration": 70
+  },
+  {
+   "filename": "balls 11.aseprite",
+   "frame": {
+    "x": 36,
+    "y": 16,
+    "w": 12,
+    "h": 8
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 12,
+    "h": 8
+   },
+   "sourceSize": {
+    "w": 12,
+    "h": 8
+   },
+   "duration": 70
+  },
+  {
+   "filename": "balls 12.aseprite",
+   "frame": {
+    "x": 0,
+    "y": 24,
+    "w": 12,
+    "h": 8
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 12,
+    "h": 8
+   },
+   "sourceSize": {
+    "w": 12,
+    "h": 8
+   },
+   "duration": 120
+  },
+  {
+   "filename": "balls 13.aseprite",
+   "frame": {
+    "x": 12,
+    "y": 24,
+    "w": 12,
+    "h": 8
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 12,
+    "h": 8
+   },
+   "sourceSize": {
+    "w": 12,
+    "h": 8
+   },
+   "duration": 120
+  },
+  {
+   "filename": "balls 14.aseprite",
+   "frame": {
+    "x": 24,
+    "y": 24,
+    "w": 12,
+    "h": 8
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 12,
+    "h": 8
+   },
+   "sourceSize": {
+    "w": 12,
+    "h": 8
+   },
+   "duration": 120
+  },
+  {
+   "filename": "balls 15.aseprite",
+   "frame": {
+    "x": 36,
+    "y": 24,
+    "w": 12,
+    "h": 8
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 12,
+    "h": 8
+   },
+   "sourceSize": {
+    "w": 12,
+    "h": 8
+   },
+   "duration": 120
+  },
+  {
+   "filename": "balls 16.aseprite",
+   "frame": {
+    "x": 0,
+    "y": 32,
+    "w": 12,
+    "h": 8
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 12,
+    "h": 8
+   },
+   "sourceSize": {
+    "w": 12,
+    "h": 8
+   },
+   "duration": 120
+  },
+  {
+   "filename": "balls 17.aseprite",
+   "frame": {
+    "x": 12,
+    "y": 32,
+    "w": 12,
+    "h": 8
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 12,
+    "h": 8
+   },
+   "sourceSize": {
+    "w": 12,
+    "h": 8
+   },
+   "duration": 120
+  },
+  {
+   "filename": "balls 18.aseprite",
+   "frame": {
+    "x": 24,
+    "y": 32,
+    "w": 12,
+    "h": 8
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 12,
+    "h": 8
+   },
+   "sourceSize": {
+    "w": 12,
+    "h": 8
+   },
+   "duration": 120
+  },
+  {
+   "filename": "balls 19.aseprite",
+   "frame": {
+    "x": 36,
+    "y": 32,
+    "w": 12,
+    "h": 8
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 12,
+    "h": 8
+   },
+   "sourceSize": {
+    "w": 12,
+    "h": 8
+   },
+   "duration": 120
+  },
+  {
+   "filename": "balls 20.aseprite",
+   "frame": {
+    "x": 0,
+    "y": 40,
+    "w": 12,
+    "h": 8
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 12,
+    "h": 8
+   },
+   "sourceSize": {
+    "w": 12,
+    "h": 8
+   },
+   "duration": 80
+  },
+  {
+   "filename": "balls 21.aseprite",
+   "frame": {
+    "x": 12,
+    "y": 40,
+    "w": 12,
+    "h": 8
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 12,
+    "h": 8
+   },
+   "sourceSize": {
+    "w": 12,
+    "h": 8
+   },
+   "duration": 80
+  },
+  {
+   "filename": "balls 22.aseprite",
+   "frame": {
+    "x": 24,
+    "y": 40,
+    "w": 12,
+    "h": 8
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 12,
+    "h": 8
+   },
+   "sourceSize": {
+    "w": 12,
+    "h": 8
+   },
+   "duration": 80
+  },
+  {
+   "filename": "balls 23.aseprite",
+   "frame": {
+    "x": 36,
+    "y": 40,
+    "w": 12,
+    "h": 8
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 12,
+    "h": 8
+   },
+   "sourceSize": {
+    "w": 12,
+    "h": 8
+   },
+   "duration": 80
+  }
+ ],
+ "meta": {
+  "app": "https://www.aseprite.org/",
+  "version": "1.3",
+  "image": "balls.png",
+  "format": "RGBA8888",
+  "size": {
+   "w": 48,
+   "h": 48
+  },
+  "scale": "1",
+  "frameTags": [
+   {
+    "name": "classic",
+    "from": 0,
+    "to": 3,
+    "direction": "forward",
+    "color": "#000000ff"
+   },
+   {
+    "name": "gold",
+    "from": 4,
+    "to": 7,
+    "direction": "forward",
+    "color": "#000000ff"
+   },
+   {
+    "name": "fire",
+    "from": 8,
+    "to": 11,
+    "direction": "forward",
+    "color": "#000000ff"
+   },
+   {
+    "name": "ice",
+    "from": 12,
+    "to": 15,
+    "direction": "forward",
+    "color": "#000000ff"
+   },
+   {
+    "name": "lunar",
+    "from": 16,
+    "to": 19,
+    "direction": "forward",
+    "color": "#000000ff"
+   },
+   {
+    "name": "prism",
+    "from": 20,
+    "to": 23,
+    "direction": "forward",
+    "color": "#000000ff"
+   }
+  ],
+  "layers": [
+   {
+    "name": "Layer 1",
+    "opacity": 255,
+    "blendMode": "normal"
+   }
+  ],
+  "slices": [
+   {
+    "name": "center",
+    "color": "#0000ffff",
+    "keys": [
+     {
+      "frame": 0,
+      "bounds": {
+       "x": 8,
+       "y": 4,
+       "w": 1,
+       "h": 1
+      },
+      "pivot": {
+       "x": 0,
+       "y": 0
+      }
+     }
+    ]
+   }
+  ]
+ }
+}
