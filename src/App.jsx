@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import {
   createInitialState,
   createScorecard,
+  getParYardsPerSwing,
   yardsForHole,
   HOLES_PER_ROUND,
   recordHoleScore,
@@ -440,7 +441,7 @@ export default function App() {
         lastProResult: null,
         holePickups: null,
         buffs: createBuffs(),
-        scorecard: createScorecard(nextCourseId),
+        scorecard: createScorecard(nextCourseId, getParYardsPerSwing(s)),
         roundResult: null,
       };
     });

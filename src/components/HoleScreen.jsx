@@ -6,7 +6,6 @@ import {
   formatScoreToPar,
   getCompletedHoles,
   getScoreToPar,
-  parForHole,
 } from '../logic/gameState.js';
 import { formatAutoSwingInterval } from '../logic/swingLogic.js';
 import {
@@ -81,7 +80,7 @@ export default function HoleScreen({
   const autoApproachTightening = Math.round((1 - autoApproachStats.errorMultiplier) * 100);
 
   const scoreLabel = formatScoreToPar(scoreToPar);
-  const par = parForHole(hole, state.courseId);
+  const par = scorecard[hole - 1]?.par;
 
   // Space swings, unless focus is on another control (which Space already presses).
   useEffect(() => {

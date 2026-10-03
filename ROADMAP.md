@@ -30,7 +30,7 @@ These are intentionally modest so prestige is the real progression gate.
 
 ## Par, putting, and hazards — implemented
 
-- Par per hole = full swings to reach the green at the course's `designYards`, plus two putts (clamped 3–5, about 75 per course).
+- Par per hole = full swings to reach the green at the player's yards per swing when they tee off, plus two putts (minimum 3). Par follows power, so the score shows how well a round was played rather than how strong the player is. `npm run sim:par` checks how simulated rounds land against it.
 - Approach range grows with swing power (at least 120 yds), so a strong hitter attacks par 3s from the tee. Long approaches carry extra error that shrinks as power grows.
 - Approaches that finish are putted out from their proximity: closer means more one-putts, holing the approach needs none. Putts add strokes but never cost balls, so the ball pool limits finishing, not scoring.
 - Fairway hazards follow a fixed per-hole rhythm: water (+1 stroke, lost ball, drop short) and bunkers (next shot 30% shorter). Hazards only activate once a swing can carry them.

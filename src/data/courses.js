@@ -16,8 +16,6 @@ function toHoleDefinition([name, theme, label, description, distanceMultiplier])
 //   coursePass: available once the Course Pass Tier 2 upgrade reaches `level`
 //
 // prestigeValue: Pro Points for an even-par finish (see prestigeLogic.js).
-// designYards: the swing distance the course is built for. Par assumes that many
-//   yards per swing to reach the green, plus two putts (see parForHole).
 // hazardNames: what water and bunker hazards are called on this course.
 export const COURSES = [
   {
@@ -26,7 +24,6 @@ export const COURSES = [
     description: 'A forgiving local course that gets longer and moodier as the round goes on.',
     targetBase: 200,
     targetStep: 30,
-    designYards: 260,
     hazardNames: { water: 'Creek', bunker: 'Fairway Bunker' },
     unlock: { type: 'start' },
     prestigeValue: 4,
@@ -57,7 +54,6 @@ export const COURSES = [
     description: 'A low-gravity course with long carries, crater lips, and a very quiet gallery.',
     targetBase: 360,
     targetStep: 60,
-    designYards: 440,
     hazardNames: { water: 'Coolant Pool', bunker: 'Crater' },
     unlock: { type: 'chain', after: 'meadowMunicipal' },
     prestigeValue: 6,
@@ -88,7 +84,6 @@ export const COURSES = [
     description: 'Endless dunes, baked fairways that roll forever, and bunkers the size of towns.',
     targetBase: 520,
     targetStep: 80,
-    designYards: 700,
     hazardNames: { water: 'Oasis', bunker: 'Dune Trap' },
     unlock: { type: 'coursePass', level: 1 },
     prestigeValue: 10,
@@ -119,7 +114,6 @@ export const COURSES = [
     description: 'Ice-slick fairways and thin alpine air. Long carries, but snowbanks swallow mistakes.',
     targetBase: 700,
     targetStep: 100,
-    designYards: 950,
     hazardNames: { water: 'Meltwater', bunker: 'Snowbank' },
     unlock: { type: 'coursePass', level: 2 },
     prestigeValue: 15,
@@ -150,7 +144,6 @@ export const COURSES = [
     description: 'A championship course inside an active volcano. Updrafts launch the ball, ash buries it.',
     targetBase: 950,
     targetStep: 130,
-    designYards: 1250,
     hazardNames: { water: 'Lava Flow', bunker: 'Ash Pit' },
     unlock: { type: 'coursePass', level: 3 },
     prestigeValue: 22,

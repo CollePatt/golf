@@ -51,7 +51,7 @@ After adding a screenshot, uncomment this line:
 - Unlockable Auto Caddie for idle swings with upgradeable speed.
 - Round recap table with per-hole score details.
 - Course select tab with per-course records, cycle bests, and unlock requirements.
-- Pro Tour prestige: fewer shots across cleared courses earns more Pro Points.
+- Pro Tour prestige: a better score to par on cleared courses earns more Pro Points. Par is set from your power at tee off.
 - Turning pro pays a signing bonus of last cycle's yards and lands in the Clubhouse, so new courses can be picked right away.
 - Tier 2 Pro upgrades: Pro Clubs, Course Pass, Auto Driver, Yardage Book, Tour Bag, and Signing Bonus.
 - Course Pass courses: Sahara Sands, Glacier Greens, and Caldera Classic.
