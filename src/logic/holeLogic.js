@@ -110,6 +110,9 @@ export function rollPutts(proximity, options = {}, rng = Math.random) {
  *   strokes   : swing + putts + penalty strokes added to the score
  *   ballsUsed : balls spent (the swing, plus one lost to water)
  *   restAt    : yards from the tee where the ball stopped, or null if it was lost
+ *
+ * swing.startAt and swing.landAt (yards from the tee) are where the ball left
+ * and first came down, so the canvas can draw splashes and roll-outs.
  */
 export function playShot(s, { source = 'manual', focused = false, rng = Math.random } = {}) {
   const holeDefinition = getHoleDefinition(s.courseId, s.hole);
@@ -146,6 +149,8 @@ export function playShot(s, { source = 'manual', focused = false, rng = Math.ran
       swing: {
         ...swing,
         yards: approach.carry,
+        startAt: s.yardsThisHole,
+        landAt: s.yardsThisHole + approach.carry,
         shotPhase: 'approach',
         approach,
         putting: approach.cleared ? { putts, proximity: approach.proximity } : null,
@@ -176,7 +181,15 @@ export function playShot(s, { source = 'manual', focused = false, rng = Math.ran
 
   let landing = s.yardsThisHole + carry;
   const result = {
-    swing: { ...swing, yards: carry, shotPhase: 'fairway', laidUp, lieNote },
+    swing: {
+      ...swing,
+      yards: carry,
+      startAt: s.yardsThisHole,
+      landAt: landing,
+      shotPhase: 'fairway',
+      laidUp,
+      lieNote,
+    },
     strokes: 1,
     ballsUsed: 1,
     holeCleared: false,

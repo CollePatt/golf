@@ -448,21 +448,62 @@ h3 {
   background: #fff;
 }
 
-.yard-float {
+.hole-out {
   position: absolute;
   left: 50%;
-  top: 38%;
-  font-family: var(--display);
-  font-size: 14px;
-  color: var(--sun);
-  text-shadow: 2px 2px 0 var(--ink), -2px 0 0 var(--ink), 0 -2px 0 var(--ink);
+  top: 46%;
+  transform: translate(-50%, -50%);
+  display: grid;
+  justify-items: center;
+  gap: 6px;
+  padding: 10px 16px;
+  background: var(--ink);
+  border: 3px solid var(--chalk);
+  box-shadow: var(--drop);
+  color: var(--chalk);
+  text-align: center;
+  white-space: nowrap;
   pointer-events: none;
-  opacity: 0;
-  animation: rise 1s steps(8, end);
+  animation: stamp 240ms steps(3, end);
 }
 
-.yard-float.perfect {
-  color: var(--chalk);
+.hole-out strong {
+  font-family: var(--display);
+  font-size: 20px;
+  font-weight: 400;
+}
+
+.hole-out.great {
+  border-color: var(--sun);
+}
+
+.hole-out.great strong {
+  color: var(--sun);
+}
+
+.hole-out.good {
+  border-color: var(--good);
+}
+
+.hole-out.good strong {
+  color: var(--good);
+}
+
+.hole-out.weak strong {
+  color: var(--chalk-dim);
+}
+
+.hole-out.bad {
+  border-color: var(--bad);
+}
+
+.hole-out.bad strong {
+  color: var(--bad);
+}
+
+@keyframes stamp {
+  from { transform: translate(-50%, -50%) scale(1.6); }
+  to { transform: translate(-50%, -50%) scale(1); }
 }
 
 .approach-strip {
@@ -1338,6 +1379,10 @@ h3 {
     height: 200px;
   }
 
+  .hole-out strong {
+    font-size: 15px;
+  }
+
   .stage {
     display: flex;
     flex-direction: column;
@@ -1367,9 +1412,5 @@ h3 {
   *::after {
     animation: none !important;
     transition: none !important;
-  }
-
-  .yard-float {
-    display: none;
   }
 }

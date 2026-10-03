@@ -56,18 +56,135 @@ const PICKUP_COLORS = {
   magnet: '#e04848',
 }
 
-const HAZARD_STYLES = {
-  water: { fill: 'rgba(56, 132, 214, 0.85)', label: '#e0f2fe' },
-  bunker: { fill: 'rgba(233, 205, 140, 0.95)', label: '#3f2d12' },
+const INK = '#0f130e'
+const LABEL_FONT = '13px "DotGothic16", system-ui, sans-serif'
+const STAMP_FONT = '"Press Start 2P", ui-monospace, monospace'
+
+// Hazards are drawn as pixel pools (water) or traps (bunker); each course
+// picks a look in courses.js. top is the surface row, deep the bottom.
+const HAZARD_LOOKS = {
+  water: { pool: true, top: '#bfe3ff', body: '#3d82d6', deep: '#29599e' },
+  coolant: { pool: true, top: '#c8fff6', body: '#2bb8a7', deep: '#167d72' },
+  oasis: { pool: true, top: '#b6f2e3', body: '#2a9d8f', deep: '#1c6b62' },
+  meltwater: { pool: true, top: '#f0faff', body: '#7cc3ea', deep: '#4b8fbe' },
+  lava: { pool: true, top: '#ffe066', body: '#f2661b', deep: '#a8230e' },
+  sand: { pool: false, top: '#f6e2b0', body: '#e4c58d', deep: '#b48f55' },
+  dune: { pool: false, top: '#f8d891', body: '#e2ad59', deep: '#a8752f' },
+  crater: { pool: false, top: '#cfd4dd', body: '#8b92a1', deep: '#525866' },
+  snow: { pool: false, top: '#ffffff', body: '#d2e4f1', deep: '#86a8c2' },
+  ash: { pool: false, top: '#8f8882', body: '#5f5853', deep: '#37312d' },
+}
+
+const STAMP_COLORS = {
+  great: '#f6c445',
+  good: '#8fe39b',
+  plain: '#f3edd3',
+  weak: '#c3cdb0',
+  bad: '#ff9b8a',
+}
+
+const STAMP_MS = 1300
+const SPLASH_HIDE_MS = 420
+const HOP_MS = 300
+const ROLL_MS = 380
+const STEP_MS = 50
+
+function snap(v) {
+  return Math.round(v / PX) * PX
+}
+
+function prefersReducedMotion() {
+  return typeof window !== 'undefined'
+    && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
+}
+
+// Ink tag with pixel text, used for hazard names and the hole trait.
+function drawTag(ctx, parts, x, y, align = 'center') {
+  ctx.font = LABEL_FONT
+  ctx.textAlign = 'left'
+  ctx.textBaseline = 'middle'
+  const gap = 6
+  const widths = parts.map(part => ctx.measureText(part.text).width)
+  const w = Math.round(widths.reduce((a, b) => a + b, 0) + gap * (parts.length - 1) + 12)
+  const left = Math.round(align === 'center' ? x - w / 2 : x)
+  ctx.fillStyle = INK
+  ctx.fillRect(left, y - 9, w, 18)
+  let cursor = left + 6
+  parts.forEach((part, index) => {
+    ctx.fillStyle = part.color
+    ctx.fillText(part.text, cursor, y + 1)
+    cursor += widths[index] + gap
+  })
+  ctx.textBaseline = 'alphabetic'
+}
+
+// Stepped shape sunk into the fairway. Rows shrink inward to fake a rounded
+// bottom; an ink pass one pixel wider goes down first as the outline.
+function drawHazardShape(ctx, look, x0, x1, ts, still) {
+  const rows = look.pool
+    ? [[0, look.top, 1], [0, look.body, 2], [1, look.body, 1], [2, look.deep, 1], [4, look.deep, 1]]
+    : [[0, look.top, 1], [1, look.body, 2], [2, look.body, 1], [4, look.deep, 1]]
+  let y = GROUND_Y
+  const shapes = rows.map(([inset, color, h]) => {
+    const shape = { x: x0 + inset * PX, w: x1 - x0 - inset * PX * 2, y, h: h * PX, color }
+    y += h * PX
+    return shape
+  })
+  // No ink along the top edge, so it reads as cut into the fairway.
+  ctx.fillStyle = INK
+  for (const s of shapes) ctx.fillRect(s.x - PX, s.y, s.w + PX * 2, s.h + PX)
+  for (const s of shapes) {
+    if (s.w <= 0) continue
+    ctx.fillStyle = s.color
+    ctx.fillRect(s.x, s.y, s.w, s.h)
+  }
+  const width = x1 - x0
+  if (look.pool) {
+    // Two-frame ripple on the surface.
+    const frame = still ? 0 : Math.floor(ts / 450) % 2
+    ctx.fillStyle = look.top
+    for (let x = x0 + PX * (2 + frame * 2); x < x1 - PX * 3; x += PX * 8) {
+      ctx.fillRect(x, GROUND_Y + PX * 2, PX * 2, PX)
+    }
+  } else {
+    // Fixed grain so the trap reads as loose ground, not a stripe.
+    ctx.fillStyle = look.deep
+    for (let i = 0; i < width / (PX * 4); i++) {
+      const gx = x0 + PX * 2 + ((i * 7) % Math.max(1, Math.floor(width / PX) - 4)) * PX
+      ctx.fillRect(gx, GROUND_Y + PX * (i % 2 === 0 ? 2 : 3), PX, PX)
+    }
+  }
+}
+
+// Short-lived pixel particles for landings. Positions snap to the sprite grid
+// and advance in steps, matching the stepped UI animation.
+function spawnBurst(list, ts, x, y, colors, count, { speed = 0.12, lift = 0.22, gravity = 0.0006, life = 520 } = {}) {
+  for (let i = 0; i < count; i++) {
+    const spread = (i / Math.max(1, count - 1)) * 2 - 1
+    list.push({
+      x,
+      y,
+      vx: spread * speed + (Math.random() - 0.5) * 0.04,
+      vy: -lift * (0.6 + Math.random() * 0.5),
+      gravity,
+      born: ts,
+      life,
+      color: colors[i % colors.length],
+    })
+  }
 }
 
 export default function GolfHoleCanvas({
   yardsThisRun,
   targetDistance,
+  holeKey,
   approachDistance = 120,
   hazards = [],
   pickups = null,
   pickupRadius = 0,
+  shot = null,
+  trait = null,
+  onShotSettled,
   theme,
   themeId,
   ballStyle = 'classic',
@@ -87,6 +204,11 @@ export default function GolfHoleCanvas({
   hazardsRef.current = hazards
   const pickupsRef = useRef({ pickups, pickupRadius, yardsThisRun })
   pickupsRef.current = { pickups, pickupRadius, yardsThisRun }
+  const traitRef = useRef(trait)
+  traitRef.current = trait
+  const onSettledRef = useRef(onShotSettled)
+  onSettledRef.current = onShotSettled
+  const lastShotKeyRef = useRef(shot?.key ?? null)
   // id -> timestamp the pop animation started, per hole.
   const popsRef = useRef({ key: null, starts: {} })
 
@@ -101,6 +223,11 @@ export default function GolfHoleCanvas({
     golferX: 0,
     walkFrom: 0,
     walkStart: null,
+    plan: null,
+    inCup: false,
+    particles: [],
+    trail: [],
+    stamp: null,
   })
 
   // Main render loop — runs once on mount, restarts if targetDistance changes
@@ -246,6 +373,92 @@ export default function GolfHoleCanvas({
       }
     }
 
+    const reduceMotion = prefersReducedMotion()
+
+    // The ball just came down: kick up the landing effect and stamp the result.
+    function landShot(st, plan, ts) {
+      if (plan.stamp) st.stamp = { ...plan.stamp, x: plan.landX, start: ts }
+      if (reduceMotion) return
+      const look = plan.look
+      const at = [st.particles, ts, plan.landX, GROUND_Y - PX]
+      if (plan.effect === 'splash' || plan.effect === 'skip') {
+        const colors = look ? ['#ffffff', look.top, look.body] : ['#ffffff', '#bfe3ff', '#3d82d6']
+        spawnBurst(...at, colors, plan.effect === 'splash' ? 12 : 6, { speed: 0.08, lift: 0.34 })
+      } else if (plan.effect === 'sand') {
+        const colors = look ? [look.top, look.body, look.deep] : ['#f6e2b0', '#e4c58d']
+        spawnBurst(...at, colors, 10, { speed: 0.14, lift: 0.24 })
+      } else {
+        spawnBurst(...at, [theme.fairway, 'rgba(255,255,255,0.7)'], 4, { speed: 0.08, lift: 0.12, life: 360 })
+      }
+      if (plan.tone === 'great') {
+        spawnBurst(...at, ['#f6c445', '#fff1a8'], 6, { speed: 0.12, lift: 0.3, gravity: 0.0004, life: 640 })
+      }
+    }
+
+    function drawTrail(ctx, st, ts, cam) {
+      if (!st.trail.length) return
+      const fade = st.plan?.landed ? Math.max(0, 1 - (ts - st.plan.landed) / 500) : 1
+      if (fade <= 0) {
+        st.trail = []
+        return
+      }
+      st.trail.forEach((point, index) => {
+        ctx.globalAlpha = fade * (0.25 + 0.6 * (index / st.trail.length))
+        ctx.fillStyle = index % 2 === 0 ? '#f6c445' : '#fff1a8'
+        ctx.fillRect(snap(point.x - cam) - PX, snap(point.y) - PX, PX * 2, PX * 2)
+      })
+      ctx.globalAlpha = 1
+    }
+
+    function drawParticles(ctx, st, ts, cam) {
+      st.particles = st.particles.filter(p => ts - p.born < p.life)
+      for (const p of st.particles) {
+        const a = Math.floor((ts - p.born) / STEP_MS) * STEP_MS
+        const x = p.x + p.vx * a
+        const y = p.y + p.vy * a + 0.5 * p.gravity * a * a
+        ctx.fillStyle = p.color
+        ctx.fillRect(snap(x - cam), snap(y), PX, PX)
+      }
+    }
+
+    // Result word over the landing spot: pops in over three steps, rises a
+    // few pixels, then fades. Still under reduced motion.
+    function drawStamp(ctx, st, ts, cam, W) {
+      const stamp = st.stamp
+      if (!stamp) return
+      const age = ts - stamp.start
+      if (age > STAMP_MS) {
+        st.stamp = null
+        return
+      }
+      const step = Math.floor(age / 60)
+      const scale = reduceMotion ? 1 : ([1.5, 1.25, 1.1][step] ?? 1)
+      const lift = reduceMotion ? 0 : Math.min(4, Math.floor(age / 120)) * PX
+      ctx.globalAlpha = age > STAMP_MS - 300 ? Math.ceil(((STAMP_MS - age) / 300) * 3) / 3 : 1
+      const fontPx = Math.round(14 * scale)
+      ctx.font = `${fontPx}px ${STAMP_FONT}`
+      const half = Math.max(48, ctx.measureText(stamp.label).width / 2 + 10)
+      const x = Math.max(half, Math.min(W - half, stamp.x - cam))
+      const y = GROUND_Y - 72 - lift
+      ctx.textAlign = 'center'
+      ctx.lineJoin = 'miter'
+      if (stamp.label) {
+        ctx.lineWidth = 6
+        ctx.strokeStyle = INK
+        ctx.strokeText(stamp.label, x, y)
+        ctx.fillStyle = STAMP_COLORS[stamp.tone] || STAMP_COLORS.plain
+        ctx.fillText(stamp.label, x, y)
+      }
+      ctx.font = '15px "DotGothic16", system-ui, sans-serif'
+      ctx.lineWidth = 4
+      ctx.strokeStyle = INK
+      const subY = stamp.label ? y + 20 : y
+      ctx.strokeText(stamp.sub, x, subY)
+      ctx.fillStyle = STAMP_COLORS.plain
+      ctx.fillText(stamp.sub, x, subY)
+      ctx.globalAlpha = 1
+    }
+
     function draw(ts) {
       const ctx = canvas.getContext('2d')
       const W = canvas.width
@@ -254,10 +467,13 @@ export default function GolfHoleCanvas({
 
       const pad = sprites ? TEE_PAD : 0
 
-      // Advance arc animation. In sprite mode the ball waits for the club to
-      // reach impact before it launches.
+      // Advance the shot: flight to where the ball comes down, then whatever
+      // happens after (a splash, a hop, a roll into the cup). In sprite mode
+      // the ball waits for the club to reach impact before it launches.
       let ballY = GROUND_Y
-      if (st.isAnim) {
+      let ballVisible = !st.inCup
+      if (st.isAnim && st.plan) {
+        const plan = st.plan
         if (!st.animStart) {
           if (sprites) {
             if (st.swingStart == null) st.swingStart = ts
@@ -266,16 +482,44 @@ export default function GolfHoleCanvas({
             st.animStart = ts
           }
         }
-        const rawT = Math.max(0, Math.min((ts - st.animStart) / ANIM_MS, 1))
-        const t = easeOut(rawT)
-        st.ballVX = st.animFrom + (st.animTo - st.animFrom) * t
-        ballY = GROUND_Y - Math.sin(rawT * Math.PI) * ARC_H
-        if (rawT >= 1) {
-          st.isAnim = false
-          st.ballVX = st.animTo
-          st.animStart = null
-          st.landedAt = ts
-          ballY = GROUND_Y
+        const elapsed = ts - st.animStart
+        const flightT = Math.max(0, Math.min(elapsed / plan.flightMs, 1))
+        if (flightT < 1) {
+          st.ballVX = plan.fromX + (plan.landX - plan.fromX) * easeOut(flightT)
+          ballY = GROUND_Y - Math.sin(flightT * Math.PI) * plan.arcH
+          if (plan.trail && !reduceMotion && elapsed > 0) {
+            const last = st.trail[st.trail.length - 1]
+            if (!last || ts - last.ts >= STEP_MS) st.trail.push({ x: st.ballVX, y: ballY, ts })
+          }
+        } else {
+          if (!plan.landed) {
+            plan.landed = ts
+            landShot(st, plan, ts)
+          }
+          const after = elapsed - plan.flightMs
+          if (plan.effect === 'splash') {
+            const shown = after - SPLASH_HIDE_MS
+            st.ballVX = shown < 0 ? plan.landX : plan.restX
+            // Lost ball: gone in the splash, then blinks in at the drop.
+            ballVisible = shown >= 0 && (reduceMotion || Math.floor(shown / 100) % 2 === 0)
+          } else if (plan.settleMs > 0) {
+            const t = Math.min(1, after / plan.settleMs)
+            st.ballVX = plan.landX + (plan.restX - plan.landX) * (plan.effect === 'holed' ? t : easeOut(t))
+            ballY = GROUND_Y - Math.sin(t * Math.PI) * plan.hopH
+          }
+          if (after >= plan.settleMs) {
+            st.isAnim = false
+            st.ballVX = plan.restX
+            st.animStart = null
+            st.landedAt = ts
+            ballY = GROUND_Y
+            if (plan.effect === 'holed') {
+              st.inCup = true
+              ballVisible = false
+              if (!reduceMotion) spawnBurst(st.particles, ts, plan.restX, GROUND_Y - PX * 2, ['#f6c445', '#fff1a8', '#ffffff'], 8, { speed: 0.1, lift: 0.26 })
+            }
+            onSettledRef.current?.(plan.key)
+          }
         }
       }
 
@@ -314,8 +558,8 @@ export default function GolfHoleCanvas({
       if (approachEndX > 0 && approachStartX < W) {
         ctx.fillStyle = 'rgba(241, 213, 138, 0.18)'
         ctx.fillRect(approachStartX, GROUND_Y - 4, approachEndX - approachStartX, 18)
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.68)'
-        ctx.font = 'bold 11px system-ui'
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.75)'
+        ctx.font = LABEL_FONT
         ctx.textAlign = 'center'
         const labelX = Math.max(44, Math.min(W - 44, approachStartX + 64))
         // Sits above the yardage markers so the two never overlap.
@@ -324,24 +568,31 @@ export default function GolfHoleCanvas({
 
       // Fairway hazards
       for (const hazard of hazardsRef.current) {
-        const style = HAZARD_STYLES[hazard.type] || HAZARD_STYLES.bunker
-        const startX = hazard.start * SCALE - cam
-        const endX = hazard.end * SCALE - cam
+        const look = HAZARD_LOOKS[hazard.look] || (hazard.type === 'water' ? HAZARD_LOOKS.water : HAZARD_LOOKS.sand)
+        const startX = snap(hazard.start * SCALE - cam)
+        const endX = snap(hazard.end * SCALE - cam)
         if (endX < 0 || startX > W) continue
-        ctx.fillStyle = style.fill
-        ctx.beginPath()
-        ctx.ellipse((startX + endX) / 2, GROUND_Y + 5, (endX - startX) / 2, 7, 0, 0, Math.PI * 2)
-        ctx.fill()
-        ctx.fillStyle = style.label
-        ctx.font = 'bold 10px system-ui'
-        ctx.textAlign = 'center'
-        const labelX = Math.max(startX + 30, Math.min(endX - 30, W / 2))
-        ctx.fillText(hazard.name.toUpperCase(), labelX, GROUND_Y + 26)
+        drawHazardShape(ctx, look, startX, endX, ts, reduceMotion)
+        const labelX = Math.max(startX + 50, Math.min(endX - 50, W / 2))
+        drawTag(ctx, [{ text: hazard.name, color: look.top }], labelX, GROUND_Y + 34)
+      }
+
+      // Hole trait, posted at the tee so it reads before the first swing.
+      const holeTrait = traitRef.current
+      if (holeTrait && -cam > -260 && -cam < W) {
+        const pct = Math.round(((holeTrait.distanceMultiplier ?? 1) - 1) * 100)
+        drawTag(ctx, [
+          { text: holeTrait.label, color: STAMP_COLORS.plain },
+          {
+            text: pct > 0 ? `+${pct}%` : pct < 0 ? `${pct}%` : '±0%',
+            color: pct > 0 ? STAMP_COLORS.good : pct < 0 ? STAMP_COLORS.bad : STAMP_COLORS.weak,
+          },
+        ], Math.round(-cam - (sprites ? 72 : 0)), GROUND_Y + 34, 'left')
       }
 
       // Yardage tick marks
       ctx.textAlign = 'center'
-      ctx.font = 'bold 11px system-ui'
+      ctx.font = LABEL_FONT
       for (let y = 25; y < targetDistance; y += 25) {
         const sx = y * SCALE - cam
         if (sx < -10 || sx > W + 10) continue
@@ -407,32 +658,39 @@ export default function GolfHoleCanvas({
         drawGolfer(ctx, st, ts, cam)
       }
 
-      // Ball ground shadow (flattens when ball is in air)
-      const shadowScale = Math.max(0.3, (ballY - (GROUND_Y - ARC_H)) / ARC_H)
-      ctx.fillStyle = 'rgba(0,0,0,0.18)'
-      ctx.beginPath()
-      ctx.ellipse(st.ballVX - cam, GROUND_Y + 2, (BALL_R + 2) * shadowScale, 2 * shadowScale, 0, 0, Math.PI * 2)
-      ctx.fill()
+      drawTrail(ctx, st, ts, cam)
 
-      // Ball
-      const ballSheet = sprites && SHEETS.balls
-      if (ballSheet) {
-        const frame = ballSheet.frameAt(ballStyle, st.isAnim ? ts : 0)
-        const c = ballSheet.slices.center || { x: 8, y: 4 }
-        const s = BALL_SHEET_SCALE
-        ballSheet.draw(ctx, frame, st.ballVX - cam - c.x * s, ballY + 3 - (c.y + 4) * s, s)
-      } else if (sprites) {
-        const b = sprites.ball
-        ctx.drawImage(b, Math.round(st.ballVX - cam - b.width / 2), Math.round(ballY - b.height + 3))
-      } else {
-        ctx.fillStyle = '#ffffff'
+      // Ball ground shadow (flattens when ball is in air)
+      if (ballVisible) {
+        const shadowScale = Math.max(0.3, (ballY - (GROUND_Y - ARC_H)) / ARC_H)
+        ctx.fillStyle = 'rgba(0,0,0,0.18)'
         ctx.beginPath()
-        ctx.arc(st.ballVX - cam, ballY, BALL_R, 0, Math.PI * 2)
+        ctx.ellipse(st.ballVX - cam, GROUND_Y + 2, (BALL_R + 2) * shadowScale, 2 * shadowScale, 0, 0, Math.PI * 2)
         ctx.fill()
-        ctx.strokeStyle = 'rgba(0,0,0,0.12)'
-        ctx.lineWidth = 1
-        ctx.stroke()
+
+        // Ball
+        const ballSheet = sprites && SHEETS.balls
+        if (ballSheet) {
+          const frame = ballSheet.frameAt(ballStyle, st.isAnim ? ts : 0)
+          const c = ballSheet.slices.center || { x: 8, y: 4 }
+          const s = BALL_SHEET_SCALE
+          ballSheet.draw(ctx, frame, st.ballVX - cam - c.x * s, ballY + 3 - (c.y + 4) * s, s)
+        } else if (sprites) {
+          const b = sprites.ball
+          ctx.drawImage(b, Math.round(st.ballVX - cam - b.width / 2), Math.round(ballY - b.height + 3))
+        } else {
+          ctx.fillStyle = '#ffffff'
+          ctx.beginPath()
+          ctx.arc(st.ballVX - cam, ballY, BALL_R, 0, Math.PI * 2)
+          ctx.fill()
+          ctx.strokeStyle = 'rgba(0,0,0,0.12)'
+          ctx.lineWidth = 1
+          ctx.stroke()
+        }
       }
+
+      drawParticles(ctx, st, ts, cam)
+      drawStamp(ctx, st, ts, cam, W)
 
       rafRef.current = requestAnimationFrame(draw)
     }
@@ -443,27 +701,90 @@ export default function GolfHoleCanvas({
 
   useEffect(() => {
     prevYardsRef.current = yardsThisRun
-    r.current.ballVX = yardsThisRun * SCALE
-    r.current.cameraX = 0
-    r.current.isAnim = false
-    r.current.animStart = null
-    r.current.swingStart = null
-    r.current.golferX = r.current.ballVX
-    r.current.walkStart = null
-  }, [targetDistance])
+    const st = r.current
+    st.ballVX = yardsThisRun * SCALE
+    st.cameraX = 0
+    st.isAnim = false
+    st.animStart = null
+    st.swingStart = null
+    st.golferX = st.ballVX
+    st.walkStart = null
+    st.plan = null
+    st.inCup = false
+    st.particles = []
+    st.trail = []
+    st.stamp = null
+  }, [holeKey ?? targetDistance])
 
-  // Trigger arc animation on each swing
+  function startPlan(plan) {
+    const st = r.current
+    st.plan = plan
+    st.isAnim = true
+    st.animStart = null
+    st.swingStart = null
+    st.golferX = plan.fromX
+    st.walkStart = null
+    st.inCup = false
+    st.trail = []
+    prevYardsRef.current = yardsThisRun
+  }
+
+  // A new swing: plan its flight from where it started to where it came down,
+  // then on to where it rests (the drop after a splash, or the cup).
+  useEffect(() => {
+    if (!shot || shot.key === lastShotKeyRef.current) return
+    lastShotKeyRef.current = shot.key
+    const fromX = shot.startAt * SCALE
+    const landX = Math.min(shot.landAt, targetDistance + 20) * SCALE
+    const restX = (shot.effect === 'holed' ? targetDistance : Math.min(yardsThisRun, targetDistance)) * SCALE
+    const carry = Math.abs(landX - fromX)
+    const gap = Math.abs(restX - landX)
+    const arcScale = shot.tone === 'great' ? 1.15 : shot.tone === 'weak' ? 0.8 : 1
+    let settleMs = 0
+    let hopH = 0
+    if (shot.effect === 'splash') settleMs = SPLASH_HIDE_MS + 300
+    else if (shot.effect === 'holed') settleMs = gap > 0 ? ROLL_MS : 120
+    else if (gap > 0) {
+      settleMs = Math.min(600, HOP_MS + gap * 0.3)
+      hopH = Math.min(shot.effect === 'skip' ? 24 : 30, gap * 0.15)
+    }
+    startPlan({
+      key: shot.key,
+      fromX,
+      landX,
+      restX,
+      arcH: Math.max(30, Math.min(ARC_H * 1.1, carry * 0.32)) * arcScale,
+      flightMs: Math.round(520 + Math.min(300, carry * 0.25)),
+      settleMs,
+      hopH,
+      effect: shot.effect,
+      tone: shot.tone,
+      trail: shot.trail,
+      look: HAZARD_LOOKS[shot.look] || null,
+      stamp: { label: shot.label, sub: shot.sub, tone: shot.tone },
+    })
+  }, [shot?.key])
+
+  // Fallback when the ball moves without a described shot.
   useEffect(() => {
     const prev = prevYardsRef.current
     if (yardsThisRun !== prev) {
-      r.current.animFrom = prev * SCALE
-      r.current.animTo = Math.min(yardsThisRun, targetDistance) * SCALE
-      r.current.isAnim = true
-      r.current.animStart = null
-      r.current.swingStart = null
-      r.current.golferX = r.current.animFrom
-      r.current.walkStart = null
-      prevYardsRef.current = yardsThisRun
+      const to = Math.min(yardsThisRun, targetDistance) * SCALE
+      startPlan({
+        key: null,
+        fromX: prev * SCALE,
+        landX: to,
+        restX: to,
+        arcH: ARC_H,
+        flightMs: ANIM_MS,
+        settleMs: 0,
+        hopH: 0,
+        effect: 'dust',
+        tone: 'plain',
+        trail: false,
+        look: null,
+        stamp: null,
+      })
     }
   }, [yardsThisRun, targetDistance])
 
