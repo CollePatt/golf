@@ -938,6 +938,7 @@ h3 {
 
 .upgrade-header {
   display: flex;
+  flex-wrap: wrap;
   justify-content: space-between;
   align-items: baseline;
   gap: 8px;
@@ -948,6 +949,7 @@ h3 {
 }
 
 .upgrade-label small {
+  white-space: nowrap;
   color: var(--sun);
   font-weight: 600;
   margin-left: 4px;
@@ -985,6 +987,7 @@ h3 {
 
 .allocate-actions {
   display: flex;
+  flex-wrap: wrap;
   gap: 8px;
   margin-top: 4px;
 }
@@ -1253,6 +1256,33 @@ h3 {
   color: var(--chalk);
 }
 
+.reset-confirm {
+  justify-self: center;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 12px;
+  text-align: center;
+}
+
+.reset-confirm p {
+  flex-basis: 100%;
+  margin: 0;
+  color: var(--chalk);
+  font-size: 14px;
+}
+
+.reset-confirm .reset-btn {
+  margin-top: 0;
+}
+
+.reset-btn.danger {
+  border-color: var(--flag);
+  color: var(--chalk);
+}
+
 /* ---------- Small screens ---------- */
 
 @media (max-width: 720px) {
@@ -1286,6 +1316,22 @@ h3 {
   .tee-off-actions .btn,
   .tee-off-head .btn {
     width: 100%;
+  }
+
+  /* Courses and perks scroll sideways so Tee off stays near the top. */
+  .course-picker,
+  .perk-row {
+    grid-template-columns: none;
+    grid-auto-flow: column;
+    grid-auto-columns: minmax(200px, 78%);
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    padding: 3px;
+  }
+
+  .course-pick,
+  .perk-choice {
+    scroll-snap-align: start;
   }
 
   .hole-canvas {

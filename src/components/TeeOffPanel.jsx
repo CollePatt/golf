@@ -40,6 +40,7 @@ export default function TeeOffPanel({
   const currentCourse = getCourseById(state.courseId);
   const completedHoles = getCompletedHoles(state.scorecard);
   const roundStarted = state.hole > 1 || state.currentHoleShots > 0;
+  const newCycle = between && !state.roundResult;
 
   if (!between) {
     return (
@@ -65,16 +66,27 @@ export default function TeeOffPanel({
 
   return (
     <section className="panel tee-off" aria-labelledby="tee-off-title">
-      <div className="round-summary paper">
-        <span className="label">{roundComplete ? 'Round complete' : 'Out of balls'}</span>
-        <h2 id="tee-off-title">{currentCourse.name}</h2>
-        <dl>
-          <div><dt>Holes</dt><dd>{completedHoles.length} / {HOLES_PER_ROUND}</dd></div>
-          <div><dt>Score</dt><dd>{formatScoreToPar(getScoreToPar(state.scorecard))}</dd></div>
-          <div><dt>Shots</dt><dd>{state.totalShots}</dd></div>
-          <div><dt>Yards to spend</dt><dd className="big-number">{state.yardsToAllocate.toLocaleString()}</dd></div>
-        </dl>
-      </div>
+      {newCycle ? (
+        <div className="round-summary paper">
+          <span className="label">Turned pro</span>
+          <h2 id="tee-off-title">Pro cycle {state.prestige.count + 1}</h2>
+          <dl>
+            <div><dt>Pro Points</dt><dd>{state.prestige.points}</dd></div>
+            <div><dt>Yards to spend</dt><dd className="big-number">{state.yardsToAllocate.toLocaleString()}</dd></div>
+          </dl>
+        </div>
+      ) : (
+        <div className="round-summary paper">
+          <span className="label">{roundComplete ? 'Round complete' : 'Out of balls'}</span>
+          <h2 id="tee-off-title">{currentCourse.name}</h2>
+          <dl>
+            <div><dt>Holes</dt><dd>{completedHoles.length} / {HOLES_PER_ROUND}</dd></div>
+            <div><dt>Score</dt><dd>{formatScoreToPar(getScoreToPar(state.scorecard))}</dd></div>
+            <div><dt>Shots</dt><dd>{state.totalShots}</dd></div>
+            <div><dt>Yards to spend</dt><dd className="big-number">{state.yardsToAllocate.toLocaleString()}</dd></div>
+          </dl>
+        </div>
+      )}
 
       <div className="next-round">
         <span className="label">Next round</span>

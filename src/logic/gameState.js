@@ -10,10 +10,10 @@ import { PRO_UPGRADES } from '../data/proUpgrades.js';
 import { createCoursePerkChoices, getCoursePerkById } from '../data/coursePerks.js';
 import { getSwingMode } from '../data/swingModes.js';
 import { normalizeWind, rollWind } from './runModifiers.js';
-import { DEFAULT_BALL_ID, isBallUnlocked } from '../data/balls.js';
+import { BALLS, DEFAULT_BALL_ID, isBallUnlocked } from '../data/balls.js';
 import { createBuffs, normalizeBuffs, normalizeHolePickups } from './pickupLogic.js';
 
-export const SAVE_VERSION = 13;
+export const SAVE_VERSION = 14;
 
 export const BASE_YARDS_PER_SWING = 25;
 export const BASE_STARTING_BALLS = 10;
@@ -117,10 +117,13 @@ export function createInitialState() {
     completedCourseIds: [],        // completed in the current pro cycle
     selectedCourseId: COURSES[0].id, // course the next round starts on
     cycleBestRounds: {},           // courseId -> best round this pro cycle (prestige scoring)
+    cycleYardsEarned: 0,           // upgrade yards earned this pro cycle (sets the signing bonus)
     courseRecords: {},             // courseId -> all-time best round
     prestige: createPrestigeState(),
     lastProResult: null,           // { earned, count } after the most recent prestige
     equippedBall: DEFAULT_BALL_ID, // see data/balls.js; kept when turning pro
+    seenBallIds: [DEFAULT_BALL_ID], // unlocked balls the player has seen in the Locker
+    saveFocusForApproach: false,   // hold a full Focus meter until an approach shot
     holePickups: null,             // { key, items } for the current hole, rolled lazily
     buffs: createBuffs(),          // pickup effects waiting on the next swings
     lifetimeStats: createLifetimeStats(),
@@ -306,11 +309,17 @@ export function normalizeState(savedState) {
     recentAchievements: Array.isArray(state?.recentAchievements) ? state.recentAchievements : [],
     scorecard: normalizeScorecard(state?.scorecard, normalizedCourseId),
     roundsCompleted: Number.isFinite(state?.roundsCompleted) ? state.roundsCompleted : 0,
+    cycleYardsEarned: Number.isFinite(state?.cycleYardsEarned) ? Math.max(0, state.cycleYardsEarned) : 0,
     bestCompletedRound: state?.bestCompletedRound || null,
   };
   return {
     ...normalized,
     equippedBall: isBallUnlocked(state?.equippedBall, normalized) ? state.equippedBall : DEFAULT_BALL_ID,
+    // Older saves have no record, so treat balls already unlocked as seen.
+    seenBallIds: Array.isArray(state?.seenBallIds)
+      ? state.seenBallIds.filter(id => BALLS.some(ball => ball.id === id))
+      : BALLS.filter(ball => isBallUnlocked(ball.id, normalized)).map(ball => ball.id),
+    saveFocusForApproach: Boolean(state?.saveFocusForApproach),
   };
 }
 

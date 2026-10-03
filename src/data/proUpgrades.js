@@ -4,6 +4,7 @@
 // Effects reuse the Tier 1 effect types where possible (see swingLogic.js), plus:
 //   unlockCourse    : each level opens the next Course Pass course (see courses.js)
 //   yardsEarnedMult : multiplies the yards converted into upgrade currency by value^level
+//   signingBonus    : adds value × level to the share of last cycle's yards paid out on turning pro
 //
 // Cost to buy the next level (level → level+1) is:
 //   baseCost × costGrowth ^ level   (whole Pro Points)
@@ -52,6 +53,15 @@ export const PRO_UPGRADES = [
     costGrowth: 1.6,
     maxLevel: 10,
     effects: [{ type: 'addBalls', value: 5 }],
+  },
+  {
+    id: 'signingBonus',
+    label: 'Signing Bonus',
+    description: '+10% of last cycle\'s yards paid out when you turn pro, per level',
+    baseCost: 3,
+    costGrowth: 2.2,
+    maxLevel: 5,
+    effects: [{ type: 'signingBonus', value: 0.1 }],
   },
 ];
 

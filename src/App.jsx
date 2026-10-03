@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
   createInitialState,
   createScorecard,
@@ -18,10 +18,11 @@ import {
   getYardsEarnedMultiplier,
 } from './logic/swingLogic.js';
 import { applyTurnPro, buyProUpgrade, canTurnPro } from './logic/prestigeLogic.js';
-import { getShotExpectedYards, playShot } from './logic/holeLogic.js';
+import { getCurrentApproachRange, getShotExpectedYards, playShot } from './logic/holeLogic.js';
+import { getRemainingDistance, isApproachDistance } from './logic/approachLogic.js';
 import { COURSES, PRO_CHAIN_COURSE_IDS, getNextCourseId, isCourseUnlocked } from './data/courses.js';
 import { ACHIEVEMENTS } from './data/achievements.js';
-import { getBallEffects, isBallUnlocked } from './data/balls.js';
+import { BALLS, getBallEffects, isBallUnlocked } from './data/balls.js';
 import {
   collectPickups,
   consumeSwingBuffs,
@@ -47,6 +48,8 @@ import './App.css';
 
 const FOCUS_GAIN_PER_MANUAL_SWING = 18;
 const FOCUS_READY = 100;
+// Manual swings wait for the ball-flight animation, so click spam can't outrun it.
+const MANUAL_SWING_COOLDOWN_MS = 700;
 
 function applyAchievementUnlocks(state) {
   const newlyUnlocked = ACHIEVEMENTS.filter(achievement => (
@@ -122,10 +125,17 @@ function getEarnedUpgradeYards(s, totalYards) {
   );
 }
 
+// True when the next swing plays as an approach at the pin.
+function isApproachShot(s) {
+  return isApproachDistance(getRemainingDistance(s.targetDistance, s.yardsThisHole), getCurrentApproachRange(s));
+}
+
 function advanceSwingState(prev, source = 'manual') {
   if (prev.phase !== 'run' || prev.ballsLeft <= 0) return prev;
 
-  const focused = source === 'manual' && prev.focusMeter >= FOCUS_READY;
+  const focused = source === 'manual'
+    && prev.focusMeter >= FOCUS_READY
+    && (!prev.saveFocusForApproach || isApproachShot(prev));
   const swingMode = getSwingMode(prev.selectedSwingMode);
   const ready = withHolePickups(prev);
   const shot = playShot(ready, { source, focused });
@@ -152,7 +162,8 @@ function advanceSwingState(prev, source = 'manual') {
   const newBalls = Math.max(0, s.ballsLeft - shot.ballsUsed);
   const newHoleShots = s.currentHoleShots + shot.strokes;
   const newTotalShots = s.totalShots + shot.strokes;
-  const newTotalYards = s.totalYardsThisRound + yards;
+  // Yards hit become upgrade currency; Safe swings pay a premium for the shorter carry.
+  const newTotalYards = s.totalYardsThisRound + Math.round(yards * (swingMode.yardsEarnedMult ?? 1));
   const manualFocusGain = FOCUS_GAIN_PER_MANUAL_SWING
     + swingMode.focusGainBonus
     + getCoursePerkFocusGain(s.activeCoursePerk)
@@ -200,7 +211,8 @@ function advanceSwingState(prev, source = 'manual') {
       nextCoursePerk: null,
       phase: 'upgrade',
       roundResult: 'complete',
-      yardsToAllocate: getEarnedUpgradeYards(s, newTotalYards),
+      yardsToAllocate: s.yardsToAllocate + getEarnedUpgradeYards(s, newTotalYards),
+      cycleYardsEarned: s.cycleYardsEarned + getEarnedUpgradeYards(s, newTotalYards),
     });
   }
 
@@ -222,7 +234,8 @@ function advanceSwingState(prev, source = 'manual') {
       scorecard: nextScorecard,
       phase: 'upgrade',
       roundResult: 'outOfBalls',
-      yardsToAllocate: getEarnedUpgradeYards(s, newTotalYards),
+      yardsToAllocate: s.yardsToAllocate + getEarnedUpgradeYards(s, newTotalYards),
+      cycleYardsEarned: s.cycleYardsEarned + getEarnedUpgradeYards(s, newTotalYards),
     });
   }
 
@@ -296,9 +309,28 @@ export default function App() {
     return () => window.clearInterval(intervalId);
   }, [state.phase, state.autoSwingEnabled, autoSwingIntervalMs]);
 
+  const lastManualSwingAt = useRef(0);
+
   function handleSwing() {
+    const now = Date.now();
+    if (now - lastManualSwingAt.current < MANUAL_SWING_COOLDOWN_MS) return;
+    lastManualSwingAt.current = now;
     setState(s => advanceSwingState(s, 'manual'));
   }
+
+  function handleToggleSaveFocus() {
+    setState(s => ({ ...s, saveFocusForApproach: !s.saveFocusForApproach }));
+  }
+
+  // Opening the Locker (or the Ball Bag overlay) clears its New badge.
+  const viewingBalls = overlay === 'bag' || (view === 'clubhouse' && door === 'locker');
+  useEffect(() => {
+    if (!viewingBalls) return;
+    setState(s => {
+      const unseen = BALLS.filter(ball => isBallUnlocked(ball.id, s) && !s.seenBallIds.includes(ball.id));
+      return unseen.length ? { ...s, seenBallIds: [...s.seenBallIds, ...unseen.map(ball => ball.id)] } : s;
+    });
+  }, [viewingBalls, state.lifetimeStats, state.courseRecords]);
 
   function handleToggleAutoSwing() {
     setState(s => ({
@@ -397,7 +429,7 @@ export default function App() {
         ballsLeft: getStartingBalls(getEffectLevels(s)) + getCoursePerkStartingBalls(activeCoursePerk),
         totalShots: 0,
         totalYardsThisRound: 0,
-        yardsToAllocate: 0,
+        // Unspent yards carry over to the next Clubhouse visit.
         wind: rollWind(),
         lastSwing: null,
         focusMeter: 0,
@@ -414,7 +446,10 @@ export default function App() {
     });
   }
 
+  const [confirmingReset, setConfirmingReset] = useState(false);
+
   function handleReset() {
+    setConfirmingReset(false);
     clearSave();
     setView('course');
     setOverlay(null);
@@ -439,6 +474,7 @@ export default function App() {
             onSwing={handleSwing}
             onSelectSwingMode={handleSelectSwingMode}
             onToggleAutoSwing={handleToggleAutoSwing}
+            onToggleSaveFocus={handleToggleSaveFocus}
             onOpenOverlay={setOverlay}
             onOpenClubhouse={() => setView('clubhouse')}
             yardsPerSwing={getShotExpectedYards(state)}
@@ -482,9 +518,17 @@ export default function App() {
         </Overlay>
       )}
 
-      <button className="reset-btn" onClick={handleReset}>
-        Reset Game
-      </button>
+      {confirmingReset ? (
+        <div className="reset-confirm" role="alertdialog" aria-label="Confirm reset">
+          <p>Erase everything, including Pro upgrades, records and achievements?</p>
+          <button className="reset-btn danger" onClick={handleReset}>Erase save</button>
+          <button className="reset-btn" onClick={() => setConfirmingReset(false)} autoFocus>Keep playing</button>
+        </div>
+      ) : (
+        <button className="reset-btn" onClick={() => setConfirmingReset(true)}>
+          Reset Game
+        </button>
+      )}
     </div>
   );
 }

@@ -157,6 +157,17 @@ export function getCoursePassLevel(upgrades) {
   return passLevel;
 }
 
+// Share of the yards earned in a pro cycle that turning pro pays back as a head start.
+export const BASE_SIGNING_BONUS = 0.1;
+
+export function getSigningBonusShare(upgrades) {
+  let share = BASE_SIGNING_BONUS;
+  forEachActiveEffect(upgrades, (e, level) => {
+    if (e.type === 'signingBonus') share += e.value * level;
+  });
+  return share;
+}
+
 export function formatAutoSwingInterval(intervalMs) {
   if (!intervalMs) return 'Locked';
   return `${(intervalMs / 1000).toFixed(1)}s`;

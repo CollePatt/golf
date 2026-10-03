@@ -35,7 +35,7 @@ export default function GuidePanel() {
             <li>Approach shots must land close enough to finish; misses leave a follow-up distance.</li>
             <li>Your best completed round is saved automatically.</li>
             <li>Wind and swing quality can change each shot's distance.</li>
-            <li>Safe shots are steadier, while aggressive shots can carry farther or miss harder.</li>
+            <li>Aggressive carries farther for clearing a new course. Normal scores best. Safe is shorter but pays 30% more yards, so it suits a course you have mastered.</li>
             <li>Rare shot events can add bounces, focus boosts, or rough lies.</li>
           </ul>
         </section>

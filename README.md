@@ -42,7 +42,7 @@ After adding a screenshot, uncomment this line:
 - Course-completion perk choices that carry into the next course attempt.
 - Round wind modifiers and per-swing distance variance.
 - Rare shot events such as bounces, cart paths, crowd boosts, and rough lies.
-- Safe, normal, and aggressive swing modes for light risk/reward shot choice.
+- Four swing modes with distinct jobs: Aggressive for clearing a new course, Normal for scoring, Safe for farming yards on a mastered course, and Lay Up for avoiding hazards.
 - Manual Focus meter that rewards active play with stronger shots.
 - Approach upgrades for softer landings, wider finish windows, and better Auto Caddie accuracy.
 - Achievements and lifetime stats with bonus yard rewards.
@@ -52,7 +52,8 @@ After adding a screenshot, uncomment this line:
 - Round recap table with per-hole score details.
 - Course select tab with per-course records, cycle bests, and unlock requirements.
 - Pro Tour prestige: fewer shots across cleared courses earns more Pro Points.
-- Tier 2 Pro upgrades: Pro Clubs, Course Pass, Auto Driver, Yardage Book, and Tour Bag.
+- Turning pro pays a signing bonus of last cycle's yards and lands in the Clubhouse, so new courses can be picked right away.
+- Tier 2 Pro upgrades: Pro Clubs, Course Pass, Auto Driver, Yardage Book, Tour Bag, and Signing Bonus.
 - Course Pass courses: Sahara Sands, Glacier Greens, and Caldera Classic.
 - Local storage save/load support with versioned migrations.
 - Round-end upgrade screen.

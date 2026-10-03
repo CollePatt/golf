@@ -6,7 +6,7 @@ import {
   getCourseParTotal,
   yardsForHole,
 } from './gameState.js';
-import { getEffectLevels, getStartingBalls } from './swingLogic.js';
+import { getEffectLevels, getSigningBonusShare, getStartingBalls } from './swingLogic.js';
 
 // Pro Points for one course = prestigeValue × (1 + 5% per stroke under par), clamped.
 // Even par pays the course value; 10 under pays 1.5×, 10 over pays 0.5×.
@@ -56,12 +56,19 @@ export function canTurnPro(state) {
   return getMissingProChainCourses(state).length === 0;
 }
 
+export function getSigningBonusYards(state) {
+  return Math.floor((state.cycleYardsEarned ?? 0) * getSigningBonusShare(getEffectLevels(state)));
+}
+
 // Prestige: bank Pro Points, wipe Tier 1 and the current cycle, keep Tier 2,
-// lifetime stats, achievements, and all-time course records.
+// lifetime stats, achievements, and all-time course records. The player lands in
+// the Clubhouse with a signing bonus to spend, so a Course Pass bought right
+// after turning pro can be picked for the very first round.
 export function applyTurnPro(state) {
   if (!canTurnPro(state)) return state;
 
   const earned = getPendingPrestigePoints(state);
+  const signingBonus = getSigningBonusYards(state);
   const fresh = createInitialState();
   const prestige = {
     ...state.prestige,
@@ -86,8 +93,13 @@ export function applyTurnPro(state) {
     targetDistance: yardsForHole(1, startingCourseId),
     scorecard: createScorecard(startingCourseId),
     ballsLeft: getStartingBalls(getEffectLevels({ ...fresh, prestige })),
-    lastProResult: { earned, count: prestige.count },
+    phase: 'upgrade',
+    roundResult: null,
+    yardsToAllocate: signingBonus,
+    lastProResult: { earned, count: prestige.count, signingBonus },
     equippedBall: state.equippedBall,
+    seenBallIds: state.seenBallIds,
+    saveFocusForApproach: state.saveFocusForApproach,
   };
 }
 

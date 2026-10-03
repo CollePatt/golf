@@ -31,6 +31,7 @@ export default function HoleScreen({
   onSwing,
   onSelectSwingMode,
   onToggleAutoSwing,
+  onToggleSaveFocus,
   onOpenOverlay,
   onOpenClubhouse,
   yardsPerSwing,
@@ -65,7 +66,9 @@ export default function HoleScreen({
   const activeHazards = getActiveHazards(state, yardsPerSwing);
   const nextHazard = approachActive ? null : getNextHazard(activeHazards, yardsThisHole);
   const inSand = state.lie === 'sand';
-  const focusedReady = focusMeter >= focusReady;
+  const focusFull = focusMeter >= focusReady;
+  // A saved meter waits for the approach before it fires.
+  const focusedReady = focusFull && (!state.saveFocusForApproach || approachActive);
   const manualApproachStats = getShotApproachStats(state, 'manual');
   const autoApproachStats = getShotApproachStats(state, 'auto');
   const equippedBall = getBallById(state.equippedBall);
@@ -174,11 +177,20 @@ export default function HoleScreen({
           <p className="mode-hint">{selectedSwingMode.description}</p>
           <div className="meter-row">
             <span className="label">Focus</span>
-            <span className={`blocks ${focusedReady ? 'ready' : ''}`} role="meter" aria-label="Focus" aria-valuemin={0} aria-valuemax={focusReady} aria-valuenow={focusMeter}>
+            <span className={`blocks ${focusFull ? 'ready' : ''}`} role="meter" aria-label="Focus" aria-valuemin={0} aria-valuemax={focusReady} aria-valuenow={focusMeter}>
               {Array.from({ length: 10 }, (_, index) => (
                 <i key={index} className={focusMeter >= ((index + 1) * focusReady) / 10 ? 'full' : ''} />
               ))}
             </span>
+            <button
+              type="button"
+              className={`btn small ${state.saveFocusForApproach ? 'on' : ''}`}
+              onClick={onToggleSaveFocus}
+              aria-pressed={state.saveFocusForApproach}
+              title="Hold a full Focus meter until your next approach shot"
+            >
+              {state.saveFocusForApproach ? 'Saving for approach' : 'Save for approach'}
+            </button>
             <span className="auto-caddie">
               <span className="label">Auto Caddie</span>
               <button
