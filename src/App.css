@@ -1373,17 +1373,3 @@ h3 {
     display: none;
   }
 }
-
-.away-report {
-  display: grid;
-  gap: 10px;
-  text-align: center;
-}
-
-.away-report h2 {
-  margin: 0;
-}
-
-.away-report p {
-  margin: 0;
-}

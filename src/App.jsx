@@ -274,104 +274,8 @@ function advanceSwingState(prev, source = 'manual') {
   });
 }
 
-// A fresh round on the selected course. A completed round brings its chosen perk.
-function startNextRoundState(s) {
-  const completedRound = s.roundResult === 'complete';
-  const nextCourseId = isCourseUnlocked(s.selectedCourseId, getCourseUnlockContext(s))
-    ? s.selectedCourseId
-    : COURSES[0].id;
-  const activeCoursePerk = completedRound ? s.nextCoursePerk : null;
-
-  return {
-    ...s,
-    phase: 'run',
-    courseId: nextCourseId,
-    selectedCourseId: nextCourseId,
-    hole: 1,
-    targetDistance: yardsForHole(1, nextCourseId),
-    yardsThisHole: 0,
-    currentHoleShots: 0,
-    lie: 'fairway',
-    ballsLeft: getStartingBalls(getEffectLevels(s)) + getCoursePerkStartingBalls(activeCoursePerk),
-    totalShots: 0,
-    totalYardsThisRound: 0,
-    // Unspent yards carry over to the next Clubhouse visit.
-    wind: rollWind(),
-    lastSwing: null,
-    focusMeter: 0,
-    activeCoursePerk,
-    pendingCoursePerkChoices: [],
-    nextCoursePerk: null,
-    recentAchievements: [],
-    lastProResult: null,
-    holePickups: null,
-    buffs: createBuffs(),
-    scorecard: createScorecard(nextCourseId),
-    roundResult: null,
-  };
-}
-
-function formatDuration(ms) {
-  const minutes = Math.round(ms / 60000);
-  const hours = Math.floor(minutes / 60);
-  return hours > 0 ? `${hours} h ${minutes % 60} min` : `${minutes} min`;
-}
-
-// Idle time is capped so a long absence pays well without replacing play.
-const OFFLINE_CAP_MS = 8 * 60 * 60 * 1000;
-const OFFLINE_MIN_MS = 60 * 1000;
-const MAX_CATCH_UP_SWINGS = 40000;
-
-/**
- * Play every Auto Caddie swing that fits in elapsedMs. Used to catch up a
- * throttled background tab and, with continueRounds, to play while the game
- * was closed: each finished round tees off again on the same course (no perk)
- * and its yards are banked for the next Clubhouse visit.
- */
-function playAutoSwings(state, elapsedMs, { continueRounds = false } = {}) {
-  let s = state;
-  let remaining = elapsedMs;
-  let swings = 0;
-  let rounds = 0;
-  while (swings < MAX_CATCH_UP_SWINGS) {
-    const intervalMs = getAutoSwingIntervalMs(getEffectLevels(s));
-    if (!intervalMs || !s.autoSwingEnabled || remaining < intervalMs) break;
-    if (s.phase !== 'run') {
-      if (!continueRounds) break;
-      s = startNextRoundState({ ...s, nextCoursePerk: null, roundResult: null });
-    }
-    remaining -= intervalMs;
-    s = advanceSwingState(s, 'auto');
-    swings += 1;
-    if (s.phase !== 'run') rounds += 1;
-  }
-  return { state: s, swings, rounds };
-}
-
-function loadWithOfflineProgress() {
-  const saved = loadGame();
-  if (!saved) return { state: createInitialState(), away: null };
-  const awayMs = Math.min(OFFLINE_CAP_MS, Date.now() - (saved.savedAt ?? Date.now()));
-  if (awayMs < OFFLINE_MIN_MS) return { state: saved, away: null };
-
-  const result = playAutoSwings(saved, awayMs, { continueRounds: true });
-  if (result.swings === 0) return { state: saved, away: null };
-  return {
-    state: result.state,
-    away: {
-      awayMs,
-      swings: result.swings,
-      rounds: result.rounds,
-      holes: result.state.lifetimeStats.holesCleared - saved.lifetimeStats.holesCleared,
-      yards: result.state.cycleYardsEarned - saved.cycleYardsEarned,
-    },
-  };
-}
-
 export default function App() {
-  const [boot] = useState(loadWithOfflineProgress);
-  const [state, setState] = useState(boot.state);
-  const [awayReport, setAwayReport] = useState(boot.away);
+  const [state, setState] = useState(() => loadGame() || createInitialState());
   const [view, setView] = useState(() => state.phase === 'upgrade' ? 'clubhouse' : 'course');
   const [door, setDoor] = useState('shop');
   const [overlay, setOverlay] = useState(null);
@@ -399,16 +303,8 @@ export default function App() {
 
   useEffect(() => {
     if (state.phase !== 'run' || !state.autoSwingEnabled || !autoSwingIntervalMs) return undefined;
-    // Count swings by the clock: background tabs throttle timers, so one late
-    // tick plays every swing that came due while the tab was hidden.
-    let lastSwingAt = Date.now();
     const intervalId = window.setInterval(() => {
-      const due = Math.floor((Date.now() - lastSwingAt + 50) / autoSwingIntervalMs);
-      if (due < 1) return;
-      lastSwingAt += due * autoSwingIntervalMs;
-      setState(s => (due === 1
-        ? advanceSwingState(s, 'auto')
-        : playAutoSwings(s, due * autoSwingIntervalMs).state));
+      setState(s => advanceSwingState(s, 'auto'));
     }, autoSwingIntervalMs);
     return () => window.clearInterval(intervalId);
   }, [state.phase, state.autoSwingEnabled, autoSwingIntervalMs]);
@@ -511,7 +407,43 @@ export default function App() {
     if (state.roundResult === 'complete' && !state.nextCoursePerk) return;
 
     setView('course');
-    setState(s => (s.roundResult === 'complete' && !s.nextCoursePerk ? s : startNextRoundState(s)));
+    setState(s => {
+      if (s.roundResult === 'complete' && !s.nextCoursePerk) return s;
+
+      const completedRound = s.roundResult === 'complete';
+      const nextCourseId = isCourseUnlocked(s.selectedCourseId, getCourseUnlockContext(s))
+        ? s.selectedCourseId
+        : COURSES[0].id;
+      const activeCoursePerk = completedRound ? s.nextCoursePerk : null;
+
+      return {
+        ...s,
+        phase: 'run',
+        courseId: nextCourseId,
+        selectedCourseId: nextCourseId,
+        hole: 1,
+        targetDistance: yardsForHole(1, nextCourseId),
+        yardsThisHole: 0,
+        currentHoleShots: 0,
+        lie: 'fairway',
+        ballsLeft: getStartingBalls(getEffectLevels(s)) + getCoursePerkStartingBalls(activeCoursePerk),
+        totalShots: 0,
+        totalYardsThisRound: 0,
+        // Unspent yards carry over to the next Clubhouse visit.
+        wind: rollWind(),
+        lastSwing: null,
+        focusMeter: 0,
+        activeCoursePerk,
+        pendingCoursePerkChoices: [],
+        nextCoursePerk: null,
+        recentAchievements: [],
+        lastProResult: null,
+        holePickups: null,
+        buffs: createBuffs(),
+        scorecard: createScorecard(nextCourseId),
+        roundResult: null,
+      };
+    });
   }
 
   const [confirmingReset, setConfirmingReset] = useState(false);
@@ -578,19 +510,6 @@ export default function App() {
       {overlay === 'bag' && (
         <Overlay title="Ball Bag" onClose={() => setOverlay(null)}>
           <BallBagPanel state={state} onEquipBall={handleEquipBall} />
-        </Overlay>
-      )}
-      {awayReport && (
-        <Overlay title="While you were away" onClose={() => setAwayReport(null)}>
-          <div className="away-report">
-            <h2>While you were away</h2>
-            <p>
-              Your Auto Caddie played for {formatDuration(awayReport.awayMs)}: {awayReport.swings.toLocaleString()} swings,
-              {' '}{awayReport.holes.toLocaleString()} holes and {awayReport.rounds.toLocaleString()} finished rounds.
-            </p>
-            <p className="big-number">+{awayReport.yards.toLocaleString()} yds banked</p>
-            <p className="hint">Offline play is capped at 8 hours. Spend the yards in the Pro Shop.</p>
-          </div>
         </Overlay>
       )}
       {overlay === 'guide' && (
