@@ -14,8 +14,8 @@ export const PRO_UPGRADES = [
     label: 'Pro Clubs',
     description: '×1.3 yards per swing per level',
     baseCost: 2,
-    costGrowth: 1.8,
-    maxLevel: 16,
+    costGrowth: 1.7,
+    maxLevel: 12,
     effects: [{ type: 'multYards', value: 1.3 }],
   },
   {
@@ -41,8 +41,8 @@ export const PRO_UPGRADES = [
     label: 'Yardage Book',
     description: '×1.2 yards earned for upgrades per level',
     baseCost: 2,
-    costGrowth: 1.85,
-    maxLevel: 15,
+    costGrowth: 1.8,
+    maxLevel: 10,
     effects: [{ type: 'yardsEarnedMult', value: 1.2 }],
   },
   {

@@ -48,7 +48,7 @@ After adding a screenshot, uncomment this line:
 - Achievements and lifetime stats with bonus yard rewards.
 - Permanent upgrades for yards per swing, starting balls, and yard multipliers.
 - Partial upgrade investments with next-level stat previews.
-- Unlockable Auto Caddie for idle swings with upgradeable speed. It keeps playing in a background tab and while the game is closed (up to 8 hours), with a "While you were away" summary.
+- Unlockable Auto Caddie for idle swings with upgradeable speed.
 - Round recap table with per-hole score details.
 - Course select tab with per-course records, cycle bests, and unlock requirements.
 - Pro Tour prestige: fewer shots across cleared courses earns more Pro Points.
