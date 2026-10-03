@@ -15,8 +15,8 @@ import { createBuffs, normalizeBuffs, normalizeHolePickups } from './pickupLogic
 
 export const SAVE_VERSION = 14;
 
-export const BASE_YARDS_PER_SWING = 25;
-export const BASE_STARTING_BALLS = 10;
+export const BASE_YARDS_PER_SWING = 40;
+export const BASE_STARTING_BALLS = 30;
 export const HOLES_PER_ROUND = 18;
 
 // Yardage target for a given hole (1-indexed).
