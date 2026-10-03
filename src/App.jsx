@@ -152,7 +152,7 @@ function advanceSwingState(prev, source = 'manual') {
       ? { ...pickupResult.state.buffs, magnet: false }
       : pickupResult.state.buffs,
   };
-  const resolvedSwing = pickupResult.collected.length > 0
+  let resolvedSwing = pickupResult.collected.length > 0
     ? { ...shot.swing, pickups: pickupResult.collected }
     : shot.swing;
   const swing = resolvedSwing;
@@ -182,6 +182,14 @@ function advanceSwingState(prev, source = 'manual') {
   const nextScorecard = holeCleared
     ? recordHoleScore(s.scorecard, s.hole, newHoleShots, s.courseId)
     : s.scorecard;
+  if (holeCleared) {
+    // Lets the course view show the birdie or bogey before the next hole.
+    const entry = nextScorecard[s.hole - 1];
+    resolvedSwing = {
+      ...resolvedSwing,
+      holeResult: { hole: s.hole, shots: newHoleShots, par: entry?.par, scoreToPar: entry?.scoreToPar },
+    };
+  }
 
   // Round ends: completed all 18 holes, or ran out of balls.
   if (holeCleared && lastHole) {

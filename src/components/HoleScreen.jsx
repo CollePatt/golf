@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import GolfHoleCanvas from './GolfHoleCanvas.jsx'
 import { getCourseById, getCourseTheme, getHoleDefinition } from '../data/courses.js';
 import {
@@ -25,6 +25,13 @@ import { getBallById } from '../data/balls.js';
 import SpriteIcon from './SpriteIcon.jsx';
 import { getCoursePerkById } from '../data/coursePerks.js';
 import { SWING_MODES, getSwingMode } from '../data/swingModes.js';
+import { describeHoleResult, describeShot } from '../logic/shotFeedback.js';
+
+// How long the finished hole stays up after the ball drops, so the birdie or
+// bogey reads before the next tee. The game itself has already moved on.
+const HOLE_OUT_SHOW_MS = 1400;
+// Gives up waiting on the canvas (a hidden tab pauses its frames).
+const HOLE_OUT_MAX_MS = 4000;
 
 export default function HoleScreen({
   state,
@@ -95,9 +102,73 @@ export default function HoleScreen({
     return () => window.removeEventListener('keydown', onKey);
   }, [onSwing]);
 
-  // Only float yards for swings taken while this screen is up.
-  const swingsAtMount = useRef(state.lifetimeStats.swings);
-  const showFloat = lastSwing && state.lifetimeStats.swings !== swingsAtMount.current;
+  // Only play shot feedback for swings taken while this screen is up.
+  const swingCount = state.lifetimeStats.swings;
+  const swingsAtMount = useRef(swingCount);
+  const freshSwing = lastSwing && swingCount !== swingsAtMount.current;
+  const shotFeel = freshSwing ? describeShot(lastSwing) : null;
+  const shot = freshSwing && lastSwing.startAt != null
+    ? {
+        key: swingCount,
+        startAt: lastSwing.startAt,
+        landAt: lastSwing.landAt,
+        look: lastSwing.hazard?.look,
+        sub: `+${lastSwing.yards} yds${shotFeel.note ? `, ${shotFeel.note}` : ''}`,
+        ...shotFeel,
+      }
+    : null;
+
+  const liveView = {
+    holeKey: `${state.courseId}-${hole}`,
+    hole,
+    yardsThisRun: yardsThisHole,
+    targetDistance,
+    approachDistance: approachRange,
+    // A bunker shortens the next swing, which can drop the trap it sits in
+    // below the activation line; keep drawing what the ball came to rest in.
+    hazards: inSand ? getActiveHazards(state, yardsPerSwing / getSandMultiplier(state)) : activeHazards,
+    pickups: state.holePickups,
+    pickupRadius: getPickupRadius(state, yardsPerSwing),
+    trait: holeDefinition.trait,
+    theme,
+    themeId: holeDefinition.theme,
+    shot,
+  };
+
+  // When a swing finishes a hole, keep drawing that hole until the ball drops
+  // and the score has had a moment on screen.
+  // The detection only reads the previous committed view, so repeating it in
+  // a second render pass records the same hold.
+  const lastViewRef = useRef(liveView);
+  const holdRef = useRef(null);
+  const holeResult = freshSwing ? lastSwing.holeResult : null;
+  const prevView = lastViewRef.current;
+  if (holeResult && prevView.hole === holeResult.hole && hole !== holeResult.hole) {
+    holdRef.current = {
+      ...prevView,
+      key: swingCount,
+      yardsThisRun: prevView.targetDistance,
+      shot,
+      result: { ...holeResult, ...describeHoleResult(holeResult) },
+    };
+  }
+  useEffect(() => {
+    lastViewRef.current = liveView;
+  });
+
+  const [droppedKey, setDroppedKey] = useState(null);
+  const [releasedKey, setReleasedKey] = useState(null);
+  const held = holdRef.current && holdRef.current.key !== releasedKey ? holdRef.current : null;
+  const heldKey = held?.key ?? null;
+  const dropped = heldKey != null && droppedKey === heldKey;
+  const onShotSettled = useCallback(key => setDroppedKey(key), []);
+  useEffect(() => {
+    if (heldKey == null) return undefined;
+    const timer = setTimeout(() => setReleasedKey(heldKey), dropped ? HOLE_OUT_SHOW_MS : HOLE_OUT_MAX_MS);
+    return () => clearTimeout(timer);
+  }, [heldKey, dropped]);
+
+  const view = held || liveView;
 
   return (
     <div className="course-view">
@@ -118,15 +189,19 @@ export default function HoleScreen({
 
       <div className="stage">
         <GolfHoleCanvas
-          yardsThisRun={yardsThisHole}
-          targetDistance={targetDistance}
-          approachDistance={approachRange}
-          hazards={activeHazards}
-          pickups={state.holePickups}
-          pickupRadius={getPickupRadius(state, yardsPerSwing)}
+          holeKey={view.holeKey}
+          yardsThisRun={view.yardsThisRun}
+          targetDistance={view.targetDistance}
+          approachDistance={view.approachDistance}
+          hazards={view.hazards}
+          pickups={view.pickups}
+          pickupRadius={view.pickupRadius}
+          trait={view.trait}
+          shot={view.shot}
+          onShotSettled={onShotSettled}
           ballStyle={equippedBall.id}
-          theme={theme}
-          themeId={holeDefinition.theme}
+          theme={view.theme}
+          themeId={view.themeId}
         />
         <div className="hud">
           <div className="hud-group">
@@ -144,10 +219,13 @@ export default function HoleScreen({
             </button>
           </div>
         </div>
-        {showFloat && (
-          <span key={state.lifetimeStats.swings} className={`yard-float ${lastSwing.quality === 'Perfect' ? 'perfect' : ''}`}>
-            +{lastSwing.yards} yds
-          </span>
+        {dropped && (
+          <div key={heldKey} className={`hole-out ${held.result.tone}`} role="status">
+            <strong>{held.result.label}</strong>
+            <span>
+              Hole {held.result.hole} · {held.result.shots} stroke{held.result.shots === 1 ? '' : 's'} · Par {held.result.par}
+            </span>
+          </div>
         )}
       </div>
 

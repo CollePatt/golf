@@ -19,6 +19,8 @@ function toHoleDefinition([name, theme, label, description, distanceMultiplier])
 // designYards: the swing distance the course is built for. Par assumes that many
 //   yards per swing to reach the green, plus two putts (see parForHole).
 // hazardNames: what water and bunker hazards are called on this course.
+// hazardLooks: how the hole canvas draws them (see GolfHoleCanvas.jsx).
+// hazardPattern: where they sit; courses without one use HAZARD_PATTERN.
 export const COURSES = [
   {
     id: 'meadowMunicipal',
@@ -28,6 +30,7 @@ export const COURSES = [
     targetStep: 30,
     designYards: 260,
     hazardNames: { water: 'Creek', bunker: 'Fairway Bunker' },
+    hazardLooks: { water: 'water', bunker: 'sand' },
     unlock: { type: 'start' },
     prestigeValue: 4,
     holes: [
@@ -59,6 +62,13 @@ export const COURSES = [
     targetStep: 60,
     designYards: 440,
     hazardNames: { water: 'Coolant Pool', bunker: 'Crater' },
+    hazardLooks: { water: 'coolant', bunker: 'crater' },
+    hazardPattern: [
+      // Pocked with small craters; one coolant pool guards a few long holes.
+      { every: 2, offset: 1, type: 'bunker', from: 0.24, to: 0.3 },
+      { every: 3, offset: 0, type: 'bunker', from: 0.58, to: 0.66 },
+      { every: 6, offset: 4, type: 'water', from: 0.7, to: 0.8 },
+    ],
     unlock: { type: 'chain', after: 'meadowMunicipal' },
     prestigeValue: 6,
     holes: [
@@ -90,6 +100,13 @@ export const COURSES = [
     targetStep: 80,
     designYards: 700,
     hazardNames: { water: 'Oasis', bunker: 'Dune Trap' },
+    hazardLooks: { water: 'oasis', bunker: 'dune' },
+    hazardPattern: [
+      // Wide dune traps on every other hole; the rare oasis sits past them.
+      { every: 2, offset: 0, type: 'bunker', from: 0.35, to: 0.52 },
+      { every: 5, offset: 3, type: 'bunker', from: 0.66, to: 0.8 },
+      { every: 7, offset: 6, type: 'water', from: 0.56, to: 0.64 },
+    ],
     unlock: { type: 'coursePass', level: 1 },
     prestigeValue: 10,
     holes: [
@@ -121,6 +138,13 @@ export const COURSES = [
     targetStep: 100,
     designYards: 950,
     hazardNames: { water: 'Meltwater', bunker: 'Snowbank' },
+    hazardLooks: { water: 'meltwater', bunker: 'snow' },
+    hazardPattern: [
+      // Narrow meltwater channels early, snowbanks short of the green.
+      { every: 3, offset: 1, type: 'water', from: 0.28, to: 0.36 },
+      { every: 3, offset: 2, type: 'water', from: 0.55, to: 0.62 },
+      { every: 2, offset: 0, type: 'bunker', from: 0.78, to: 0.86 },
+    ],
     unlock: { type: 'coursePass', level: 2 },
     prestigeValue: 15,
     holes: [
@@ -152,6 +176,13 @@ export const COURSES = [
     targetStep: 130,
     designYards: 1250,
     hazardNames: { water: 'Lava Flow', bunker: 'Ash Pit' },
+    hazardLooks: { water: 'lava', bunker: 'ash' },
+    hazardPattern: [
+      // Lava forced carries off the tee, ash pits where the drives come down.
+      { every: 2, offset: 1, type: 'water', from: 0.3, to: 0.44 },
+      { every: 4, offset: 0, type: 'water', from: 0.6, to: 0.7 },
+      { every: 3, offset: 2, type: 'bunker', from: 0.5, to: 0.58 },
+    ],
     unlock: { type: 'coursePass', level: 3 },
     prestigeValue: 22,
     holes: [
@@ -295,7 +326,8 @@ export function getHoleDefinition(courseId, hole) {
 }
 
 // Fairway hazards follow a fixed rhythm so each hole plays the same every visit.
-// Bands are fractions of hole length, measured from the tee.
+// Bands are fractions of hole length, measured from the tee. A hole matches a
+// row when hole % every === offset.
 const HAZARD_PATTERN = [
   { every: 3, offset: 0, type: 'water', from: 0.42, to: 0.56 },
   { every: 4, offset: 2, type: 'bunker', from: 0.62, to: 0.72 },
@@ -305,11 +337,13 @@ const HAZARD_PATTERN = [
 export function getHoleHazards(courseId, hole, targetDistance) {
   const course = getCourseById(courseId);
   const names = course.hazardNames || { water: 'Water', bunker: 'Bunker' };
-  return HAZARD_PATTERN
+  const looks = course.hazardLooks || { water: 'water', bunker: 'sand' };
+  return (course.hazardPattern || HAZARD_PATTERN)
     .filter(pattern => hole % pattern.every === pattern.offset)
     .map(pattern => ({
       type: pattern.type,
       name: names[pattern.type],
+      look: looks[pattern.type],
       start: Math.round(targetDistance * pattern.from),
       end: Math.round(targetDistance * pattern.to),
     }));
