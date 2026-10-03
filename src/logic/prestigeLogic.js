@@ -3,30 +3,30 @@ import { getProUpgradeById, getProUpgradeCost } from '../data/proUpgrades.js';
 import {
   createInitialState,
   createScorecard,
-  getCourseParTotal,
+  getParYardsPerSwing,
   yardsForHole,
 } from './gameState.js';
 import { getEffectLevels, getSigningBonusShare, getStartingBalls } from './swingLogic.js';
 
 // Pro Points for one course = prestigeValue × (1 + 5% per stroke under par), clamped.
-// Even par pays the course value; 10 under pays 1.5×, 10 over pays 0.5×.
+// Par is set from the player's power at tee off, so this rewards how well the
+// round was played. Even par pays the course value; 10 under pays 1.5×.
 export const POINTS_PER_STROKE = 0.05;
 export const MIN_SHOT_EFFICIENCY = 0.25;
 export const MAX_SHOT_EFFICIENCY = 3;
 
-export function getShotEfficiency(courseId, shots) {
-  if (!Number.isFinite(shots) || shots <= 0) return 0;
-  const strokesUnderPar = getCourseParTotal(courseId) - shots;
+export function getShotEfficiency(scoreToPar) {
+  if (!Number.isFinite(scoreToPar)) return 0;
   return Math.max(
     MIN_SHOT_EFFICIENCY,
-    Math.min(MAX_SHOT_EFFICIENCY, 1 + strokesUnderPar * POINTS_PER_STROKE)
+    Math.min(MAX_SHOT_EFFICIENCY, 1 - scoreToPar * POINTS_PER_STROKE)
   );
 }
 
-export function getCoursePrestigePoints(courseId, shots) {
+export function getCoursePrestigePoints(courseId, scoreToPar) {
   const course = getCourseById(courseId);
-  if (!Number.isFinite(shots)) return 0;
-  return Math.max(1, Math.floor((course.prestigeValue ?? 1) * getShotEfficiency(courseId, shots)));
+  if (!Number.isFinite(scoreToPar)) return 0;
+  return Math.max(1, Math.floor((course.prestigeValue ?? 1) * getShotEfficiency(scoreToPar)));
 }
 
 export function getPrestigeBreakdown(state) {
@@ -38,8 +38,8 @@ export function getPrestigeBreakdown(state) {
         courseId: course.id,
         name: course.name,
         shots: round.shots,
-        par: getCourseParTotal(course.id),
-        points: getCoursePrestigePoints(course.id, round.shots),
+        par: round.shots - round.scoreToPar,
+        points: getCoursePrestigePoints(course.id, round.scoreToPar),
       };
     });
 }
@@ -91,7 +91,7 @@ export function applyTurnPro(state) {
     courseId: startingCourseId,
     selectedCourseId: startingCourseId,
     targetDistance: yardsForHole(1, startingCourseId),
-    scorecard: createScorecard(startingCourseId),
+    scorecard: createScorecard(startingCourseId, getParYardsPerSwing({ ...fresh, prestige })),
     ballsLeft: getStartingBalls(getEffectLevels({ ...fresh, prestige })),
     phase: 'upgrade',
     roundResult: null,

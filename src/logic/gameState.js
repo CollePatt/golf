@@ -2,6 +2,7 @@ import { UPGRADES } from '../data/upgrades.js';
 import {
   COURSES,
   getCourseById,
+  getHoleDefinition,
   getNextCourseId,
   isCourseUnlocked,
   isValidCourseId,
@@ -12,12 +13,18 @@ import { getSwingMode } from '../data/swingModes.js';
 import { normalizeWind, rollWind } from './runModifiers.js';
 import { BALLS, DEFAULT_BALL_ID, isBallUnlocked } from '../data/balls.js';
 import { createBuffs, normalizeBuffs, normalizeHolePickups } from './pickupLogic.js';
+import { getEffectLevels, getYardsPerSwing } from './swingLogic.js';
 
-export const SAVE_VERSION = 14;
+export const SAVE_VERSION = 15;
 
 export const BASE_YARDS_PER_SWING = 25;
 export const BASE_STARTING_BALLS = 10;
 export const HOLES_PER_ROUND = 18;
+// Par assumes Normal swings: the average carry runs about 4% past the swing's
+// rated yards (Perfect swings and lucky bounces), and a ball inside the 15 yd
+// approach finish window is on the green (see swingModes.js and shotEvents.js).
+export const PAR_CARRY_MULTIPLIER = 1.04;
+export const PAR_GREEN_YARDS = 15;
 
 // Yardage target for a given hole (1-indexed).
 export function yardsForHole(hole, courseId = COURSES[0].id) {
@@ -25,11 +32,21 @@ export function yardsForHole(hole, courseId = COURSES[0].id) {
   return (course.targetBase ?? 300) + (hole - 1) * (course.targetStep ?? 50);
 }
 
-// Par = full swings to reach the green at the course's design power, plus two putts.
-export function parForHole(hole, courseId = COURSES[0].id) {
-  const course = getCourseById(courseId);
-  const swingsToGreen = Math.ceil(yardsForHole(hole, courseId) / (course.designYards ?? 260));
-  return Math.max(3, Math.min(5, swingsToGreen + 2));
+// Par = full swings to reach the green at the player's power, plus two putts.
+// Power is the upgrade yards per swing scaled by the hole's trait; wind, balls,
+// swing modes and pickups are left out, so they move the score instead of par.
+// The scorecard locks par in at tee off, so a round is judged by the power
+// the player brought to it.
+export function parForHole(hole, courseId = COURSES[0].id, yardsPerSwing = BASE_YARDS_PER_SWING) {
+  const holeMultiplier = getHoleDefinition(courseId, hole).trait.distanceMultiplier ?? 1;
+  const reach = Math.max(1, yardsPerSwing * holeMultiplier * PAR_CARRY_MULTIPLIER);
+  const swingsToGreen = Math.max(1, Math.ceil((yardsForHole(hole, courseId) - PAR_GREEN_YARDS) / reach));
+  return Math.max(3, swingsToGreen + 2);
+}
+
+// Power that par is set from: yards per swing from Tier 1 and Pro upgrades.
+export function getParYardsPerSwing(state) {
+  return getYardsPerSwing(getEffectLevels(state));
 }
 
 function buildInitialUpgrades() {
@@ -78,13 +95,13 @@ function createLifetimeStats() {
   };
 }
 
-export function createScorecard(courseId = COURSES[0].id) {
+export function createScorecard(courseId = COURSES[0].id, yardsPerSwing = BASE_YARDS_PER_SWING) {
   return Array.from({ length: HOLES_PER_ROUND }, (_, index) => {
     const hole = index + 1;
     return {
       hole,
       targetDistance: yardsForHole(hole, courseId),
-      par: parForHole(hole, courseId),
+      par: parForHole(hole, courseId, yardsPerSwing),
       shots: null,
       scoreToPar: null,
     };
@@ -154,10 +171,12 @@ function normalizeScorecard(scorecard, courseId = COURSES[0].id) {
   return initial.map((entry, index) => {
     const saved = scorecard[index] || {};
     const shots = Number.isFinite(saved.shots) ? saved.shots : null;
+    const par = Number.isFinite(saved.par) && saved.par > 0 ? saved.par : entry.par;
     return {
       ...entry,
+      par,
       shots,
-      scoreToPar: shots === null ? null : shots - entry.par,
+      scoreToPar: shots === null ? null : shots - par,
     };
   });
 }
@@ -192,13 +211,14 @@ function normalizeRoundRecords(records) {
       shots: record.shots,
       scoreToPar: Number.isFinite(record.scoreToPar) ? record.scoreToPar : 0,
       ...(record.migrated ? { migrated: true } : {}),
+      ...(record.legacyPar ? { legacyPar: true } : {}),
     };
   }
   return normalized;
 }
 
-export function getCourseParTotal(courseId) {
-  return createScorecard(courseId).reduce((total, entry) => total + entry.par, 0);
+export function getCourseParTotal(courseId, yardsPerSwing = BASE_YARDS_PER_SWING) {
+  return createScorecard(courseId, yardsPerSwing).reduce((total, entry) => total + entry.par, 0);
 }
 
 // v11 saves waiting on the upgrade screen after a completed course used to
@@ -221,7 +241,11 @@ function migrateV11ToV12(state) {
     : [];
   const seededRounds = {};
   for (const courseId of completedCourseIds) {
-    seededRounds[courseId] = { shots: getCourseParTotal(courseId), scoreToPar: 0, migrated: true };
+    seededRounds[courseId] = {
+      shots: getCourseParTotal(courseId, getParYardsPerSwing(state)),
+      scoreToPar: 0,
+      migrated: true,
+    };
   }
   return {
     ...state,
@@ -232,9 +256,30 @@ function migrateV11ToV12(state) {
   };
 }
 
+// v14 -> v15: par follows the player's power instead of a fixed course design.
+// All-time records scored against the old par are flagged so the next finish on
+// that course replaces them. This cycle's best rounds keep their old scores, so
+// Pro Points already earned toward turning pro are not lost.
+function markLegacyPar(record) {
+  return record && typeof record === 'object' ? { ...record, legacyPar: true } : record;
+}
+
+function migrateV14ToV15(state) {
+  const courseRecords = {};
+  for (const [courseId, record] of Object.entries(state?.courseRecords || {})) {
+    courseRecords[courseId] = markLegacyPar(record);
+  }
+  return {
+    ...state,
+    courseRecords,
+    bestCompletedRound: markLegacyPar(state?.bestCompletedRound) || null,
+  };
+}
+
 export function migrateState(state) {
   let migrated = state;
   if ((migrated?.version ?? 0) < 12) migrated = migrateV11ToV12(migrated);
+  if ((migrated?.version ?? 0) < 15) migrated = migrateV14ToV15(migrated);
   return migrated;
 }
 
@@ -364,7 +409,7 @@ export function recordCourseRound(records, courseId, round) {
 }
 
 export function isBetterCompletedRound(candidate, best) {
-  if (!best) return true;
+  if (!best || best.legacyPar) return true;
   if (candidate.scoreToPar !== best.scoreToPar) {
     return candidate.scoreToPar < best.scoreToPar;
   }

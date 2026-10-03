@@ -30,7 +30,7 @@ export default function GuidePanel() {
         <section className="guide-card">
           <h3>Scoring</h3>
           <ul>
-            <li>Par is full swings to reach the green at the course's design power, plus two putts.</li>
+            <li>Par is full swings to reach the green at your power when you tee off, plus two putts. Getting stronger moves par with you, so your score shows how well you played.</li>
             <li>Fewer shots improves your score to par.</li>
             <li>Approach shots must land close enough to finish; misses leave a follow-up distance.</li>
             <li>Your best completed round is saved automatically.</li>

@@ -10,6 +10,7 @@ import {
   formatScoreToPar,
   getCompletedHoles,
   getCourseParTotal,
+  getParYardsPerSwing,
   getScoreToPar,
   HOLES_PER_ROUND,
 } from '../logic/gameState.js';
@@ -52,7 +53,7 @@ export default function TeeOffPanel({
             <p className="hint">
               {roundStarted
                 ? `Hole ${state.hole} of ${HOLES_PER_ROUND} · ${state.ballsLeft} balls left · ${formatScoreToPar(getScoreToPar(state.scorecard))}`
-                : `Hole 1 · ${state.ballsLeft} balls · Par ${getCourseParTotal(currentCourse.id)}`}
+                : `Hole 1 · ${state.ballsLeft} balls · Par ${getCourseParTotal(currentCourse.id, getParYardsPerSwing(state))}`}
             </p>
           </div>
           <button type="button" className="btn go big" onClick={onBackToCourse}>
@@ -113,7 +114,7 @@ export default function TeeOffPanel({
                 <strong>{course.name}</strong>
                 <small>
                   {unlocked
-                    ? `Par ${getCourseParTotal(course.id)} · ${formatRound(state.courseRecords[course.id])}`
+                    ? `Par ${getCourseParTotal(course.id, getParYardsPerSwing(state))} · ${formatRound(state.courseRecords[course.id])}`
                     : describeCourseUnlock(course.id)}
                 </small>
               </button>

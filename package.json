@@ -8,7 +8,8 @@
     "build": "vite build",
     "preview": "vite preview",
     "sprites:generate": "node scripts/generate-sprite-sheets.mjs",
-    "sprites:export": "node scripts/export-sprite-sheets.mjs"
+    "sprites:export": "node scripts/export-sprite-sheets.mjs",
+    "sim:par": "node scripts/simulate-par.mjs"
   },
   "dependencies": {
     "@fontsource/dotgothic16": "^5.3.0",
